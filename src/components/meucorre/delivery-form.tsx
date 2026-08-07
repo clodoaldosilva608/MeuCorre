@@ -12,30 +12,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DELIVERY_APPS } from "@/lib/apps";
-import type { AppName, Delivery } from "@/lib/types";
-import { Bike, Route, DollarSign, Zap } from "lucide-react";
+import type { Delivery, DeliveryApp } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { DollarSign, Route, Bike, Zap, Check } from "lucide-react";
 
 interface DeliveryFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: {
-    app: AppName;
+    app: string;
     value: number;
     km: number;
     notes?: string;
   }) => Promise<void>;
   editing?: Delivery | null;
+  apps: DeliveryApp[]; // apps visíveis (do DB)
 }
 
-// Valores default sensatos para acelerar o lançamento (R$ 10, 3 km).
 const QUICK_VALUES = [5, 10, 15, 20, 25, 30];
 
 export function DeliveryForm({
@@ -43,14 +36,14 @@ export function DeliveryForm({
   onOpenChange,
   onSubmit,
   editing,
+  apps,
 }: DeliveryFormProps) {
-  const [app, setApp] = useState<AppName>("iFood");
+  const [app, setApp] = useState<string>("iFood");
   const [value, setValue] = useState<string>("");
   const [km, setKm] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Pré-preenche quando está editando
   useEffect(() => {
     if (open) {
       if (editing) {
@@ -59,13 +52,13 @@ export function DeliveryForm({
         setKm(String(editing.km).replace(".", ","));
         setNotes(editing.notes ?? "");
       } else {
-        setApp("iFood");
+        setApp(apps[0]?.name ?? "iFood");
         setValue("");
         setKm("");
         setNotes("");
       }
     }
-  }, [open, editing]);
+  }, [open, editing, apps]);
 
   const parseNumber = (s: string): number => {
     if (!s) return 0;
@@ -106,31 +99,58 @@ export function DeliveryForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 px-5 py-5">
-          {/* App */}
-          <div className="space-y-1.5">
+          {/* App selector — grid visual de cards */}
+          <div className="space-y-2">
             <Label className="text-xs font-medium text-zinc-400">
               Aplicativo
             </Label>
-            <Select
-              value={app}
-              onValueChange={(v) => setApp(v as AppName)}
-            >
-              <SelectTrigger className="border-zinc-800 bg-zinc-900 text-zinc-100 focus:ring-emerald-500/30 focus:ring-offset-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="border-zinc-800 bg-zinc-900 text-zinc-100">
-                {DELIVERY_APPS.map((a) => (
-                  <SelectItem
+            <div className="grid grid-cols-3 gap-2">
+              {apps.map((a) => {
+                const selected = app === a.name;
+                return (
+                  <button
                     key={a.name}
-                    value={a.name}
-                    className="focus:bg-zinc-800 focus:text-zinc-100"
+                    type="button"
+                    onClick={() => setApp(a.name)}
+                    className={cn(
+                      "relative flex flex-col items-center gap-1 rounded-xl border p-2.5 transition-all",
+                      selected
+                        ? "border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/40"
+                        : "border-zinc-800 bg-zinc-900 hover:border-zinc-700 hover:bg-zinc-800/60",
+                    )}
                   >
-                    <span className="mr-2">{a.emoji}</span>
-                    {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    {/* Imagem oficial OU emoji */}
+                    {a.image ? (
+                      <img
+                        src={a.image}
+                        alt={a.label}
+                        className="h-9 w-9 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="grid h-9 w-9 place-items-center rounded-lg text-lg"
+                        style={{ backgroundColor: `${a.color}22` }}
+                      >
+                        {a.emoji}
+                      </div>
+                    )}
+                    <span
+                      className={cn(
+                        "max-w-full truncate text-[10px] font-medium",
+                        selected ? "text-emerald-300" : "text-zinc-400",
+                      )}
+                    >
+                      {a.label}
+                    </span>
+                    {selected && (
+                      <div className="absolute right-1 top-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-500">
+                        <Check className="h-2.5 w-2.5 text-zinc-950" strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Valor */}
@@ -149,7 +169,6 @@ export function DeliveryForm({
               autoFocus
               className="border-zinc-800 bg-zinc-900 text-lg font-semibold text-emerald-400 placeholder:text-zinc-600 placeholder:font-normal focus:border-emerald-500 focus:ring-emerald-500/20"
             />
-            {/* Valores rápidos */}
             {!editing && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {QUICK_VALUES.map((v) => (
@@ -182,7 +201,7 @@ export function DeliveryForm({
             />
           </div>
 
-          {/* Notas (opcional) */}
+          {/* Notas */}
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-xs font-medium text-zinc-400">
               <Bike className="h-3 w-3" />

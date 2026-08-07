@@ -43,3 +43,46 @@ Stage Summary:
 - Implementado tudo do MVP da conversa + extras sênior: edição, filtros de período, export JSON/CSV, splash com mascote Foguetinho, toasts, empty states, animações Framer Motion
 - 0 erros de lint, 0 erros runtime no browser
 - Pronto para deploy em Vercel/Netlify (HTTPS necessário para instalação PWA)
+
+---
+Task ID: 2
+Agent: Super Z (main)
+Task: Implementar v2 do MeuCorre: controle de despesas (lucro líquido), gráficos Recharts, captura por notificação, e CRUD de apps de entrega com card de imagem oficial.
+
+Work Log:
+- Atualizado schema Dexie v1 -> v2: adicionadas tabelas expenses, apps; seed dos 6 apps padrão (iFood, 99Food, Lalamove, Rappi, Loggi, Independente) via evento on("populate").
+- Atualizado src/lib/types.ts: novos tipos DeliveryApp, Expense, ExpenseCategory; PeriodStat expandido com expenses e netProfit; AppStat com label/color/emoji/image.
+- Atualizado src/lib/apps.ts: loadVisibleApps/loadAllApps (DB-first), EXPENSE_CATEGORIES com 6 categorias, appMeta() com lookup de imagem, formatadores BRL/KM/datas, helpers daysAgoISO, fileToDataURL, resizeImage (canvas 256x256 JPEG 85%), parseNotification (regex para app + valor em 4 padrões).
+- Atualizado src/hooks/use-deliveries.ts: hooks useApps (CRUD + toggleHide + reorder), useExpenses (CRUD), useDeliveries mantido; filterByPeriod para ambas as tabelas; computeStats expandido com byApp enriquecido (label, color, emoji, image); computeDailySeries (7 dias); exportJSON/CSV com expenses; downloadFile com BOM UTF-8 para Excel.
+- Criados novos componentes em src/components/meucorre/:
+  - app-manager.tsx: modal CRUD de apps com upload de imagem (resize 256x256), picker de 20 emojis, picker de 14 cores, ocultar/excluir apps padrão (padrão só oculta, custom exclui), AlertDialog de confirmação
+  - expense-form.tsx: modal Nova/Editar Despesa com grid visual de 6 categorias, quick values R$10-100, descrição opcional
+  - expense-list.tsx: lista de últimas despesas com emoji/cor por categoria, editar/excluir
+  - notification-capture.tsx: modal com botão "Permitir notificações" (Notification API), textarea para colar notificação, parser automático em tempo real, exemplos clicáveis (iFood/99Food/Lalamove/Rappi), preview editável antes de confirmar, info box explicando limitação da API web
+  - charts.tsx: 3 gráficos Recharts (área ganhos vs despesas 7 dias, pizza distribuição por app com legenda e %, barras despesas por categoria), tooltips dark theme
+  - bottom-nav.tsx: nav inferior mobile com 3 tabs (Corridas/Despesas/Gráficos), tab Gráficos só aparece se houver dados, safe-area-inset support
+- Atualizados componentes existentes:
+  - summary-cards.tsx: adicionado card de Lucro Líquido (verde se positivo, vermelho se negativo, com badge "no azul"/"no vermelho")
+  - header.tsx: adicionados botões 🔔 (captura notificação) e ⊞ (gerenciar apps) no header
+  - delivery-form.tsx: refatorado para grid visual de cards de apps (com imagem ou emoji+cor), usa apps do DB em vez de lista estática
+  - delivery-list.tsx: usa appMeta() com lookup de imagem; deleta por objeto (não id) para AlertDialog com contexto
+  - app-summary.tsx: usa app.image quando disponível, mostra km no subtitle
+  - fab.tsx: variant "primary" (verde) ou "danger" (vermelho) baseado na tab ativa, reposicionado para bottom-20 (acima da bottom nav)
+- Reescrito src/app/page.tsx: integra tudo com estado de tab ativa, modais delivery/expense/app-manager/capture, AlertDialogs de confirmação para deletar corrida/despesa/apagar tudo, exports JSON/CSV com both deliveries+expenses.
+- Lint: corrigidos 2 erros (set-state-in-effect no app-manager, função nomeada como hook no notification-capture) e 5 warnings (eslint-disable desnecessários para <img> que é permitido). Resultado final: 0 erros, 0 warnings.
+- Validação Agent Browser (iPhone 14):
+  - App carregou sem erros, SW registrado, splash funcionou
+  - Testou gerenciar apps: abriu AppManager, cadastrou "Uber Eats" com emoji 🛵 e cor preta -> apareceu na lista e no formulário de corrida
+  - Lançou corrida Uber Eats R$15 + 5km -> total R$15, lucro R$15, 1 corrida, 5km ✓
+  - Trocou para tab Despesas -> FAB ficou vermelho, lançou R$20 combustível -> lucro ficou -R$5 (vermelho) ✓
+  - Tab Gráficos: 3 gráficos renderizaram (área 7 dias, pizza por app, barras despesas)
+  - Captura por notificação: colou "iFood: Pedido entregue! Você recebeu R$ 22,50" -> parser detectou app=iFood, valor=22,5 -> botão "Lançar R$22,50" -> confirmou -> total R$37,50, lucro R$17,50 ✓
+  - Export JSON: toast "Backup JSON exportado, 2 corridas, 1 despesas" ✓
+  - Screenshots: meucorre-v2-corridas.png, meucorre-v2-graficos.png, meucorre-v2-full.png
+- Atualizado README com seções v2: despesas, lucro líquido, gráficos, CRUD apps com imagem, captura por notificação, schema DB v2, roadmap atualizado.
+
+Stage Summary:
+- v2 do MeuCorre entregue com TODAS as features pedidas pelo usuário: controle de despesas com lucro líquido, gráficos Recharts (3 tipos), CRUD completo de apps com upload de imagem oficial, e captura por notificação com parser regex automático
+- 0 erros de lint, 0 erros runtime no browser, todos os fluxos testados ponta a ponta
+- Arquitetura Local-First mantida: imagens dos apps salvas como base64 no IndexedDB (256x256 JPEG), dados nunca saem do celular
+- App pronto para deploy (Vercel/Netlify com HTTPS para PWA instalação)

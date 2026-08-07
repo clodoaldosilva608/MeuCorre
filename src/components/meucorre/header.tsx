@@ -1,7 +1,7 @@
 "use client";
 
 import { formatShortDate } from "@/lib/apps";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Trash2, Bell, Grid3x3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,10 +16,18 @@ interface HeaderProps {
   onExportJSON: () => void;
   onExportCSV: () => void;
   onClearAll: () => void;
+  onOpenApps: () => void;
+  onOpenCapture: () => void;
 }
 
 // Cabeçalho fixo no topo: logo ⚡ MeuCorre + data + menu de ações.
-export function Header({ onExportJSON, onExportCSV, onClearAll }: HeaderProps) {
+export function Header({
+  onExportJSON,
+  onExportCSV,
+  onClearAll,
+  onOpenApps,
+  onOpenCapture,
+}: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3.5">
@@ -37,10 +45,34 @@ export function Header({ onExportJSON, onExportCSV, onClearAll }: HeaderProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-[11px] font-medium capitalize text-zinc-400">
+        <div className="flex items-center gap-1.5">
+          <span className="hidden rounded-full bg-zinc-800 px-2.5 py-1 text-[11px] font-medium capitalize text-zinc-400 sm:inline">
             {formatShortDate()}
           </span>
+
+          {/* Capturar por notificação */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenCapture}
+            aria-label="Capturar por notificação"
+            className="h-8 w-8 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+          >
+            <Bell className="h-4 w-4" />
+          </Button>
+
+          {/* Gerenciar apps */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenApps}
+            aria-label="Gerenciar apps de entrega"
+            className="h-8 w-8 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+          >
+            <Grid3x3 className="h-4 w-4" />
+          </Button>
+
+          {/* Menu de backup */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

@@ -1,7 +1,7 @@
 // Tipos centrais do MeuCorre
 // Arquitetura Local-First: o dispositivo é a única fonte da verdade.
 
-export type AppName =
+export type DefaultAppName =
   | "iFood"
   | "99Food"
   | "Lalamove"
@@ -9,9 +9,22 @@ export type AppName =
   | "Loggi"
   | "Independente/Outros";
 
+// App de entrega — pode ser padrão (built-in) ou customizado pelo usuário.
+export interface DeliveryApp {
+  id?: number;
+  name: string; // identificador único (chave)
+  label: string; // nome exibido
+  color: string; // cor hex para badges/barras
+  emoji: string; // emoji fallback
+  image?: string; // data URL (base64) da imagem oficial do app (opcional)
+  isDefault?: boolean; // true se for built-in (não pode excluir)
+  hidden?: boolean; // true se o usuário ocultou
+  order?: number; // ordem de exibição
+}
+
 export interface Delivery {
   id?: number;
-  app: AppName;
+  app: string; // nome (chave) do DeliveryApp
   value: number;
   km: number;
   date: string; // YYYY-MM-DD (ISO local)
@@ -19,10 +32,31 @@ export interface Delivery {
   notes?: string;
 }
 
+export interface Expense {
+  id?: number;
+  category: ExpenseCategory;
+  value: number;
+  description?: string;
+  date: string; // YYYY-MM-DD
+  timestamp: number;
+}
+
+export type ExpenseCategory =
+  | "combustivel"
+  | "alimentacao"
+  | "manutencao"
+  | "bateria"
+  | "pedagio"
+  | "outros";
+
 export type PeriodFilter = "hoje" | "semana" | "mes" | "tudo";
 
 export interface AppStat {
-  app: AppName;
+  app: string;
+  label: string;
+  color: string;
+  emoji: string;
+  image?: string;
   total: number;
   count: number;
   km: number;
@@ -33,4 +67,6 @@ export interface PeriodStat {
   count: number;
   km: number;
   byApp: AppStat[];
+  expenses: number;
+  netProfit: number; // total - expenses
 }

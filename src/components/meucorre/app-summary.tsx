@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { formatBRL, appColor, appEmoji } from "@/lib/apps";
+import { formatBRL } from "@/lib/apps";
 import type { AppStat, PeriodStat } from "@/lib/types";
 
 interface AppSummaryProps {
@@ -56,18 +56,32 @@ export function AppSummary({ stats }: AppSummaryProps) {
                     className="absolute inset-y-0 left-0 opacity-[0.12]"
                     style={{
                       width: `${(app.total / max) * 100}%`,
-                      backgroundColor: appColor(app.app),
+                      backgroundColor: app.color,
                     }}
                   />
                   {/* Conteúdo */}
-                  <div className="relative flex items-center gap-2">
-                    <span className="text-base">{appEmoji(app.app)}</span>
+                  <div className="relative flex items-center gap-2.5">
+                    {app.image ? (
+                      <img
+                        src={app.image}
+                        alt={app.label}
+                        className="h-8 w-8 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="grid h-8 w-8 place-items-center rounded-lg text-base"
+                        style={{ backgroundColor: `${app.color}22` }}
+                      >
+                        {app.emoji}
+                      </div>
+                    )}
                     <div className="leading-tight">
                       <p className="text-sm font-semibold text-zinc-200">
-                        {app.app}
+                        {app.label}
                       </p>
                       <p className="text-[10px] text-zinc-500">
                         {app.count} {app.count === 1 ? "corrida" : "corridas"}
+                        {app.km > 0 && ` • ${app.km.toFixed(1).replace(".", ",")} km`}
                       </p>
                     </div>
                   </div>
@@ -83,5 +97,3 @@ export function AppSummary({ stats }: AppSummaryProps) {
     </section>
   );
 }
-
-
