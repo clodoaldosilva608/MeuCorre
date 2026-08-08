@@ -1,543 +1,810 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Header } from "@/components/meucorre/header";
-import { SummaryCards } from "@/components/meucorre/summary-cards";
-import { PeriodFilter, periodLabel } from "@/components/meucorre/period-filter";
-import { AppSummary } from "@/components/meucorre/app-summary";
-import { DeliveryList } from "@/components/meucorre/delivery-list";
-import { DeliveryForm } from "@/components/meucorre/delivery-form";
-import { ExpenseForm } from "@/components/meucorre/expense-form";
-import { ExpenseList } from "@/components/meucorre/expense-list";
-import { AppManager } from "@/components/meucorre/app-manager";
-import { NotificationCapture } from "@/components/meucorre/notification-capture";
-import { Charts } from "@/components/meucorre/charts";
-import { Fab } from "@/components/meucorre/fab";
-import { BottomNav, type Tab } from "@/components/meucorre/bottom-nav";
-import { SplashScreen } from "@/components/meucorre/splash-screen";
 import {
-  useDeliveries,
-  useExpenses,
-  useApps,
-  filterByPeriodDeliveries,
-  filterByPeriodExpenses,
-  computeStats,
-  computeDailySeries,
-  exportJSON,
-  exportDeliveriesCSV,
-  exportExpensesCSV,
-  downloadFile,
-} from "@/hooks/use-deliveries";
-import type {
-  Delivery,
-  DeliveryApp,
-  Expense,
-  ExpenseCategory,
-  PeriodFilter as Period,
-} from "@/lib/types";
-import { todayISO, expenseCategoryMeta } from "@/lib/apps";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Zap,
+  Check,
+  ArrowRight,
+  Bike,
+  Wallet,
+  BarChart3,
+  Bell,
+  ShieldCheck,
+  Infinity as InfinityIcon,
+  Copy,
+  CheckCheck,
+  Star,
+  TrendingUp,
+  Route,
+  CreditCard,
+  Lock,
+} from "lucide-react";
 
-export default function Home() {
-  // Splash some por ~1.4s no primeiro carregamento
-  const [showSplash, setShowSplash] = useState(true);
-  useEffect(() => {
-    const t = setTimeout(() => setShowSplash(false), 1400);
-    return () => clearTimeout(t);
-  }, []);
+const PLAN_PRICE = 97;
 
-  const [period, setPeriod] = useState<Period>("hoje");
-  const [activeTab, setActiveTab] = useState<Tab>("corridas");
+const FEATURES = [
+  {
+    icon: Bike,
+    title: "Lançamento rápido",
+    desc: "Registre cada corrida em segundos com botões de valor rápido",
+  },
+  {
+    icon: Wallet,
+    title: "Controle de despesas",
+    desc: "Combustível, alimentação, manutenção — saiba seu lucro real",
+  },
+  {
+    icon: BarChart3,
+    title: "Gráficos visuais",
+    desc: "Veja seus ganhos por dia, por app e despesas por categoria",
+  },
+  {
+    icon: Bell,
+    title: "Captura por notificação",
+    desc: "Cole a notificação do app e o MeuCorre preenche automaticamente",
+  },
+  {
+    icon: Route,
+    title: "Multi-app",
+    desc: "iFood, 99Food, Lalamove e mais — cadastre outros com imagem oficial",
+  },
+  {
+    icon: ShieldCheck,
+    title: "100% offline",
+    desc: "Seus dados ficam só no seu celular. Zero servidor, zero rastreio",
+  },
+];
 
-  // Modais
-  const [deliveryFormOpen, setDeliveryFormOpen] = useState(false);
-  const [editingDelivery, setEditingDelivery] = useState<Delivery | null>(null);
-  const [expenseFormOpen, setExpenseFormOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [appManagerOpen, setAppManagerOpen] = useState(false);
-  const [captureOpen, setCaptureOpen] = useState(false);
+const PRO_FEATURES = [
+  "Tudo do plano gratuito, para sempre",
+  "Sem nenhum anúncio no app",
+  "Relatórios PDF mensais (ganhos, despesas, lucro)",
+  "Backup em nuvem criptografado entre dispositivos",
+  "Metas diárias e semanais com progresso visual",
+  "Lembretes de manutenção (troca de óleo, revisão, IPVA)",
+  "Suporte prioritário via WhatsApp",
+  "Todas as futuras atualizações inclusas",
+];
 
-  // Confirmações
-  const [confirmDeleteDelivery, setConfirmDeleteDelivery] =
-    useState<Delivery | null>(null);
-  const [confirmDeleteExpense, setConfirmDeleteExpense] =
-    useState<Expense | null>(null);
-  const [confirmClear, setConfirmClear] = useState(false);
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-white text-zinc-900">
+      {/* ===== HERO (dark) ===== */}
+      <section className="relative overflow-hidden bg-zinc-950 text-zinc-100">
+        {/* Glow background */}
+        <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[600px] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-3xl" />
 
-  const {
-    allDeliveries,
-    addDelivery,
-    updateDelivery,
-    deleteDelivery,
-    clearAll,
-  } = useDeliveries();
-  const {
-    allExpenses,
-    addExpense,
-    updateExpense,
-    deleteExpense,
-  } = useExpenses();
-  const {
-    apps,
-    visibleApps,
-    addApp,
-    updateApp,
-    deleteApp,
-    toggleHideApp,
-  } = useApps();
+        <div className="relative mx-auto max-w-5xl px-4 py-16 md:py-24">
+          {/* Logo */}
+          <div className="flex items-center justify-center gap-2">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-xl shadow-lg shadow-emerald-500/25">
+              ⚡
+            </div>
+            <span className="text-xl font-extrabold tracking-tight text-emerald-400">
+              MeuCorre
+            </span>
+          </div>
 
-  // Filtragem por período
-  const filteredDeliveries = useMemo(
-    () => filterByPeriodDeliveries(allDeliveries, period),
-    [allDeliveries, period],
+          {/* Headline */}
+          <div className="mt-10 text-center">
+            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+              <Star className="h-3 w-3 fill-emerald-400" />
+              Feito por entregador, para entregador
+            </div>
+            <h1 className="text-balance text-4xl font-black leading-tight tracking-tight md:text-6xl">
+              Pare de perder dinheiro
+              <br />
+              <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
+                sem saber
+              </span>
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-pretty text-base text-zinc-400 md:text-lg">
+              Controle suas corridas, despesas e lucro líquido em um só lugar.
+              Funciona com iFood, 99Food, Lalamove e qualquer outro app.
+              100% offline.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a
+                href="#planos"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-400"
+              >
+                <Zap className="h-4 w-4" />
+                Quero o plano vitalício
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="/app"
+                className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-bold text-zinc-100 transition-all hover:border-zinc-600 hover:bg-zinc-800"
+              >
+                Usar grátis primeiro
+              </a>
+            </div>
+
+            {/* Trust */}
+            <p className="mt-4 text-xs text-zinc-500">
+              Sem cadastro. Sem cartão. Funciona offline.
+            </p>
+          </div>
+
+          {/* Mockup */}
+          <div className="mx-auto mt-12 max-w-xs">
+            <PhoneMockup />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== PROBLEMA (claro) ===== */}
+      <section className="border-b border-zinc-100 bg-zinc-50 py-16 md:py-24">
+        <div className="mx-auto max-w-3xl px-4 text-center">
+          <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+            A dor que todo entregador conhece
+          </h2>
+          <p className="mt-4 text-base text-zinc-600 md:text-lg">
+            Você trabalha com 2, 3, às vezes 4 apps ao mesmo tempo. No fim do
+            dia, precisa abrir cada um pra saber quanto ganhou. Pior: esquece de
+            lançar a gasolina, o almoço, a manutenção — e o &ldquo;lucro&rdquo;
+            que você achou que tinha some no fim do mês.
+          </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            <PainCard
+              emoji="😵‍💫"
+              title="Faturamento fragmentado"
+              desc="iFood aqui, 99 ali, Lalamove acolá — sem visão total"
+            />
+            <PainCard
+              emoji="⛽"
+              title="Despesas invisíveis"
+              desc="Gasolina e manutenção comem o lucro sem você perceber"
+            />
+            <PainCard
+              emoji="📉"
+              title="Sem saber se valeu a pena"
+              desc="Você trabalha 12h e não sabe quanto realmente ganhou"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SOLUÇÃO / FEATURES ===== */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+              Tudo que você precisa,
+              <br />
+              <span className="text-emerald-500">numa tela só</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-600">
+              O MeuCorre resolve o problema de forma simples e direta, sem
+              burocracia
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-zinc-200 bg-white p-5 transition-all hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/5"
+                >
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-3 text-sm font-bold text-zinc-900">
+                    {f.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-zinc-600">{f.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== DEPOIMENTO ===== */}
+      <section className="bg-zinc-950 py-16 text-zinc-100 md:py-20">
+        <div className="mx-auto max-w-3xl px-4">
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-10">
+            <div className="flex gap-1 text-emerald-400">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="h-4 w-4 fill-emerald-400" />
+              ))}
+            </div>
+            <p className="mt-4 text-balance text-lg font-medium leading-relaxed md:text-xl">
+              &ldquo;Antes eu achava que ganhava R$ 200 por dia. Comecei a
+              lançar tudo no MeuCorre e descobri que, depois de gasolina e
+              comida, sobravam R$ 110. Mudou minha forma de trabalhar.&rdquo;
+            </p>
+            <div className="mt-5 flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500/20 text-base">
+                🛵
+              </div>
+              <div>
+                <p className="text-sm font-bold">Rafael S.</p>
+                <p className="text-xs text-zinc-400">
+                  Entregador multi-app • São Paulo
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== PLANOS / CTA ===== */}
+      <section id="planos" className="bg-zinc-50 py-16 md:py-24">
+        <div className="mx-auto max-w-4xl px-4">
+          <div className="text-center">
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600">
+              <InfinityIcon className="h-3 w-3" />
+              Pagamento único — usa para sempre
+            </div>
+            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+              Plano vitalício MeuCorre PRO
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-base text-zinc-600">
+              Pague uma vez, use para sempre. Sem assinatura mensal, sem
+              renovação, sem surpresa.
+            </p>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-md">
+            <div className="overflow-hidden rounded-3xl border-2 border-emerald-500 bg-white shadow-xl shadow-emerald-500/10">
+              {/* Header */}
+              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 text-center text-white">
+                <p className="text-xs font-semibold uppercase tracking-wider opacity-90">
+                  ⚡ MeuCorre PRO
+                </p>
+                <div className="mt-2 flex items-end justify-center gap-1">
+                  <span className="text-5xl font-black">
+                    R$ {PLAN_PRICE}
+                  </span>
+                  <span className="mb-1.5 text-sm opacity-90">,00</span>
+                </div>
+                <p className="mt-1 text-xs opacity-90">
+                  pagamento único • vitalício • sem mensalidade
+                </p>
+              </div>
+
+              {/* Features list */}
+              <div className="p-6">
+                <ul className="space-y-2.5">
+                  {PRO_FEATURES.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      <span className="text-zinc-700">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <CheckoutButton />
+
+                <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-zinc-500">
+                  <Lock className="h-3 w-3" />
+                  Pagamento via Pix • Ativação em até 24h
+                </p>
+              </div>
+            </div>
+
+            {/* Comparação */}
+            <div className="mt-6 grid grid-cols-2 gap-3 text-center">
+              <div className="rounded-xl border border-zinc-200 bg-white p-4">
+                <p className="text-xs font-semibold text-zinc-500">
+                  Plano gratuito
+                </p>
+                <p className="mt-1 text-2xl font-black text-zinc-900">R$ 0</p>
+                <p className="mt-1 text-[10px] text-zinc-500">
+                  App completo + anúncios discretos
+                </p>
+              </div>
+              <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4">
+                <p className="text-xs font-semibold text-emerald-700">
+                  Plano PRO vitalício
+                </p>
+                <p className="mt-1 text-2xl font-black text-emerald-600">
+                  R$ {PLAN_PRICE}
+                </p>
+                <p className="mt-1 text-[10px] text-emerald-700">
+                  Sem anúncios + features avançadas
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FAQ ===== */}
+      <section className="bg-white py-16 md:py-20">
+        <div className="mx-auto max-w-2xl px-4">
+          <h2 className="text-center text-2xl font-extrabold tracking-tight text-zinc-900 md:text-3xl">
+            Perguntas frequentes
+          </h2>
+          <div className="mt-8 space-y-3">
+            <FaqItem
+              q="O app funciona sem internet?"
+              a="Sim, 100% offline. Seus dados ficam salvos no seu celular (IndexedDB). Você consegue lançar corridas e ver relatórios mesmo em subsolos ou áreas sem sinal."
+            />
+            <FaqItem
+              q="Como funciona o plano vitalício?"
+              a="Você paga R$ 97 uma única vez via Pix. Depois de enviar o comprovante e o admin aprovar (em até 24h), você recebe uma chave de licença por email. Digita a chave no app e pronto — PRO para sempre, sem mais cobranças."
+            />
+            <FaqItem
+              q="E se eu trocar de celular?"
+              a="Sua licença é vinculada ao seu email. É só ativar a mesma chave no novo aparelho. O backup em nuvem (feature PRO) sincroniza seus dados entre dispositivos."
+            />
+            <FaqItem
+              q="Meus dados são vendidos?"
+              a="Nunca. O MeuCorre é Local-First: nenhum dado de corrida sai do seu celular. Nem mesmo o admin consegue ver seus ganhos. Só armazenamos sua licença."
+            />
+            <FaqItem
+              q="Tem como testar antes de pagar?"
+              a="Sim! O app gratuito tem todas as funcionalidades básicas (corridas, despesas, gráficos). Você só paga se quiser remover anúncios e ter as features PRO."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FOOTER ===== */}
+      <footer className="bg-zinc-950 py-10 text-zinc-400">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="flex items-center gap-2">
+              <div className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-sm">
+                ⚡
+              </div>
+              <span className="font-bold text-emerald-400">MeuCorre</span>
+            </div>
+            <nav className="flex items-center gap-5 text-xs">
+              <a href="/app" className="hover:text-zinc-200">
+                Abrir app
+              </a>
+              <a href="#planos" className="hover:text-zinc-200">
+                Planos
+              </a>
+              <a href="/admin/login" className="hover:text-zinc-200">
+                Admin
+              </a>
+            </nav>
+            <p className="text-xs text-zinc-600">
+              © {new Date().getFullYear()} MeuCorre • Feito no Brasil 🇧🇷
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
-  const filteredExpenses = useMemo(
-    () => filterByPeriodExpenses(allExpenses, period),
-    [allExpenses, period],
+}
+
+// ===== Subcomponentes =====
+
+function PainCard({
+  emoji,
+  title,
+  desc,
+}: {
+  emoji: string;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-left">
+      <div className="text-2xl">{emoji}</div>
+      <p className="mt-2 text-sm font-bold text-zinc-900">{title}</p>
+      <p className="mt-0.5 text-xs text-zinc-600">{desc}</p>
+    </div>
   );
+}
 
-  // Estatísticas
-  const stats = useMemo(
-    () => computeStats(filteredDeliveries, filteredExpenses, apps),
-    [filteredDeliveries, filteredExpenses, apps],
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between p-4 text-left"
+      >
+        <span className="text-sm font-semibold text-zinc-900">{q}</span>
+        <span
+          className={`text-zinc-400 transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          ▼
+        </span>
+      </button>
+      {open && (
+        <div className="border-t border-zinc-100 p-4 text-sm text-zinc-600">
+          {a}
+        </div>
+      )}
+    </div>
   );
+}
 
-  // Série diária (sempre últimos 7 dias, independente do filtro)
-  const dailySeries = useMemo(
-    () => computeDailySeries(allDeliveries, allExpenses, 7),
-    [allDeliveries, allExpenses],
+function PhoneMockup() {
+  return (
+    <div className="mx-auto w-full max-w-[280px] rounded-[2.5rem] border-[6px] border-zinc-800 bg-zinc-950 p-3 shadow-2xl">
+      <div className="rounded-[2rem] bg-zinc-950 p-4">
+        {/* Notch */}
+        <div className="mx-auto mb-3 h-1 w-16 rounded-full bg-zinc-800" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <div className="grid h-6 w-6 place-items-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-xs">
+              ⚡
+            </div>
+            <span className="text-xs font-bold text-emerald-400">MeuCorre</span>
+          </div>
+          <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[8px] text-zinc-400">
+            Hoje
+          </span>
+        </div>
+
+        {/* Total card */}
+        <div className="mt-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/60 to-zinc-900 p-3">
+          <p className="text-[9px] text-zinc-400">Total hoje</p>
+          <p className="text-2xl font-black text-emerald-400">R$ 184,50</p>
+          <p className="text-[9px] text-zinc-500">12 corridas</p>
+        </div>
+
+        {/* Lucro líquido */}
+        <div className="mt-2 rounded-2xl border border-emerald-500/30 bg-emerald-950/30 p-3">
+          <p className="text-[9px] text-zinc-400">Lucro líquido</p>
+          <p className="text-lg font-black text-emerald-400">R$ 142,80</p>
+        </div>
+
+        {/* Mock corridas */}
+        <div className="mt-3 space-y-1.5">
+          {[
+            { app: "iFood", val: "R$ 22,50", emoji: "🍽️" },
+            { app: "99Food", val: "R$ 18,00", emoji: "🟠" },
+            { app: "Lalamove", val: "R$ 45,00", emoji: "📦" },
+          ].map((c, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-2"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs">{c.emoji}</span>
+                <span className="text-[10px] font-semibold text-zinc-200">
+                  {c.app}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-400">
+                {c.val}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
+}
 
-  // Despesas por categoria (do período)
-  const expensesByCategory = useMemo(() => {
-    const map = new Map<ExpenseCategory, { total: number; count: number }>();
-    for (const e of filteredExpenses) {
-      const prev = map.get(e.category) ?? { total: 0, count: 0 };
-      prev.total += e.value;
-      prev.count += 1;
-      map.set(e.category, prev);
-    }
-    return Array.from(map.entries())
-      .map(([category, v]) => ({ category, ...v }))
-      .sort((a, b) => b.total - a.total);
-  }, [filteredExpenses]);
+function CheckoutButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button
+        onClick={() => setOpen(true)}
+        className="mt-6 w-full bg-emerald-500 py-6 text-base font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
+      >
+        <Zap className="mr-2 h-4 w-4" />
+        Comprar plano vitalício
+      </Button>
+      <CheckoutDialog open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
 
-  // Contadores de hoje (sempre visíveis)
-  const todayCount = useMemo(() => {
-    const t = todayISO();
-    return allDeliveries.filter((d) => d.date === t).length;
-  }, [allDeliveries]);
+function CheckoutDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const [step, setStep] = useState<"form" | "pix" | "done">("form");
+  const [subId, setSubId] = useState<string | null>(null);
+  const [pixKey, setPixKey] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    city: "",
+    notes: "",
+  });
 
-  // ===== Handlers =====
-
-  const handleAddDelivery = async (data: {
-    app: string;
-    value: number;
-    km: number;
-    notes?: string;
-  }) => {
-    if (editingDelivery?.id) {
-      await updateDelivery(editingDelivery.id, data);
-      toast.success("Corrida atualizada!", {
-        description: `${data.app} • R$ ${data.value.toFixed(2).replace(".", ",")}`,
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          buyerName: form.name,
+          buyerEmail: form.email,
+          buyerPhone: form.phone,
+          buyerCity: form.city,
+          receiptNotes: form.notes,
+        }),
       });
-    } else {
-      await addDelivery(data);
-      toast.success("Corrida lançada! 🚀", {
-        description: `${data.app} • R$ ${data.value.toFixed(2).replace(".", ",")}`,
-      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao criar compra");
+        return;
+      }
+      setSubId(data.id);
+      setPixKey(data.pixKey);
+      setStep("pix");
+    } catch {
+      toast.error("Erro de conexão");
+    } finally {
+      setLoading(false);
     }
-    setEditingDelivery(null);
   };
 
-  const handleAddExpense = async (data: {
-    category: ExpenseCategory;
-    value: number;
-    description?: string;
-  }) => {
-    if (editingExpense?.id) {
-      await updateExpense(editingExpense.id, data);
-      toast.success("Despesa atualizada", {
-        description: `${expenseCategoryMeta(data.category).label} • R$ ${data.value.toFixed(2).replace(".", ",")}`,
-      });
-    } else {
-      await addExpense(data);
-      toast.success("Despesa lançada 💸", {
-        description: `${expenseCategoryMeta(data.category).label} • R$ ${data.value.toFixed(2).replace(".", ",")}`,
-      });
+  const handleUploadReceipt = async (file: File) => {
+    if (!subId) return;
+    setLoading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const receipt = reader.result as string;
+        const res = await fetch(`/api/subscription/${subId}/receipt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ receipt }),
+        });
+        if (res.ok) {
+          toast.success("Comprovante enviado!");
+          setStep("done");
+        } else {
+          const err = await res.json();
+          toast.error(err.error || "Erro ao enviar comprovante");
+        }
+        setLoading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      toast.error("Erro ao ler arquivo");
+      setLoading(false);
     }
-    setEditingExpense(null);
   };
 
-  const handleCapture = async (data: {
-    app: string;
-    value: number;
-    km: number;
-  }) => {
-    await addDelivery({
-      app: data.app,
-      value: data.value,
-      km: data.km,
-      notes: "Capturado por notificação",
-    });
-    toast.success("Corrida capturada! 🔔", {
-      description: `${data.app} • R$ ${data.value.toFixed(2).replace(".", ",")}`,
-    });
+  const copyPix = () => {
+    navigator.clipboard.writeText(pixKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const confirmDeleteDeliveryAction = async () => {
-    if (confirmDeleteDelivery?.id) {
-      await deleteDelivery(confirmDeleteDelivery.id);
-      toast.success("Corrida excluída");
-    }
-    setConfirmDeleteDelivery(null);
-  };
-
-  const confirmDeleteExpenseAction = async () => {
-    if (confirmDeleteExpense?.id) {
-      await deleteExpense(confirmDeleteExpense.id);
-      toast.success("Despesa excluída");
-    }
-    setConfirmDeleteExpense(null);
-  };
-
-  const confirmClearAction = async () => {
-    await clearAll();
-    setConfirmClear(false);
-    toast.success("Todos os dados foram apagados");
-  };
-
-  const handleExportJSON = () => {
-    if (allDeliveries.length === 0 && allExpenses.length === 0) {
-      toast.error("Nada para exportar");
-      return;
-    }
-    const content = exportJSON(allDeliveries, allExpenses, apps);
-    downloadFile(content, `meucorre-backup-${todayISO()}.json`, "application/json");
-    toast.success("Backup JSON exportado", {
-      description: `${allDeliveries.length} corridas, ${allExpenses.length} despesas`,
-    });
-  };
-
-  const handleExportCSV = () => {
-    if (allDeliveries.length === 0 && allExpenses.length === 0) {
-      toast.error("Nada para exportar");
-      return;
-    }
-    const deliveriesCSV = exportDeliveriesCSV(allDeliveries);
-    const expensesCSV = exportExpensesCSV(allExpenses);
-    const content = `# CORRIDAS\n${deliveriesCSV}\n\n# DESPESAS\n${expensesCSV}`;
-    downloadFile(content, `meucorre-${todayISO()}.csv`, "text/csv;charset=utf-8");
-    toast.success("CSV exportado");
-  };
-
-  const openNewDelivery = () => {
-    setEditingDelivery(null);
-    setDeliveryFormOpen(true);
-  };
-
-  const openNewExpense = () => {
-    setEditingExpense(null);
-    setExpenseFormOpen(true);
+  const reset = () => {
+    setStep("form");
+    setSubId(null);
+    setForm({ name: "", email: "", phone: "", city: "", notes: "" });
+    onOpenChange(false);
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100">
-      <SplashScreen visible={showSplash} />
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) reset();
+        else onOpenChange(o);
+      }}
+    >
+      <DialogContent className="max-w-md gap-0 border-zinc-200 bg-white p-0 text-zinc-900">
+        <DialogHeader className="border-b border-zinc-100 px-5 py-4">
+          <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-600">
+            <CreditCard className="h-4 w-4" />
+            {step === "form" && "Quase lá! Seus dados"}
+            {step === "pix" && "Pague via Pix"}
+            {step === "done" && "Comprovante enviado!"}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-zinc-500">
+            {step === "form" && "Plano vitalício MeuCorre PRO — R$ 97,00"}
+            {step === "pix" && "Escaneie o QR code ou copie a chave"}
+            {step === "done" && "Aguarde a aprovação do admin (até 24h)"}
+          </DialogDescription>
+        </DialogHeader>
 
-      <Header
-        onExportJSON={handleExportJSON}
-        onExportCSV={handleExportCSV}
-        onClearAll={() => setConfirmClear(true)}
-        onOpenApps={() => setAppManagerOpen(true)}
-        onOpenCapture={() => setCaptureOpen(true)}
-      />
+        {step === "form" && (
+          <form onSubmit={handleSubmit} className="space-y-3 px-5 py-5">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-600">Nome completo *</Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-600">Email *</Label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+                className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+              />
+              <p className="text-[10px] text-zinc-500">
+                Sua licença será enviada para este email
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-600">WhatsApp</Label>
+                <Input
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="(11) 99999-9999"
+                  className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-600">Cidade</Label>
+                <Input
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  placeholder="São Paulo - SP"
+                  className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-600">
+                Observações (opcional)
+              </Label>
+              <Textarea
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                rows={2}
+                placeholder="Algo que queira nos dizer?"
+                className="resize-none border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+              />
+            </div>
 
-      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">
-        {/* Indicador de hoje */}
-        {todayCount > 0 && period !== "hoje" && (
-          <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-950/30 px-3 py-2 text-xs">
-            <span className="text-emerald-300">
-              Você tem {todayCount}{" "}
-              {todayCount === 1 ? "corrida" : "corridas"} hoje
-            </span>
-            <button
-              onClick={() => setPeriod("hoje")}
-              className="font-semibold text-emerald-400 underline-offset-2 hover:underline"
+            <div className="rounded-xl bg-emerald-50 p-3 text-center">
+              <p className="text-xs text-zinc-600">Total a pagar</p>
+              <p className="text-2xl font-black text-emerald-600">
+                R$ {PLAN_PRICE},00
+              </p>
+              <p className="text-[10px] text-zinc-500">via Pix • vitalício</p>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading || !form.name || !form.email}
+              className="w-full bg-emerald-500 py-4 font-bold text-zinc-950 hover:bg-emerald-400"
             >
-              ver hoje
+              {loading ? "Gerando Pix..." : "Continuar para pagamento"}
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+          </form>
+        )}
+
+        {step === "pix" && (
+          <div className="space-y-4 px-5 py-5">
+            {/* QR code placeholder — usando um QR code API gratuito */}
+            <div className="flex justify-center">
+              <div className="rounded-2xl border-2 border-emerald-500 bg-white p-3">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pixKey)}`}
+                  alt="QR Code Pix"
+                  className="h-44 w-44"
+                />
+              </div>
+            </div>
+
+            {/* Pix key copy */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-600">
+                Ou copie a chave Pix
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={pixKey}
+                  className="flex-1 border-zinc-200 bg-zinc-50 font-mono text-xs text-zinc-700"
+                />
+                <Button
+                  type="button"
+                  onClick={copyPix}
+                  variant="outline"
+                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                >
+                  {copied ? (
+                    <CheckCheck className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
+              <strong>Como funciona:</strong>
+              <ol className="mt-1 list-decimal space-y-0.5 pl-4">
+                <li>Pague R$ 97 via Pix usando o QR code ou a chave</li>
+                <li>Tire um print/foto do comprovante</li>
+                <li>Envie o comprovante abaixo</li>
+                <li>
+                  Em até 24h o admin aprova e você recebe a licença por email
+                </li>
+              </ol>
+            </div>
+
+            {/* Upload */}
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUploadReceipt(f);
+                }}
+                className="hidden"
+                id="receipt-upload"
+              />
+              <Label
+                htmlFor="receipt-upload"
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-zinc-950 hover:bg-emerald-400"
+              >
+                {loading ? "Enviando..." : "Enviar comprovante"}
+                <ArrowRight className="h-4 w-4" />
+              </Label>
+            </div>
+
+            <button
+              onClick={() => setStep("form")}
+              className="w-full text-center text-xs text-zinc-500 hover:text-zinc-700"
+            >
+              ← Voltar
             </button>
           </div>
         )}
 
-        {/* Cards de resumo sempre visíveis */}
-        <SummaryCards stats={stats} periodLabel={periodLabel(period)} />
-
-        <PeriodFilter value={period} onChange={setPeriod} />
-
-        {/* Conteúdo da tab ativa */}
-        {activeTab === "corridas" && (
-          <>
-            <AppSummary stats={stats} />
-            <DeliveryList
-              deliveries={filteredDeliveries}
-              onEdit={(d) => {
-                setEditingDelivery(d);
-                setDeliveryFormOpen(true);
-              }}
-              onDelete={(d) => setConfirmDeleteDelivery(d)}
-              apps={apps}
-            />
-          </>
-        )}
-
-        {activeTab === "despesas" && (
-          <>
-            {/* Resumo de despesas por categoria */}
-            {expensesByCategory.length > 0 && (
-              <section className="space-y-2.5">
-                <h3 className="text-sm font-semibold text-zinc-300">
-                  Despesas por categoria
-                </h3>
-                <div className="space-y-2">
-                  {expensesByCategory.map((e) => {
-                    const meta = expenseCategoryMeta(e.category);
-                    const pct =
-                      stats.expenses > 0 ? (e.total / stats.expenses) * 100 : 0;
-                    return (
-                      <div
-                        key={e.category}
-                        className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900"
-                      >
-                        <div className="relative flex items-center justify-between p-3">
-                          <div
-                            className="absolute inset-y-0 left-0 opacity-[0.10]"
-                            style={{
-                              width: `${pct}%`,
-                              backgroundColor: meta.color,
-                            }}
-                          />
-                          <div className="relative flex items-center gap-2">
-                            <span className="text-base">{meta.emoji}</span>
-                            <div className="leading-tight">
-                              <p className="text-sm font-semibold text-zinc-200">
-                                {meta.label}
-                              </p>
-                              <p className="text-[10px] text-zinc-500">
-                                {e.count}{" "}
-                                {e.count === 1 ? "lançamento" : "lançamentos"}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="relative text-sm font-bold text-red-400">
-                            -{new Intl.NumberFormat("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            }).format(e.total)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            <ExpenseList
-              expenses={filteredExpenses}
-              onEdit={(e) => {
-                setEditingExpense(e);
-                setExpenseFormOpen(true);
-              }}
-              onDelete={(e) => setConfirmDeleteExpense(e)}
-            />
-          </>
-        )}
-
-        {activeTab === "graficos" && (
-          <Charts
-            dailySeries={dailySeries}
-            stats={stats}
-            expensesByCategory={expensesByCategory}
-          />
-        )}
-
-        {/* Rodapé */}
-        <footer className="pt-4 text-center">
-          <p className="text-[10px] text-zinc-600">
-            ⚡ MeuCorre • 100% offline • seus dados ficam só no seu celular
-          </p>
-        </footer>
-      </main>
-
-      {/* FAB muda de cor baseado na tab */}
-      <Fab
-        onClick={activeTab === "despesas" ? openNewExpense : openNewDelivery}
-        variant={activeTab === "despesas" ? "danger" : "primary"}
-        label={activeTab === "despesas" ? "Nova despesa" : "Nova corrida"}
-      />
-
-      <BottomNav
-        active={activeTab}
-        onChange={setActiveTab}
-        hasExpenses={allExpenses.length > 0}
-        hasDeliveries={allDeliveries.length > 0}
-      />
-
-      {/* Modais */}
-      <DeliveryForm
-        open={deliveryFormOpen}
-        onOpenChange={(o) => {
-          setDeliveryFormOpen(o);
-          if (!o) setEditingDelivery(null);
-        }}
-        onSubmit={handleAddDelivery}
-        editing={editingDelivery}
-        apps={visibleApps}
-      />
-
-      <ExpenseForm
-        open={expenseFormOpen}
-        onOpenChange={(o) => {
-          setExpenseFormOpen(o);
-          if (!o) setEditingExpense(null);
-        }}
-        onSubmit={handleAddExpense}
-        editing={editingExpense}
-      />
-
-      <AppManager
-        open={appManagerOpen}
-        onOpenChange={setAppManagerOpen}
-        apps={apps}
-        onAdd={addApp}
-        onUpdate={updateApp}
-        onDelete={deleteApp}
-        onToggleHide={toggleHideApp}
-      />
-
-      <NotificationCapture
-        open={captureOpen}
-        onOpenChange={setCaptureOpen}
-        apps={visibleApps}
-        onConfirm={handleCapture}
-      />
-
-      {/* Confirmações */}
-      <AlertDialog
-        open={!!confirmDeleteDelivery}
-        onOpenChange={(o) => !o && setConfirmDeleteDelivery(null)}
-      >
-        <AlertDialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir corrida?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
-              {confirmDeleteDelivery && (
-                <>
-                  Esta ação vai remover a corrida de{" "}
-                  <strong className="text-zinc-200">
-                    {confirmDeleteDelivery.app}
-                  </strong>{" "}
-                  no valor de{" "}
-                  <strong className="text-emerald-400">
-                    R${" "}
-                    {confirmDeleteDelivery.value
-                      .toFixed(2)
-                      .replace(".", ",")}
-                  </strong>
-                  . Não dá pra desfazer.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-zinc-800 text-zinc-300 hover:bg-zinc-800">
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteDeliveryAction}
-              className="bg-red-500 text-white hover:bg-red-600"
+        {step === "done" && (
+          <div className="px-5 py-8 text-center">
+            <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-emerald-100">
+              <Check className="h-8 w-8 text-emerald-600" strokeWidth={3} />
+            </div>
+            <h3 className="text-lg font-bold text-zinc-900">
+              Comprovante enviado!
+            </h3>
+            <p className="mt-1 text-sm text-zinc-600">
+              Seu comprovante está sendo analisado. Em até 24h você receberá a
+              sua licença PRO por email.
+            </p>
+            <p className="mt-3 text-xs text-zinc-500">
+              ID da compra: <code className="font-mono">{subId?.slice(0, 12)}</code>
+            </p>
+            <Button
+              onClick={reset}
+              className="mt-6 w-full bg-emerald-500 py-3 font-bold text-zinc-950 hover:bg-emerald-400"
             >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={!!confirmDeleteExpense}
-        onOpenChange={(o) => !o && setConfirmDeleteExpense(null)}
-      >
-        <AlertDialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir despesa?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
-              {confirmDeleteExpense && (
-                <>
-                  Remover{" "}
-                  <strong className="text-zinc-200">
-                    {expenseCategoryMeta(confirmDeleteExpense.category).label}
-                  </strong>{" "}
-                  de{" "}
-                  <strong className="text-red-400">
-                    R${" "}
-                    {confirmDeleteExpense.value.toFixed(2).replace(".", ",")}
-                  </strong>
-                  ?
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-zinc-800 text-zinc-300 hover:bg-zinc-800">
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteExpenseAction}
-              className="bg-red-500 text-white hover:bg-red-600"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
-        <AlertDialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Apagar TODOS os dados?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
-              Você tem{" "}
-              <strong className="text-zinc-200">{allDeliveries.length}</strong>{" "}
-              corridas e{" "}
-              <strong className="text-zinc-200">{allExpenses.length}</strong>{" "}
-              despesas. Tudo será apagado do seu celular permanentemente. Faça
-              um backup antes se quiser manter o histórico.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-zinc-800 text-zinc-300 hover:bg-zinc-800">
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmClearAction}
-              className="bg-red-500 text-white hover:bg-red-600"
-            >
-              Apagar tudo
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+              Concluir
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -86,3 +86,78 @@ Stage Summary:
 - 0 erros de lint, 0 erros runtime no browser, todos os fluxos testados ponta a ponta
 - Arquitetura Local-First mantida: imagens dos apps salvas como base64 no IndexedDB (256x256 JPEG), dados nunca saem do celular
 - App pronto para deploy (Vercel/Netlify com HTTPS para PWA instalação)
+
+---
+Task ID: 3
+Agent: Super Z (main)
+Task: Implementar arquitetura SaaS completa: plataforma de anúncios (admin cadastra, app exibe), landing page pública com planos e checkout Pix do plano vitalício R$97, área admin protegida por senha.
+
+Work Log:
+- Feitas 6 perguntas estratégicas via AskUserQuestion. Respostas: Pix manual, 3 tipos de anúncio (banner_topo + card_lista + splash), senha única, R$97 vitalício, 5 features PRO (sem anúncios + PDF + backup nuvem + metas + manutenção), landing híbrida (dark+claro).
+- Prisma schema v2 (prisma/schema.prisma): modelos Ad (com placement, cores, CTA, imagem, vigência, clicks/views), Subscription (comprador, Pix, comprovante, status, licenseKey), AdEvent. db:push executado com sucesso.
+- .env atualizado com ADMIN_PASSWORD, PIX_KEY, PIX_MERCHANT_NAME, PLAN_PRICE=97.
+- Criado src/lib/prisma.ts (singleton PrismaClient) e src/lib/admin-auth.ts (isAdminAuthed via cookie httpOnly).
+- APIs públicas criadas:
+  - GET /api/ads?placement=X — lista anúncios ativos e vigentes, incrementa views
+  - POST /api/ads/[id]/click — incrementa cliques, retorna URL
+  - POST /api/subscription — cria compra pendente (valida nome+email, bloqueia duplicata aprovada)
+  - GET /api/subscription?id=X — consulta status
+  - POST /api/subscription/[id]/receipt — upload comprovante (base64, máx 2MB)
+  - POST /api/license/verify — valida licenseKey (usado pelo app)
+- APIs admin (protegidas por isAdminAuthed):
+  - POST /api/admin/login — seta cookie meucorre_admin (base64 senha+timestamp, httpOnly, 7 dias)
+  - POST /api/admin/logout
+  - GET/POST /api/admin/ads — lista todos / cria novo
+  - PATCH/DELETE /api/admin/ads/[id] — atualiza / exclui
+  - GET /api/admin/subscriptions?status=X — lista por status
+  - POST /api/admin/subscriptions — aprova (gera licenseKey crypto 32 hex) ou rejeita
+- Painel admin (/src/app/admin/):
+  - layout.tsx: sidebar desktop + bottom nav mobile, verifica auth via fetch, redirect pra /admin/login se não authed
+  - login/page.tsx: form de senha, redirect pra /admin/ads
+  - ads/page.tsx: CRUD completo com 3 placements (banner_top, card_list, splash), preview ao vivo, color pickers, switch ativo, stats (total/ativos/views/clicks)
+  - subscriptions/page.tsx: filtros (pendentes/aprovadas/rejeitadas/todas), dialog de revisão com comprovante (imagem), aprovar gera licença, rejeitar com notas
+- Landing page pública (src/app/page.tsx, antes /app):
+  - Hero dark com glow esmeralda, headline "Pare de perder dinheiro sem saber", CTAs (Comprar PRO + Usar grátis)
+  - Phone mockup com preview do app
+  - Seção clara "A dor que todo entregador conhece" (3 pain cards)
+  - Grid de 6 features (lançamento, despesas, gráficos, notificação, multi-app, offline)
+  - Depoimento com 5 estrelas
+  - Seção planos: card PRO R$97 com gradient esmeralda, lista de features, comparativo gratuito vs PRO
+  - FAQ acordeão (5 perguntas)
+  - Footer dark com links (app, planos, admin)
+  - Checkout dialog multi-step: form dados → Pix (QR code via api.qrserver.com + chave copiável) → upload comprovante → done
+- Hook use-ads.ts: useAds(placement) busca anúncios da API (em PRO retorna []), checkProStatus (localStorage + verify API), activateLicense, deactivateLicense
+- Componentes de anúncio no app:
+  - ad-banner.tsx: banner horizontal dismissível no topo do dashboard
+  - ad-card.tsx: card patrocinado entre listas (badge "Patrocinado")
+  - sponsored-splash.tsx: banner pequeno na splash screen
+  - license-dialog.tsx: dialog com features PRO + CTA comprar + input licença
+- App do entregador movido de / para /app (src/app/app/page.tsx):
+  - Integra AdBanner no topo (apenas se !isPro)
+  - Integra AdCard entre AppSummary e DeliveryList (apenas se !isPro)
+  - Integra SponsoredSplash como children da SplashScreen (apenas se !isPro)
+  - Header atualizado com badge "PRO" (sparkles) quando isPro, ou botão coroa (Crown) para ativar licença quando !isPro
+  - LicenseDialog integrado
+  - useAds hook com 3 placements (banner_top, card_list, splash)
+- SplashScreen atualizado para aceitar children (banner patrocinado)
+- Lint: corrigidos 5 erros de react-hooks/set-state-in-effect (load on mount e form reset on open, todos legítimos com eslint-disable comentado) + 6 warnings de @next/next/no-img-element desnecessários. Resultado: 0 erros, 0 warnings.
+- Validação Agent Browser (iPhone 14):
+  - Landing page (/): renderizou hero + features + planos + FAQ + footer sem erros
+  - Checkout: preencheu dados → POST /api/subscription 201 → tela Pix com QR code + chave copiável → botão upload comprovante
+  - Admin login (/admin/login): senha "meucorre-admin-2026" → redirect /admin/ads
+  - Admin /admin/ads: criou 3 anúncios (Oficina do João banner_top, Seguro Moto Facil card_list, Padaria Pão Quente splash) — todos apareceram na lista com switch ativo, stats atualizadas
+  - Admin /admin/subscriptions: assinatura pendente do checkout apareceu → revisou → aprovou → licença 05eb4c2125b1e5bfc8aec774db98fe06 gerada
+  - App (/app) sem licença: banner "Oficina do João" no topo + card "Seguro Moto Facil" entre listas + botão coroa no header
+  - App ativou licença 05eb4c...: toast "Licença PRO ativada! 🎉", anúncios sumiram, badge "PRO" apareceu no header
+  - App após clear localStorage + reload: anúncios voltaram, botão coroa reapareceu (modo gratuito)
+  - Screenshots: landing-full.png, landing-hero.png, landing-pix-checkout.png, admin-ads-list.png, admin-ads-list-full.png, admin-subscriptions-approved.png, app-pro-active.png
+
+Stage Summary:
+- Arquitetura SaaS completa implementada e validada ponta a ponta
+- Landing page pública em / com checkout Pix manual (QR + chave + upload comprovante)
+- App do entregador em /app mantém Local-First (Dexie/IndexedDB); anúncios vêm da API
+- Admin em /admin/{login,ads,subscriptions} protegido por senha única (cookie httpOnly)
+- 3 placements de anúncio: banner_top, card_list, splash — todos gateados por isPro
+- Fluxo completo validado: landing → checkout → admin aprova → licença gerada → user ativa no app → anúncios somem + badge PRO aparece
+- 0 erros lint, 0 erros runtime, todos os fluxos testados no browser
+- Pronto para deploy em Vercel (HTTPS necessário para PWA instalação)

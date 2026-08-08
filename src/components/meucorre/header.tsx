@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatShortDate } from "@/lib/apps";
-import { Download, Trash2, Bell, Grid3x3 } from "lucide-react";
+import { Download, Trash2, Bell, Grid3x3, Crown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,15 +19,20 @@ interface HeaderProps {
   onClearAll: () => void;
   onOpenApps: () => void;
   onOpenCapture: () => void;
+  onOpenLicense: () => void;
+  isPro: boolean;
 }
 
 // Cabeçalho fixo no topo: logo ⚡ MeuCorre + data + menu de ações.
+// Em PRO, mostra badge "PRO" no lugar do botão de licença.
 export function Header({
   onExportJSON,
   onExportCSV,
   onClearAll,
   onOpenApps,
   onOpenCapture,
+  onOpenLicense,
+  isPro,
 }: HeaderProps) {
   // A data só é calculada depois do mount para evitar hydration mismatch.
   // O servidor roda em UTC e o cliente no fuso local do entregador — quando
@@ -88,6 +93,24 @@ export function Header({
           >
             <Grid3x3 className="h-4 w-4" />
           </Button>
+
+          {/* PRO badge ou botão de licença */}
+          {isPro ? (
+            <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 px-2 py-1 text-[10px] font-black text-zinc-950 shadow-sm shadow-emerald-500/30">
+              <Sparkles className="h-2.5 w-2.5" />
+              PRO
+            </span>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onOpenLicense}
+              aria-label="Ativar licença PRO"
+              className="h-8 w-8 rounded-full text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
+            >
+              <Crown className="h-4 w-4" />
+            </Button>
+          )}
 
           {/* Menu de backup */}
           <DropdownMenu>

@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface SplashScreenProps {
   visible: boolean;
+  children?: React.ReactNode;
 }
 
 // Splash com o mascote "Foguetinho" — foguete estilizado SVG.
 // Some suavemente assim que o app carrega (< 2s idealmente).
-export function SplashScreen({ visible }: SplashScreenProps) {
+// Aceita children para inserir um banner patrocinado (apenas se não for PRO).
+export function SplashScreen({ visible, children }: SplashScreenProps) {
   return (
     <AnimatePresence>
       {visible && (
@@ -66,6 +68,9 @@ export function SplashScreen({ visible }: SplashScreenProps) {
           >
             <div className="h-full w-full bg-gradient-to-r from-emerald-500 to-emerald-300" />
           </motion.div>
+
+          {/* Banner patrocinado opcional (filho) */}
+          {children}
         </motion.div>
       )}
     </AnimatePresence>
