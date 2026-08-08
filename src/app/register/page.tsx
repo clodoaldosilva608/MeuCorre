@@ -54,7 +54,7 @@ export default function RegisterPage() {
           <h1 className="text-2xl font-extrabold text-emerald-400">MeuCorre</h1>
           <p className="mt-1 text-sm text-zinc-500">Crie sua conta grátis</p>
           <p className="mt-1 text-[11px] text-zinc-600">
-            15 dias de trial + 5 lançamentos/dia após
+            14 dias de trial + 5 lançamentos/dia após
           </p>
         </div>
 

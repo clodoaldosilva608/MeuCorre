@@ -599,7 +599,7 @@ export default function LandingPage() {
                 </p>
                 <p className="mt-1 text-2xl font-black text-zinc-900">R$ 0</p>
                 <p className="mt-1 text-[10px] text-zinc-500">
-                  App completo + anúncios discretos
+                  14 dias grátis + 5 corridas/dia após
                 </p>
               </div>
               <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4">
@@ -659,7 +659,7 @@ export default function LandingPage() {
               },
               {
                 q: "Tem como testar antes de pagar?",
-                a: "Sim! O app gratuito tem todas as funcionalidades básicas (corridas, despesas, gráficos). Você só paga se quiser remover anúncios e ter as features PRO.",
+                a: "Sim! Você tem 14 dias de trial grátis com acesso total ao app (corridas, despesas, gráficos, captura por notificação). Após os 14 dias, o plano gratuito continua funcionando com limite de 5 lançamentos por dia. Você só paga se quiser remover anúncios e ter as features PRO ilimitadas.",
               },
             ].map((item, i) => (
               <motion.div key={i} variants={itemUp}>

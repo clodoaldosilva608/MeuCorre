@@ -21,6 +21,8 @@ export async function GET() {
       licenseKey: true,
       phone: true,
       city: true,
+      active: true,
+      trialExtendedUntil: true,
       lastLoginAt: true,
       createdAt: true,
     },

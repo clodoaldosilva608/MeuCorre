@@ -110,7 +110,7 @@ function HomeContent() {
   );
   const [isPro, setIsPro] = useState(false);
 
-  // Status de trial/limite (15 dias grátis + 5 lançamentos/dia após)
+  // Status de trial/limite (14 dias grátis + 5 lançamentos/dia após)
   const trialStatus = useTrialStatus(isPro);
   const { status: syncStatus, syncNow } = useSync();
 

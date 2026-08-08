@@ -61,7 +61,7 @@ O **MeuCorre** resolve uma dor real de milhares de entregadores brasileiros: o *
 
 ### Modelo de negócio
 
-- **Plano gratuito**: 15 dias de trial + 5 lançamentos/dia após + anúncios
+- **Plano gratuito**: 14 dias de trial + 5 lançamentos/dia após + anúncios
 - **Plano PRO vitalício**: R$ 18,90 (oferta de lançamento, depois R$ 97) — pagamento único, sem anúncios, features avançadas
 
 ---
@@ -253,7 +253,7 @@ meucorre/
 │   ├── hooks/
 │   │   ├── use-deliveries.ts            # Hooks Dexie (corridas, despesas, apps)
 │   │   ├── use-ads.ts                   # Hook anúncios + licença
-│   │   └── use-trial.ts                 # Trial 15 dias + limites free
+│   │   └── use-trial.ts                 # Trial 14 dias + limites free
 │   │
 │   └── lib/
 │       ├── db.ts                        # Dexie schema (IndexedDB local)
@@ -518,9 +518,9 @@ vercel deploy --prod
 2. **Instale como app**: Chrome (Android) → menu ⋮ → "Adicionar à tela inicial" | Safari (iOS) → Compartilhar → "Adicionar à Tela de Início"
 3. O ícone ⚡ MeuCorre aparece junto dos outros apps
 
-### 2. Primeiros 15 dias (Trial grátis)
+### 2. Primeiros 14 dias (Trial grátis)
 
-- Ao abrir pela primeira vez, você tem **15 dias de acesso total** (trial)
+- Ao abrir pela primeira vez, você tem **14 dias de acesso total** (trial)
 - Sem limites de lançamentos
 - Sem anúncios (ou com anúncios se houver parceiros cadastrados)
 

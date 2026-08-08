@@ -4,11 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { db } from "@/lib/db";
 
 // ===== Trial & Free Plan Limits =====
-// 15 dias de trial grátis (acesso total)
+// 14 dias de trial grátis (acesso total)
 // Após trial: 5 lançamentos de corrida por dia
 // Implementado via IndexedDB (client-side enforcement — MVP).
 
-const TRIAL_DAYS = 15;
+const TRIAL_DAYS = 14;
 const FREE_DAILY_LIMIT = 5;
 const STORAGE_KEY_FIRST_USE = "meucorre_first_use";
 const STORAGE_KEY_DISMISSED_PROMO = "meucorre_promo_dismissed_at";
@@ -66,7 +66,25 @@ export function useTrialStatus(isPro: boolean): TrialStatus {
       const daysSinceFirstUse = Math.floor(
         (now.getTime() - firstUseDate.getTime()) / (1000 * 60 * 60 * 24),
       );
-      const trialDaysLeft = Math.max(0, TRIAL_DAYS - daysSinceFirstUse);
+      let trialDaysLeft = Math.max(0, TRIAL_DAYS - daysSinceFirstUse);
+
+      // Verifica se admin estendeu o trial (trialExtendedUntil do servidor)
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (data.user?.trialExtendedUntil) {
+          const extendedDate = new Date(data.user.trialExtendedUntil);
+          const daysUntilExtended = Math.ceil(
+            (extendedDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+          );
+          if (daysUntilExtended > trialDaysLeft) {
+            trialDaysLeft = daysUntilExtended;
+          }
+        }
+      } catch {
+        // offline — usa trialDaysLeft do localStorage
+      }
+
       const isTrialActive = trialDaysLeft > 0;
       const isTrialExpired = !isTrialActive;
 
