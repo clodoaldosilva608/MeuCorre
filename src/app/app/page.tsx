@@ -25,6 +25,7 @@ import { PromoPopup } from "@/components/meucorre/promo-popup";
 import { SharePopup } from "@/components/meucorre/share-popup";
 import { FeedbackPopup } from "@/components/meucorre/feedback-popup";
 import { useAds, activateLicense, checkProStatus } from "@/hooks/use-ads";
+import { db } from "@/lib/db";
 import {
   useTrialStatus,
   shouldShowPromoPopup,
@@ -336,11 +337,18 @@ function HomeContent() {
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
-    // Limpa licença do localStorage
-    localStorage.removeItem("meucorre_license");
-    localStorage.removeItem("meucorre_last_sync");
+    // Limpa TUDO do localStorage (licença, sync, trial, first_use)
+    localStorage.clear();
+    // Limpa o IndexedDB (corridas, despesas, apps) pra não vazar pra outra conta
+    try {
+      await db.open();
+      await db.deliveries.clear();
+      await db.expenses.clear();
+      console.log("[logout] IndexedDB limpo com sucesso");
+    } catch (err) {
+      console.warn("[logout] Erro ao limpar IndexedDB:", err);
+    }
     toast.success("Você saiu da sua conta");
-    // Redireciona pra landing page
     window.location.href = "/";
   };
 
@@ -361,21 +369,24 @@ function HomeContent() {
   };
 
   const confirmDeleteDeliveryAction = async () => {
-    if (confirmDeleteDelivery?.id) {
-      await deleteDelivery(confirmDeleteDelivery.id);
+    // Captura o ID ANTES de fechar o dialog (Radix fecha automático)
+    const idToDelete = confirmDeleteDelivery?.id;
+    setConfirmDeleteDelivery(null);
+    if (idToDelete) {
+      await deleteDelivery(idToDelete);
       toast.success("Corrida excluída");
       syncNow();
     }
-    setConfirmDeleteDelivery(null);
   };
 
   const confirmDeleteExpenseAction = async () => {
-    if (confirmDeleteExpense?.id) {
-      await deleteExpense(confirmDeleteExpense.id);
+    const idToDelete = confirmDeleteExpense?.id;
+    setConfirmDeleteExpense(null);
+    if (idToDelete) {
+      await deleteExpense(idToDelete);
       toast.success("Despesa excluída");
       syncNow();
     }
-    setConfirmDeleteExpense(null);
   };
 
   const confirmClearAction = async () => {

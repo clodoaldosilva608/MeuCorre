@@ -34,6 +34,19 @@ export default function RegisterPage() {
         toast.error(data.error || "Erro ao cadastrar");
         return;
       }
+
+      // Limpa dados locais de qualquer sessão anterior
+      localStorage.clear();
+      try {
+        const { db } = await import("@/lib/db");
+        await db.open();
+        await db.deliveries.clear();
+        await db.expenses.clear();
+        console.log("[register] IndexedDB limpo com sucesso");
+      } catch (err) {
+        console.warn("[register] Erro ao limpar IndexedDB:", err);
+      }
+
       toast.success(`Bem-vindo ao MeuCorre, ${data.user.name.split(" ")[0]}! 🎉`);
       router.push("/app");
       router.refresh();

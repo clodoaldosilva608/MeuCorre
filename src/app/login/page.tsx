@@ -29,6 +29,21 @@ export default function LoginPage() {
         toast.error(data.error || "Erro ao entrar");
         return;
       }
+
+      // Limpa dados locais da sessão anterior (evita misturar contas)
+      localStorage.clear();
+
+      // Limpa IndexedDB (corridas/despesas da conta anterior)
+      try {
+        const { db } = await import("@/lib/db");
+        await db.open();
+        await db.deliveries.clear();
+        await db.expenses.clear();
+        console.log("[login] IndexedDB limpo com sucesso");
+      } catch (err) {
+        console.warn("[login] Erro ao limpar IndexedDB:", err);
+      }
+
       toast.success(`Bem-vindo, ${data.user.name.split(" ")[0]}! 👋`);
       router.push("/app");
       router.refresh();

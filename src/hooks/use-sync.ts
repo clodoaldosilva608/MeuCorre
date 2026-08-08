@@ -97,13 +97,19 @@ export function useSync() {
           }
         }
 
-        currentSince = data.latestUpdatedAt ?? Date.now();
+        const newSince = data.latestUpdatedAt ?? Date.now();
         hasMore = data.hasMore === true;
 
         // Se não veio nada, para
         if (data.deliveries.length === 0 && data.expenses.length === 0) {
           hasMore = false;
         }
+
+        // Safety: se latestUpdatedAt não avançou desde a última iteração, para
+        if (newSince <= currentSince) {
+          hasMore = false;
+        }
+        currentSince = newSince;
       }
 
       setLastSync(currentSince);

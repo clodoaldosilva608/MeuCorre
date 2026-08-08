@@ -28,16 +28,16 @@ export async function GET(req: NextRequest) {
         userId: session.sub,
         updatedAt: { gt: since },
       },
-      orderBy: { updatedAt: "asc" },
-      take: 100, // limita pra evitar timeout
+      orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
+      take: 2000, // sem paginação — retorna tudo de uma vez
     }),
     prisma.syncedExpense.findMany({
       where: {
         userId: session.sub,
         updatedAt: { gt: since },
       },
-      orderBy: { updatedAt: "asc" },
-      take: 100,
+      orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
+      take: 2000,
     }),
   ]);
 
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
       updatedAt: Number(e.updatedAt),
     })),
     latestUpdatedAt: Number(latestUpdatedAt),
-    hasMore: deliveries.length === 100 || expenses.length === 100,
+    hasMore: deliveries.length === 2000 || expenses.length === 2000,
     serverTime: Date.now(),
   });
 }
