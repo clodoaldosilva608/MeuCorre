@@ -130,6 +130,12 @@ export default function LandingPage() {
               >
                 Usar grátis primeiro
               </a>
+              <a
+                href="/login"
+                className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-transparent px-6 py-3 text-sm font-bold text-zinc-300 transition-all hover:border-emerald-500/40 hover:text-emerald-400"
+              >
+                Entrar
+              </a>
             </div>
 
             {/* Trust */}

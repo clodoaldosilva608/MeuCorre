@@ -78,3 +78,4 @@ tool-results/
 # arquivos do z.ai sandbox
 /.zscripts/
 /.env.local
+.env*

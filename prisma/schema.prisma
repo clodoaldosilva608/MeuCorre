@@ -94,3 +94,36 @@ model Feedback {
   @@index([createdAt]) // ordenação por data sem table scan
   @@index([rating])    // filtro por nota
 }
+
+// ===== Usuários entregadores (auth) =====
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  isPro        Boolean  @default(false)
+  licenseKey   String?  @unique // vinculado a uma Subscription quando PRO
+  phone        String?
+  city         String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([email])
+  @@index([isPro])
+}
+
+// ===== Tokens de recuperação de senha =====
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}

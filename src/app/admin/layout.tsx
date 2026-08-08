@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, LogOut, Zap } from "lucide-react";
+import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap } from "lucide-react";
 
 const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/ads", label: "Anúncios", icon: Megaphone },
   { href: "/admin/subscriptions", label: "Assinaturas", icon: CreditCard },
+  { href: "/admin/users", label: "Usuários", icon: Users },
   { href: "/admin/feedback", label: "Feedbacks", icon: MessageSquare },
 ];
 
