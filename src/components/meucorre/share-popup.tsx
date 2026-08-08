@@ -27,7 +27,7 @@ interface SharePopupProps {
   onClose: () => void;
 }
 
-const APP_URL = "https://meucorre-clodoaldosilva608.vercel.app";
+const APP_URL = "https://meucorre.vercel.app";
 const SHARE_TEXT =
   "Ô meu parceiro, achei esse app MeuCorre que ajuda pacas quem é entregador! Controla corrida, despesa, lucro líquido... tudo num lugar só. Bora testar! 🏍️⚡";
 

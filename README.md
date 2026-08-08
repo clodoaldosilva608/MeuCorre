@@ -514,7 +514,7 @@ vercel deploy --prod
 
 ### 1. Acessando o app
 
-1. Abra `https://meucorre-clodoaldosilva608.vercel.app/app` no navegador do celular
+1. Abra `https://meucorre.vercel.app/app` no navegador do celular
 2. **Instale como app**: Chrome (Android) → menu ⋮ → "Adicionar à tela inicial" | Safari (iOS) → Compartilhar → "Adicionar à Tela de Início"
 3. O ícone ⚡ MeuCorre aparece junto dos outros apps
 
@@ -594,7 +594,7 @@ vercel deploy --prod
 
 ### Acesso
 
-- URL: `https://meucorre-clodoaldosilva608.vercel.app/admin/login`
+- URL: `https://meucorre.vercel.app/admin/login`
 - Email: `clodoaldo608@gmail.com`
 - Senha: configurada em `ADMIN_PASSWORD`
 
@@ -708,10 +708,10 @@ vercel deploy --prod
    - Pagamento: Pix + Cartão
 
 2. **Configurar Thank You Page**:
-   - URL: `https://meucorre-clodoaldosilva608.vercel.app/obrigado`
+   - URL: `https://meucorre.vercel.app/obrigado`
 
 3. **Configurar Webhook**:
-   - URL: `https://meucorre-clodoaldosilva608.vercel.app/api/webhooks/kiwify`
+   - URL: `https://meucorre.vercel.app/api/webhooks/kiwify`
    - Eventos: `compra_aprovada` (e `compra_reembolsada`)
    - Token: crie um secret forte, configure em `KIWIFY_WEBHOOK_SECRET`
 
@@ -843,8 +843,8 @@ Feito com 💚 pra quem corre atrás 🏍️📦
 
 ## 🆘 Suporte
 
-- **App**: https://meucorre-clodoaldosilva608.vercel.app
-- **Painel admin**: https://meucorre-clodoaldosilva608.vercel.app/admin/login
+- **App**: https://meucorre.vercel.app
+- **Painel admin**: https://meucorre.vercel.app/admin/login
 - **Repositório**: https://github.com/clodoaldosilva608/MeuCorre
 
 Encontrou um bug? Tem uma sugestão? Abra uma issue no GitHub ou mande feedback pelo app (pop-up de feedback aparece automaticamente após 3 corridas lançadas).
