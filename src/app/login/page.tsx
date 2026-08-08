@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { switchDb } from "@/lib/db";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,23 +31,14 @@ export default function LoginPage() {
         return;
       }
 
-      // Limpa localStorage da sessão anterior
-      localStorage.clear();
-
-      // Limpa IndexedDB em background (não bloqueia o redirect)
-      import("@/lib/db").then(async ({ db }) => {
-        try {
-          await db.open();
-          await db.deliveries.clear();
-          await db.expenses.clear();
-          console.log("[login] IndexedDB limpo com sucesso");
-        } catch (err) {
-          console.warn("[login] Erro ao limpar IndexedDB:", err);
-        }
-      });
+      // Troca para o database isolado do usuário (IndexedDB separado por userId)
+      // Isso garante isolamento total: dados do usuário A nunca aparecem pro usuário B
+      switchDb(data.user.id);
 
       toast.success(`Bem-vindo, ${data.user.name.split(" ")[0]}! 👋`);
-      // Redirect imediato (não espera limpar IndexedDB)
+      // window.location.href força um reload completo da página,
+      // garantindo que TODOS os hooks (useLiveQuery, useSync, etc.)
+      // se re-inicializem com o novo database ativo
       window.location.href = "/app";
     } catch {
       toast.error("Erro de conexão");

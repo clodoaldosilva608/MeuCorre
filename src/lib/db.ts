@@ -1,25 +1,30 @@
 import Dexie, { type Table } from "dexie";
 import type { Delivery, DeliveryApp, Expense } from "./types";
 
-// Banco de dados local do MeuCorre.
-// Padrão Local-First: dados ficam 100% no dispositivo do entregador.
-// Zero servidor, zero latência, funciona offline, privacidade total.
+// ===== Banco de dados local do MeuCorre — ISOLADO POR USUÁRIO =====
+//
+// Cada usuário logado tem seu próprio IndexedDB (ex: MeuCorreDB_user123).
+// Isso garante isolamento total: usuário A nunca vê dados do usuário B,
+// mesmo no mesmo dispositivo/navegador.
+//
+// O `db` exportado é um Proxy que redireciona todas as chamadas para
+// o database ativo atual. Quando o usuário faz login/logout, chamamos
+// `switchDb(userId)` para trocar o database ativo.
+
+const STORAGE_KEY_USER_ID = "meucorre_user_id";
 
 class MeuCorreDB extends Dexie {
   deliveries!: Table<Delivery, number>;
   expenses!: Table<Expense, number>;
   apps!: Table<DeliveryApp, number>;
 
-  constructor() {
-    super("MeuCorreDB");
+  constructor(dbName: string) {
+    super(dbName);
 
-    // v1: somente deliveries
     this.version(1).stores({
       deliveries: "++id, app, value, km, date, timestamp",
     });
 
-    // v2: adiciona expenses, apps (CRUD de apps customizados)
-    // Mantém schema do deliveries igual.
     this.version(2).stores({
       deliveries: "++id, app, value, km, date, timestamp",
       expenses: "++id, category, value, date, timestamp",
@@ -39,8 +44,6 @@ class MeuCorreDB extends Dexie {
 }
 
 // Apps padrão (built-in) com logos oficiais via CDN.
-// Cores aproximadas das marcas.
-// O usuário pode adicionar mais (com upload de imagem) ou ocultar.
 export const DEFAULT_APPS: Omit<DeliveryApp, "id" | "isDefault" | "order">[] = [
   {
     name: "iFood",
@@ -85,19 +88,86 @@ export const DEFAULT_APPS: Omit<DeliveryApp, "id" | "isDefault" | "order">[] = [
   { name: "Independente/Outros", label: "Independente / Outros", color: "#10b981", emoji: "🚀" },
 ];
 
-// Singleton — evita reabrir conexões em HMR do Next.js.
-declare global {
-  var __meucorre_db: MeuCorreDB | undefined;
+// ===== Database ativo (pode ser trocado por switchDb) =====
+
+let activeDb: MeuCorreDB | null = null;
+const dbCache = new Map<string, MeuCorreDB>();
+
+function getDbName(): string {
+  if (typeof window === "undefined") return "MeuCorreDB";
+  const userId = localStorage.getItem(STORAGE_KEY_USER_ID);
+  return userId ? `MeuCorreDB_${userId}` : "MeuCorreDB_anon";
 }
 
-export const db: MeuCorreDB =
-  globalThis.__meucorre_db ?? (globalThis.__meucorre_db = new MeuCorreDB());
+function getOrCreateDb(): MeuCorreDB {
+  const dbName = getDbName();
+  let db = dbCache.get(dbName);
+  if (!db) {
+    db = new MeuCorreDB(dbName);
+    dbCache.set(dbName, db);
+  }
+  return db;
+}
+
+// Troca o database ativo para o do usuário especificado.
+// Chamado no login/logout.
+export function switchDb(userId: string | null) {
+  if (typeof window === "undefined") return;
+  if (userId) {
+    localStorage.setItem(STORAGE_KEY_USER_ID, userId);
+  } else {
+    localStorage.removeItem(STORAGE_KEY_USER_ID);
+  }
+  activeDb = getOrCreateDb();
+}
+
+// Inicializa o database ativo (lazy init no client)
+// SEMPRE verifica se o userId mudou desde a última chamada
+function getActiveDb(): MeuCorreDB {
+  const expectedName = getDbName();
+  if (!activeDb || activeDb.name !== expectedName) {
+    activeDb = getOrCreateDb();
+  }
+  return activeDb;
+}
+
+// Objeto mutável que SEMPRE aponta para o database ativo.
+// Usando getter em vez de Proxy para garantir que Table do Dexie
+// (que são getters na classe) funcionem corretamente.
+export const db = {
+  get deliveries() {
+    return getActiveDb().deliveries;
+  },
+  get expenses() {
+    return getActiveDb().expenses;
+  },
+  get apps() {
+    return getActiveDb().apps;
+  },
+  // Métodos do Dexie que usamos
+  get open() {
+    return getActiveDb().open.bind(getActiveDb());
+  },
+  get close() {
+    return getActiveDb().close.bind(getActiveDb());
+  },
+  get transaction() {
+    return getActiveDb().transaction.bind(getActiveDb());
+  },
+  get name() {
+    return getActiveDb().name;
+  },
+  get on() {
+    return getActiveDb().on.bind(getActiveDb());
+  },
+} as unknown as MeuCorreDB;
 
 // Garante que os apps padrão existam (roda no client, idempotente).
 export async function ensureDefaultApps() {
-  const count = await db.apps.count();
+  const current = getActiveDb();
+  const count = await current.apps.count();
   if (count === 0) {
-    await db.apps.bulkAdd(
+    await current.apps.bulkAdd(
       DEFAULT_APPS.map((a, i) => ({ ...a, isDefault: true, order: i })),
     );
   }

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, ArrowRight, ArrowLeft, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { switchDb } from "@/lib/db";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -35,17 +36,8 @@ export default function RegisterPage() {
         return;
       }
 
-      // Limpa localStorage da sessão anterior
-      localStorage.clear();
-
-      // Limpa IndexedDB em background
-      import("@/lib/db").then(async ({ db }) => {
-        try {
-          await db.open();
-          await db.deliveries.clear();
-          await db.expenses.clear();
-        } catch {}
-      });
+      // Troca para o database isolado do novo usuário
+      switchDb(data.user.id);
 
       toast.success(`Bem-vindo ao MeuCorre, ${data.user.name.split(" ")[0]}! 🎉`);
       window.location.href = "/app";

@@ -25,7 +25,7 @@ import { PromoPopup } from "@/components/meucorre/promo-popup";
 import { SharePopup } from "@/components/meucorre/share-popup";
 import { FeedbackPopup } from "@/components/meucorre/feedback-popup";
 import { useAds, activateLicense, checkProStatus } from "@/hooks/use-ads";
-import { db } from "@/lib/db";
+import { db, switchDb } from "@/lib/db";
 import {
   useTrialStatus,
   shouldShowPromoPopup,
@@ -337,17 +337,15 @@ function HomeContent() {
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
-    // Limpa TUDO do localStorage (licença, sync, trial, first_use)
-    localStorage.clear();
-    // Limpa o IndexedDB (corridas, despesas, apps) pra não vazar pra outra conta
-    try {
-      await db.open();
-      await db.deliveries.clear();
-      await db.expenses.clear();
-      console.log("[logout] IndexedDB limpo com sucesso");
-    } catch (err) {
-      console.warn("[logout] Erro ao limpar IndexedDB:", err);
-    }
+    // Troca para database anônimo (sem userId) — dados do usuário ficam isolados
+    switchDb(null);
+    // Limpa localStorage (licença, sync, trial — mas NÃO apaga o userId que já foi removido por switchDb)
+    localStorage.removeItem("meucorre_license");
+    localStorage.removeItem("meucorre_last_sync");
+    localStorage.removeItem("meucorre_first_use");
+    localStorage.removeItem("meucorre_promo_dismissed_at");
+    localStorage.removeItem("meucorre_share_dismissed_at");
+    localStorage.removeItem("meucorre_feedback_asked_at");
     toast.success("Você saiu da sua conta");
     window.location.href = "/";
   };
