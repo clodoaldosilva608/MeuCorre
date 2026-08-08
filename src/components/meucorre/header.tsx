@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { formatShortDate } from "@/lib/apps";
 import { Download, Trash2, Bell, Grid3x3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,19 @@ export function Header({
   onOpenApps,
   onOpenCapture,
 }: HeaderProps) {
+  // A data só é calculada depois do mount para evitar hydration mismatch.
+  // O servidor roda em UTC e o cliente no fuso local do entregador — quando
+  // passa meia-noite num e não no outro, as datas divergem.
+  // Renderizamos string vazia no SSR e no primeiro render do cliente,
+  // e só preenchemos depois via useEffect.
+  const [dateStr, setDateStr] = useState<string>("");
+  useEffect(() => {
+    // Padrão legítimo de "render-after-mount" para evitar hydration mismatch
+    // de datas (servidor UTC vs cliente no fuso local do entregador).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDateStr(formatShortDate());
+  }, []);
+
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3.5">
@@ -46,8 +60,11 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="hidden rounded-full bg-zinc-800 px-2.5 py-1 text-[11px] font-medium capitalize text-zinc-400 sm:inline">
-            {formatShortDate()}
+          <span
+            suppressHydrationWarning
+            className="hidden min-w-[80px] rounded-full bg-zinc-800 px-2.5 py-1 text-center text-[11px] font-medium capitalize text-zinc-400 sm:inline"
+          >
+            {dateStr || "\u00A0"}
           </span>
 
           {/* Capturar por notificação */}
