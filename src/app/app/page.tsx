@@ -123,19 +123,20 @@ function HomeContent() {
   // 2. Se não tem, busca sessão de usuário logado (login via /login)
   //    Se user.isPro, salva licenseKey no localStorage e marca como PRO
   // Aproveitamos o mesmo fetch para guardar o nome do usuário (saudação).
+  // NÃO chamamos switchDb aqui — o DB ativo é determinado pelo
+  // meucorre_user_id no localStorage (setado pelo login via switchDb).
   useEffect(() => {
     (async () => {
-      // 1. Licença no localStorage (ativação manual via ?license=xxx)
+      // 1. Licença no localStorage (PRO ativado manualmente)
       const localPro = await checkProStatus();
       if (localPro) {
         setIsPro(true);
-        // Mesmo com licença local, tenta buscar o nome do usuário logado
         try {
           const res = await fetch("/api/auth/me");
           const data = await res.json();
           if (data.user?.name) setUserName(data.user.name);
         } catch {
-          // offline ou não logado — sem saudação
+          // offline ou não logado
         }
         return;
       }
@@ -145,7 +146,6 @@ function HomeContent() {
         const data = await res.json();
         if (data.user?.name) setUserName(data.user.name);
         if (data.user?.isPro && data.user.licenseKey) {
-          // Sincroniza licença do servidor pro localStorage
           localStorage.setItem("meucorre_license", data.user.licenseKey);
           setIsPro(true);
         }
