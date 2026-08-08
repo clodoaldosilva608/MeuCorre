@@ -29,7 +29,8 @@ import {
   Lock,
 } from "lucide-react";
 
-const PLAN_PRICE = 97;
+const PLAN_PRICE = 18.9; // Preço de lançamento
+const ORIGINAL_PRICE = 97; // Preço normal (riscado)
 
 const FEATURES = [
   {
@@ -266,13 +267,18 @@ export default function LandingPage() {
                 <p className="text-xs font-semibold uppercase tracking-wider opacity-90">
                   ⚡ MeuCorre PRO
                 </p>
-                <div className="mt-2 flex items-end justify-center gap-1">
-                  <span className="text-5xl font-black">
-                    R$ {PLAN_PRICE}
+                <div className="mt-2 flex items-end justify-center gap-2">
+                  <span className="mb-2 text-lg font-medium text-white/70 line-through">
+                    R$ {ORIGINAL_PRICE},00
                   </span>
-                  <span className="mb-1.5 text-sm opacity-90">,00</span>
+                  <span className="text-5xl font-black">
+                    R$ 18,90
+                  </span>
                 </div>
-                <p className="mt-1 text-xs opacity-90">
+                <p className="mt-2 inline-block rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
+                  🔥 Oferta de lançamento
+                </p>
+                <p className="mt-2 text-xs opacity-90">
                   pagamento único • vitalício • sem mensalidade
                 </p>
               </div>
@@ -313,7 +319,10 @@ export default function LandingPage() {
                   Plano PRO vitalício
                 </p>
                 <p className="mt-1 text-2xl font-black text-emerald-600">
-                  R$ {PLAN_PRICE}
+                  R$ 18,90
+                </p>
+                <p className="mt-0.5 text-[10px] text-zinc-500 line-through">
+                  de R$ {ORIGINAL_PRICE},00
                 </p>
                 <p className="mt-1 text-[10px] text-emerald-700">
                   Sem anúncios + features avançadas
@@ -337,7 +346,7 @@ export default function LandingPage() {
             />
             <FaqItem
               q="Como funciona o plano vitalício?"
-              a="Você paga R$ 97 uma única vez via Pix. Depois de enviar o comprovante e o admin aprovar (em até 24h), você recebe uma chave de licença por email. Digita a chave no app e pronto — PRO para sempre, sem mais cobranças."
+              a="Você paga R$ 18,90 (preço de lançamento, depois volta pra R$ 97) uma única vez via Pix ou cartão na Kiwify. Assim que o pagamento é aprovado (em segundos no Pix), sua licença PRO é gerada automaticamente e você já pode ativar no app. Pronto — PRO para sempre, sem mais cobranças."
             />
             <FaqItem
               q="E se eu trocar de celular?"
@@ -376,8 +385,18 @@ export default function LandingPage() {
                 Admin
               </a>
             </nav>
-            <p className="text-xs text-zinc-600">
-              © {new Date().getFullYear()} MeuCorre • Feito no Brasil 🇧🇷
+          </div>
+
+          <div className="mt-6 border-t border-zinc-800 pt-6 text-center">
+            <p className="text-sm font-semibold text-zinc-300">
+              Criado e desenvolvido por{" "}
+              <span className="font-bold text-emerald-400">
+                Clodoaldo C Silva
+              </span>
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              © {new Date().getFullYear()} MeuCorre • Feito no Brasil 🇧🇷 com
+              💚 pra quem corre atrás
             </p>
           </div>
         </div>
@@ -565,7 +584,7 @@ function CheckoutDialog({
             Quase lá! Seus dados
           </DialogTitle>
           <DialogDescription className="text-xs text-zinc-500">
-            Plano vitalício MeuCorre PRO — R$ {PLAN_PRICE},00
+            Plano vitalício MeuCorre PRO — R$ 18,90 (oferta de lançamento, depois R$ 97)
           </DialogDescription>
         </DialogHeader>
 
@@ -603,11 +622,18 @@ function CheckoutDialog({
           </div>
 
           <div className="rounded-xl bg-emerald-50 p-3 text-center">
-            <p className="text-xs text-zinc-600">Total a pagar</p>
-            <p className="text-2xl font-black text-emerald-600">
-              R$ {PLAN_PRICE},00
+            <p className="text-xs text-zinc-600">
+              Total a pagar — oferta de lançamento
             </p>
-            <p className="text-[10px] text-zinc-500">
+            <div className="mt-1 flex items-end justify-center gap-2">
+              <span className="text-sm font-medium text-zinc-400 line-through">
+                R$ {ORIGINAL_PRICE},00
+              </span>
+              <span className="text-2xl font-black text-emerald-600">
+                R$ 18,90
+              </span>
+            </div>
+            <p className="mt-1 text-[10px] text-zinc-500">
               Pagamento único • Pix ou cartão • vitalício
             </p>
           </div>
@@ -632,7 +658,7 @@ function CheckoutDialog({
             disabled={!form.name || !form.email}
             className="w-full bg-emerald-500 py-4 font-bold text-zinc-950 hover:bg-emerald-400"
           >
-            Pagar R$ {PLAN_PRICE},00 na Kiwify
+            Pagar R$ 18,90 na Kiwify
             <ArrowRight className="ml-1.5 h-4 w-4" />
           </Button>
 

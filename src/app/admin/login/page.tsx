@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, ArrowLeft, Zap } from "lucide-react";
+import { Lock, ArrowLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +21,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -54,6 +55,21 @@ export default function AdminLoginPage() {
         >
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-xs text-zinc-400">
+              <Mail className="h-3 w-3" />
+              Email
+            </Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@meucorre.com"
+              required
+              autoFocus
+              className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5 text-xs text-zinc-400">
               <Lock className="h-3 w-3" />
               Senha
             </Label>
@@ -63,13 +79,12 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              autoFocus
               className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
             />
           </div>
           <Button
             type="submit"
-            disabled={loading || !password}
+            disabled={loading || !email || !password}
             className="w-full bg-emerald-500 font-bold text-zinc-950 hover:bg-emerald-400"
           >
             {loading ? "Entrando..." : "Entrar"}

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,8 @@ export const metadata: Metadata = {
     "ganhos",
     "PWA",
   ],
-  authors: [{ name: "MeuCorre" }],
+  authors: [{ name: "Clodoaldo C Silva" }],
+  creator: "Clodoaldo C Silva",
   applicationName: "MeuCorre",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -52,7 +54,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#10b981",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#10b981" },
+    { media: "(prefers-color-scheme: dark)", color: "#10b981" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -66,36 +71,43 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-zinc-100`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
-        <Toaster
-          position="top-center"
-          theme="dark"
-          toastOptions={{
-            style: {
-              background: "#18181b",
-              border: "1px solid #27272a",
-              color: "#f4f4f5",
-            },
-          }}
-        />
-        {/* Registro do Service Worker para PWA offline */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(() => console.log('[MeuCorre] Service Worker registrado'))
-                    .catch(err => console.warn('[MeuCorre] SW erro:', err));
-                });
-              }
-            `,
-          }}
-        />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster
+            position="top-center"
+            theme="system"
+            toastOptions={{
+              style: {
+                background: "#18181b",
+                border: "1px solid #27272a",
+                color: "#f4f4f5",
+              },
+            }}
+          />
+          {/* Registro do Service Worker para PWA offline */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js')
+                      .then(() => console.log('[MeuCorre] Service Worker registrado'))
+                      .catch(err => console.warn('[MeuCorre] SW erro:', err));
+                  });
+                }
+              `,
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -79,3 +79,14 @@ model AdEvent {
 
   @@index([adId, eventType])
 }
+
+// ===== Feedback dos usuários =====
+
+model Feedback {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5 estrelas
+  message   String
+  userAgent String?
+  page      String?  // em qual página estava (landing, app, etc.)
+  createdAt DateTime @default(now())
+}

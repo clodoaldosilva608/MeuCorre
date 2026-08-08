@@ -1,0 +1,1249 @@
+Seu objetivo é realizar uma auditoria e varredura completa ("Code & Architecture Review") no sistema que criamos até aqui, avaliando sua prontidão para suportar **100.000 usuários ativos**.
+
+Quero que você analise toda a estrutura do projeto sob a ótica de engenharia de software de ponta e me entregue um diagnóstico rigoroso, sem floreios, apontando exatamente onde estão os gargalos, falhas de arquitetura, buracos de segurança e riscos de escalabilidade.
+
+---
+
+### Mapeamento e Análise Requerida
+
+Por favor, faça uma varredura considerando os seguintes pilares:
+
+#### 1. Arquitetura do Sistema e Escalabilidade
+- O modelo atual de arquitetura (Monólito, Microserviços, Serverless, etc.) se sustenta com 100k usuários?
+- Onde estão os **Pontos Únicos de Falha (SPOFs)**?
+- O sistema é *stateless* o suficiente para escalar horizontalmente de forma simples?
+- Quais gargalos de concorrência ou I/O você prevê sob alta carga?
+
+#### 2. Banco de Dados e Camada de Dados
+- Como os modelos e relacionamentos atuais vão se comportar com milhões de registros?
+- Onde faltam índices, e quais queries correm o risco de fazer *table scans* custosos?
+- Há estratégias adequadas de caching (ex: Redis), conexão em pool, réplicas de leitura ou estresse de escrita?
+- Risco de gargalo em transações (*locks* excessivos, condições de corrida)?
+
+#### 3. Código, Padrões e Dívida Técnica
+- O código segue boas práticas de engenharia (SOLID, Clean Architecture, separação clara de responsabilidades)?
+- Existem vazamentos de memória (*memory leaks*), loops ineficientes ou falta de tratamento assíncrono/filas para tarefas pesadas?
+- Qual o nível de acoplamento do código e o quão difícil será dar manutenção no futuro?
+
+#### 4. Segurança e Resiliência
+- Onde estão os riscos de segurança mais críticos (ex: OWASP Top 10, autenticação, autorização/RBAC, vazamento de dados de usuários)?
+- O sistema possui controle de taxa (*rate limiting*) para prevenir ataques DoS ou abuso de APIs?
+- Como o sistema se comporta se um serviço externo/API falhar? Há mecanismos de *circuit breaker*, *retries* ou *degradation* graciosa?
+
+#### 5. Observabilidade e Operação
+- O sistema tem logs, métricas e rastreamento (*tracing*) suficientes para diagnosticarmos um problema rapidamente em produção?
+
+---
+
+### Formato da Resposta Esperada
+
+Estruture sua análise no seguinte formato:
+
+1. **Resumo Executivo:** Diagnóstico geral da saúde do sistema (Nota de 1 a 10 para prontidão de 100k usuários).
+2. **Riscos Críticos (P0 - Blocker):** O que vai quebrar ou derrubar o sistema assim que a carga aumentar (e que precisa ser corrigido imediatamente).
+3. **Riscos Médios (P1 - High):** Ineficiências de código/dados que vão custar caro em infraestrutura ou deixar o sistema lento.
+4. **Melhorias de Arquitetura (P2 - Medium):** Refatorações recomendadas para manter a manutenibilidade a longo prazo.
+5. **Plano de Ação Passo a Passo:** Lista priorizada das primeiras coisas que devemos ajustar no projeto.
+
+Para começar, revise tudo o que construímos até o momento (código, estrutura de pastas, esquemas de banco de dados e fluxos) e apresente seu relatório detalhado.
+
+# AUDITORIA COMPLETA DE ENGENHARIA — (COLOQUE AQUI O NOME DO SEU PROJETO)
+
+Quero que você faça uma **auditoria técnica completa, profunda e independente de todo o sistema do (nome do projeto)**.
+
+Você deve atuar como um **Principal Software Architect + Principal Engineer + especialista em sistemas distribuídos, segurança, bancos de dados, escalabilidade, performance, SRE/DevOps e engenharia de software**, com nível técnico equivalente ao de um pesquisador PhD de uma das melhores universidades do mundo e, principalmente, com experiência prática em sistemas SaaS de grande escala.
+
+Não quero uma revisão superficial de código.
+
+Quero descobrir **o que existe hoje, como o sistema realmente funciona, onde estão as falhas, quais são os riscos ocultos e o que precisa ser feito para que o Painel do Dia possa crescer até 100.000 usuários sem precisarmos reconstruir tudo às pressas.**
+
+---
+
+# ⚠️ REGRA ABSOLUTA: NÃO ALTERE NADA
+
+Nesta primeira etapa você está em:
+
+**MODO SOMENTE LEITURA / AUDITORIA**
+
+NÃO:
+
+* altere arquivos;
+* refatore código;
+* corrija problemas;
+* instale dependências;
+* atualize dependências;
+* execute migrations;
+* altere banco de dados;
+* altere configurações;
+* faça deploy;
+* remova arquivos;
+* crie arquivos;
+* altere variáveis de ambiente;
+* faça qualquer mudança permanente no projeto.
+
+Você pode executar comandos **não destrutivos** para inspeção, análise, testes e diagnóstico.
+
+Primeiro investigue.
+
+Depois entregue o diagnóstico.
+
+**Não faça nenhuma correção nesta etapa, mesmo que encontre um problema crítico.**
+
+---
+
+# OBJETIVO PRINCIPAL
+
+Faça uma varredura completa do (Nome do sistema).
+
+Não analise arquivos isoladamente.
+
+Primeiro entenda o sistema como um organismo inteiro.
+
+Reconstrua como funciona o fluxo:
+
+**usuário → frontend → autenticação → backend → API → regras de negócio → banco → serviços externos → processamento assíncrono → armazenamento → logs → infraestrutura → deploy**
+
+Quero que você descubra como o sistema **realmente funciona hoje**, e não como você imagina que ele deveria funcionar.
+
+Não presuma.
+
+Procure evidências no código.
+
+---
+
+# ETAPA 1 — INVENTÁRIO COMPLETO DO PROJETO
+
+Comece examinando toda a estrutura do repositório.
+
+Identifique:
+
+* estrutura de diretórios;
+* frontend;
+* backend;
+* APIs;
+* banco;
+* migrations;
+* schemas;
+* ORM;
+* autenticação;
+* autorização;
+* serviços;
+* componentes;
+* hooks;
+* middlewares;
+* controllers;
+* services;
+* repositories;
+* funções server-side;
+* jobs;
+* workers;
+* cron jobs;
+* filas;
+* cache;
+* storage;
+* uploads;
+* webhooks;
+* integrações externas;
+* pagamentos;
+* e-mails;
+* WhatsApp;
+* APIs de terceiros;
+* IA;
+* analytics;
+* logs;
+* monitoramento;
+* testes;
+* scripts;
+* CI/CD;
+* Docker;
+* infraestrutura;
+* configurações;
+* variáveis de ambiente;
+* secrets;
+* documentação.
+
+Leia os arquivos de configuração relevantes.
+
+Examine:
+
+* package.json;
+* lockfiles;
+* tsconfig;
+* configurações do framework;
+* configurações de build;
+* configurações de banco;
+* migrations;
+* schemas;
+* arquivos de infraestrutura;
+* Dockerfiles;
+* workflows;
+* arquivos de deployment;
+* configurações de autenticação;
+* configurações de segurança.
+
+Não pule arquivos importantes simplesmente porque o projeto parece grande.
+
+---
+
+# ETAPA 2 — IDENTIFIQUE A STACK
+
+Determine exatamente:
+
+1. Framework frontend
+2. Framework backend
+3. Linguagem
+4. Banco de dados
+5. ORM
+6. Sistema de autenticação
+7. Sistema de autorização
+8. Hosting
+9. CDN
+10. Storage
+11. Cache
+12. Filas
+13. Workers
+14. Serviços externos
+15. Serviços de e-mail
+16. Serviços de WhatsApp
+17. Serviços de pagamento
+18. Serviços de IA
+19. Monitoramento
+20. Analytics
+21. CI/CD
+22. Gerenciamento de secrets
+
+Para cada item, informe:
+
+**Tecnologia → onde aparece no projeto → função → riscos**
+
+---
+
+# ETAPA 3 — MAPEAR A ARQUITETURA ATUAL
+
+Depois de entender o projeto, reconstrua a arquitetura.
+
+Quero saber:
+
+* quais são os principais componentes;
+* como eles conversam;
+* onde entram as requisições;
+* onde são processadas;
+* onde os dados são armazenados;
+* onde acontecem regras de negócio;
+* onde ficam as validações;
+* onde ocorre autenticação;
+* onde ocorre autorização;
+* quais partes dependem de terceiros;
+* quais partes são síncronas;
+* quais são assíncronas;
+* onde estão os pontos únicos de falha.
+
+Crie um diagrama em Mermaid quando possível.
+
+Exemplo conceitual:
+
+Usuário
+↓
+Frontend
+↓
+Auth
+↓
+API
+↓
+Business Logic
+↓
+Database
+
+Mas NÃO copie esse exemplo.
+
+Construa o diagrama de acordo com o sistema real.
+
+---
+
+# ETAPA 4 — ANALISAR A ARQUITETURA DE SOFTWARE
+
+Avalie:
+
+* separação de responsabilidades;
+* coesão;
+* acoplamento;
+* modularidade;
+* organização das regras de negócio;
+* dependências entre módulos;
+* duplicação;
+* abstrações;
+* complexidade;
+* dívida técnica;
+* código morto;
+* código difícil de testar;
+* pontos frágeis;
+* decisões arquiteturais questionáveis.
+
+Não critique simplesmente por preferência estética.
+
+Pergunte:
+
+**“Isso representa um risco real para crescimento, segurança, performance, manutenção ou disponibilidade?”**
+
+---
+
+# ETAPA 5 — BANCO DE DADOS
+
+Faça uma auditoria profunda do banco.
+
+Analise:
+
+* tabelas;
+* relacionamentos;
+* foreign keys;
+* constraints;
+* índices;
+* índices ausentes;
+* índices redundantes;
+* tipos de dados;
+* queries;
+* joins;
+* filtros;
+* ordenações;
+* paginação;
+* N+1 queries;
+* full table scans;
+* queries potencialmente lentas;
+* transações;
+* locks;
+* deadlocks;
+* race conditions;
+* concorrência;
+* consistência;
+* integridade;
+* crescimento das tabelas;
+* retenção;
+* dados históricos;
+* dados duplicados;
+* registros que podem crescer indefinidamente.
+
+Analise também:
+
+**O que acontece quando as tabelas deixam de ter milhares de registros e passam a ter milhões ou centenas de milhões?**
+
+Identifique consultas que provavelmente funcionarão hoje, mas poderão se tornar gargalos em escala.
+
+Avalie também:
+
+* backups;
+* recuperação;
+* disaster recovery;
+* read replicas;
+* particionamento;
+* connection pooling;
+* limites de conexão;
+* migrations;
+* possibilidade de downtime durante migrations.
+
+---
+
+# ETAPA 6 — MULTI-TENANCY
+
+Esta análise é CRÍTICA.
+
+Determine exatamente como o (nome do seu sistema) separa os dados dos diferentes usuários/contas/empresas.
+
+Descubra:
+
+* o que representa um tenant;
+* como o tenant é identificado;
+* como essa identificação chega ao backend;
+* como ela chega às queries;
+* se existe isolamento efetivo;
+* se o frontend participa indevidamente da segurança;
+* se as queries sempre filtram pelo tenant correto;
+* se existem endpoints que podem esquecer o filtro;
+* se IDs são previsíveis;
+* se existe possibilidade de enumeração;
+* se existe acesso administrativo perigoso.
+
+Faça esta pergunta em todas as áreas críticas:
+
+> **“O usuário A consegue acessar, descobrir, alterar ou excluir dados do usuário B?”**
+
+Se houver qualquer possibilidade:
+
+**CLASSIFIQUE COMO CRÍTICO.**
+
+---
+
+# ETAPA 7 — SEGURANÇA
+
+Faça uma auditoria de segurança completa.
+
+Procure especificamente:
+
+* SQL Injection;
+* XSS;
+* CSRF;
+* SSRF;
+* IDOR;
+* broken access control;
+* privilege escalation;
+* authentication bypass;
+* authorization bypass;
+* mass assignment;
+* secrets expostos;
+* tokens expostos;
+* JWT mal configurado;
+* cookies inseguros;
+* CORS;
+* rate limiting;
+* brute force;
+* abuso de API;
+* uploads inseguros;
+* validação insuficiente;
+* sanitização insuficiente;
+* exposição de dados;
+* informações sensíveis em logs;
+* mensagens de erro reveladoras;
+* endpoints administrativos;
+* webhooks sem validação;
+* webhooks sem assinatura;
+* replay attacks;
+* dependências vulneráveis;
+* configurações inseguras de produção.
+
+Procure também falhas que não tenham nomes óbvios de vulnerabilidades.
+
+Pense como um atacante.
+
+---
+
+# ETAPA 8 — AUTENTICAÇÃO E AUTORIZAÇÃO
+
+Analise profundamente:
+
+* login;
+* logout;
+* sessões;
+* tokens;
+* refresh tokens;
+* expiração;
+* recuperação de senha;
+* troca de senha;
+* verificação de e-mail;
+* permissões;
+* roles;
+* acesso administrativo;
+* acesso entre contas;
+* endpoints protegidos;
+* middleware;
+* autorização no backend.
+
+Nunca considere o frontend como camada de segurança.
+
+Determine:
+
+**Quais regras são realmente aplicadas no servidor?**
+
+---
+
+# ETAPA 9 — APIs
+
+Faça um inventário das APIs/endpoints.
+
+Para cada endpoint importante, avalie:
+
+* autenticação;
+* autorização;
+* validação;
+* rate limiting;
+* custo;
+* queries executadas;
+* dependências externas;
+* volume de dados retornado;
+* paginação;
+* tratamento de erros;
+* timeout;
+* retry;
+* idempotência;
+* risco de abuso.
+
+Identifique endpoints que podem virar gargalos em escala.
+
+---
+
+# ETAPA 10 — PERFORMANCE
+
+Analise:
+
+## FRONTEND
+
+* bundle;
+* rendering;
+* componentes pesados;
+* carregamento inicial;
+* lazy loading;
+* imagens;
+* chamadas duplicadas;
+* polling;
+* cache;
+* paginação;
+* requests excessivos;
+* re-renderizações;
+* consumo de memória.
+
+## BACKEND
+
+* endpoints lentos;
+* operações síncronas;
+* queries caras;
+* N+1;
+* processamento desnecessário;
+* chamadas externas;
+* ausência de cache;
+* ausência de filas;
+* processamento dentro da request;
+* concorrência.
+
+Identifique o que pode funcionar com 100 usuários mas começar a degradar com 10.000, 50.000 ou 100.000.
+
+---
+
+# ETAPA 11 — ESCALABILIDADE
+
+Agora pense especificamente em:
+
+**100.000 usuários.**
+
+Não quero uma resposta genérica dizendo “use cache e load balancer”.
+
+Quero descobrir:
+
+**Qual componente quebra primeiro?**
+
+Analise:
+
+* CPU;
+* RAM;
+* banco;
+* conexões;
+* requests;
+* throughput;
+* latência;
+* storage;
+* bandwidth;
+* APIs externas;
+* filas;
+* workers;
+* cache;
+* sessões;
+* logs;
+* processamento assíncrono.
+
+Faça uma análise para:
+
+### 1.000 usuários
+
+### 10.000 usuários
+
+### 50.000 usuários
+
+### 100.000 usuários
+
+Para cada escala, explique quais problemas provavelmente aparecem.
+
+---
+
+# ETAPA 12 — CONCORRÊNCIA E RACE CONDITIONS
+
+Procure situações onde:
+
+* duas requisições podem alterar o mesmo registro;
+* o usuário pode clicar duas vezes;
+* webhook pode chegar duas vezes;
+* jobs podem ser executados novamente;
+* duas operações podem sobrescrever dados;
+* operações podem acontecer fora de ordem.
+
+Avalie:
+
+* locks;
+* transactions;
+* idempotency keys;
+* unique constraints;
+* optimistic locking;
+* pessimistic locking;
+* retries;
+* filas.
+
+Determine onde existem riscos reais.
+
+---
+
+# ETAPA 13 — RESILIÊNCIA
+
+Imagine que cada dependência comece a falhar.
+
+O que acontece se:
+
+* banco ficar lento;
+* banco cair;
+* API externa ficar lenta;
+* API externa ficar indisponível;
+* serviço retornar timeout;
+* webhook falhar;
+* webhook chegar duas vezes;
+* servidor reiniciar;
+* worker morrer;
+* fila crescer;
+* usuário atualizar a página no meio de uma operação;
+* request for repetida;
+* processamento for interrompido no meio.
+
+Analise:
+
+* timeouts;
+* retries;
+* exponential backoff;
+* circuit breaker;
+* idempotência;
+* dead letter queue;
+* graceful degradation;
+* compensating transactions;
+* recuperação.
+
+---
+
+# ETAPA 14 — FILAS E PROCESSAMENTO ASSÍNCRONO
+
+Identifique tudo que deveria ou poderia ser assíncrono.
+
+Pergunte:
+
+**Estamos fazendo dentro da requisição algo que deveria ser feito por worker?**
+
+Procure:
+
+* envio de e-mail;
+* WhatsApp;
+* processamento pesado;
+* IA;
+* geração de arquivos;
+* integrações externas;
+* tarefas demoradas.
+
+Determine o impacto disso em 100.000 usuários.
+
+---
+
+# ETAPA 15 — OBSERVABILIDADE
+
+Determine se conseguimos operar esse sistema profissionalmente.
+
+Analise:
+
+* logs;
+* logs estruturados;
+* métricas;
+* traces;
+* request ID;
+* correlation ID;
+* monitoramento;
+* alertas;
+* monitoramento do banco;
+* monitoramento das filas;
+* monitoramento de APIs externas;
+* error tracking.
+
+Pergunte:
+
+> Se o (nome do seu sistema) parar de funcionar para 5.000 usuários às 3h da manhã, saberíamos?
+
+E:
+
+> Saberíamos qual componente causou o problema?
+
+Se não, explique exatamente o que falta.
+
+---
+
+# ETAPA 16 — CUSTOS
+
+Analise a arquitetura pensando no crescimento.
+
+Identifique o que pode gerar explosão de custo:
+
+* banco;
+* storage;
+* bandwidth;
+* API;
+* IA;
+* WhatsApp;
+* e-mail;
+* logs;
+* observabilidade;
+* servidores;
+* filas;
+* cache;
+* serviços de terceiros.
+
+Não invente preços.
+
+Se não houver dados suficientes para estimar custos, diga:
+
+**“Não há dados suficientes para estimar o custo.”**
+
+Depois liste quais métricas precisariam ser coletadas.
+
+---
+
+# ETAPA 17 — DEPENDÊNCIAS
+
+Analise todos os package files e lockfiles.
+
+Procure:
+
+* dependências vulneráveis;
+* versões antigas;
+* dependências abandonadas;
+* dependências duplicadas;
+* dependências desnecessárias;
+* dependências que aumentam muito o bundle;
+* dependências críticas;
+* vendor lock-in.
+
+Não atualize nada.
+
+Somente diagnostique.
+
+---
+
+# ETAPA 18 — TESTES
+
+Avalie:
+
+* testes unitários;
+* integração;
+* E2E;
+* testes de autenticação;
+* testes de autorização;
+* testes multi-tenant;
+* testes de banco;
+* testes de API;
+* testes de concorrência;
+* testes de carga;
+* testes de falha.
+
+Determine:
+
+**O que está protegido por testes e o que está completamente descoberto?**
+
+Crie:
+
+| Área | Cobertura | Risco | Teste recomendado |
+| ---- | --------- | ----- | ----------------- |
+
+---
+
+# ETAPA 19 — ATAQUE ADVERSARIAL
+
+Agora abandone o pensamento de desenvolvedor.
+
+Pense como:
+
+## HACKER
+
+Como eu atacaria o (nome do seu sistema)?
+
+## USUÁRIO MALICIOSO
+
+Como eu abusaria das regras do sistema?
+
+## USUÁRIO NORMAL
+
+Como eu poderia quebrar alguma coisa sem intenção?
+
+## 100.000 USUÁRIOS
+
+Qual recurso acabaria primeiro?
+
+## BANCO COM 100 MILHÕES DE REGISTROS
+
+Qual query começaria a morrer?
+
+## API EXTERNA FORA DO AR
+
+Qual fluxo quebraria?
+
+## CRESCIMENTO 10X
+
+Qual decisão atual se tornaria um problema?
+
+---
+
+# ETAPA 20 — ENCONTRE OS “BURACOS”
+
+Crie uma seção chamada:
+
+# BURACOS ENCONTRADOS
+
+Liste tudo que estiver:
+
+* faltando;
+* incompleto;
+* frágil;
+* improvisado;
+* perigoso;
+* dependente de configuração manual;
+* dependente de comportamento implícito;
+* difícil de escalar;
+* difícil de monitorar;
+* difícil de recuperar;
+* difícil de testar;
+* vulnerável a erro humano.
+
+Não seja diplomático.
+
+Se uma decisão arquitetural estiver errada, diga claramente:
+
+**“Esta decisão está errada.”**
+
+E explique tecnicamente.
+
+---
+
+# ETAPA 21 — CLASSIFICAÇÃO DOS RISCOS
+
+Classifique cada problema:
+
+🔴 **CRÍTICO**
+Pode causar vazamento, perda de dados, indisponibilidade grave ou inviabilizar crescimento.
+
+🟠 **ALTO**
+Provavelmente causará problemas relevantes conforme o sistema crescer.
+
+🟡 **MÉDIO**
+Não impede crescimento imediato, mas precisa ser resolvido.
+
+🟢 **BAIXO**
+Melhoria recomendada, sem impacto relevante imediato.
+
+Para cada problema, informe:
+
+1. Severidade
+2. Arquivo
+3. Linha, quando possível
+4. Componente
+5. Problema
+6. Evidência encontrada
+7. Por que é perigoso
+8. Impacto
+9. Impacto em 100.000 usuários
+10. Solução recomendada
+11. Prioridade
+12. Complexidade aproximada da correção
+
+---
+
+# ETAPA 22 — O QUE QUEBRA PRIMEIRO?
+
+Imagine que o Painel do Dia cresça rapidamente nos próximos meses.
+
+Diga:
+
+### 1º COMPONENTE A QUEBRAR
+
+Explique.
+
+### 2º COMPONENTE
+
+Explique.
+
+### 3º COMPONENTE
+
+Explique.
+
+### 4º COMPONENTE
+
+Explique.
+
+### 5º COMPONENTE
+
+Explique.
+
+Não quero especulação genérica.
+
+Baseie-se na arquitetura encontrada.
+
+---
+
+# ETAPA 23 — ROADMAP DE ESCALA
+
+Crie um roadmap pragmático.
+
+## AGORA
+
+O que precisa ser corrigido imediatamente?
+
+## ANTES DE 1.000 USUÁRIOS
+
+O que precisa estar preparado?
+
+## ANTES DE 10.000
+
+O que precisa mudar?
+
+## ANTES DE 50.000
+
+O que precisa ser reforçado?
+
+## ANTES DE 100.000
+
+O que precisa existir?
+
+Não faça overengineering.
+
+Não proponha microserviços só porque “escala”.
+
+Se um monólito modular for suficiente, diga isso.
+
+Se PostgreSQL for suficiente, diga isso.
+
+Se Redis não for necessário ainda, diga isso.
+
+Se Kubernetes for desnecessário, diga isso.
+
+Quero a arquitetura **mais simples capaz de suportar o crescimento**, e não a arquitetura mais sofisticada.
+
+---
+
+# ETAPA 24 — ARQUITETURA ALVO
+
+Depois de entender o sistema atual, proponha uma arquitetura futura para o (nome do seu sistema) capaz de suportar aproximadamente:
+
+**100.000 usuários**
+
+Avalie:
+
+* frontend;
+* backend;
+* banco;
+* cache;
+* filas;
+* workers;
+* storage;
+* CDN;
+* load balancer;
+* autenticação;
+* autorização;
+* rate limiting;
+* observabilidade;
+* backups;
+* disaster recovery;
+* deploy;
+* CI/CD.
+
+Para cada componente, diga:
+
+**Precisamos agora?**
+
+ou
+
+**Podemos esperar?**
+
+Isso é importante para evitar gastar dinheiro antes da hora.
+
+---
+
+# ETAPA 25 — O QUE NÃO DEVEMOS FAZER
+
+Crie uma seção:
+
+# OVERENGINEERING A EVITAR
+
+Identifique coisas que seriam prematuras, como:
+
+* microserviços;
+* Kubernetes;
+* arquitetura distribuída;
+* event-driven sem necessidade;
+* infraestrutura cara;
+* abstrações excessivas;
+* refatorações gigantes;
+* tecnologias desnecessárias.
+
+Não quero construir uma empresa de 100 milhões de usuários antes de termos 1.000.
+
+Quero preparação inteligente.
+
+---
+
+# FORMATO FINAL DO RELATÓRIO
+
+Entregue exatamente nesta estrutura:
+
+# 1. RESUMO EXECUTIVO
+
+Máximo 15 linhas.
+
+Comece respondendo:
+
+**“Se eu fosse responsável por colocar 100.000 usuários neste sistema, minha avaliação seria:”**
+
+---
+
+# 2. NOTA DA ENGENHARIA ATUAL
+
+Dê uma nota de 0 a 10:
+
+* Arquitetura
+* Segurança
+* Banco de dados
+* Escalabilidade
+* Performance
+* Resiliência
+* Observabilidade
+* Testes
+* Manutenibilidade
+* DevOps/Deploy
+
+Depois:
+
+## NOTA GERAL
+
+Explique.
+
+---
+
+# 3. ARQUITETURA ATUAL
+
+Explique como o sistema funciona.
+
+---
+
+# 4. DIAGRAMA
+
+Use Mermaid.
+
+---
+
+# 5. TOP 20 PROBLEMAS
+
+Use:
+
+| # | Severidade | Problema | Evidência | Impacto | Prioridade |
+| - | ---------- | -------- | --------- | ------- | ---------- |
+
+---
+
+# 6. BURACOS ENCONTRADOS
+
+Liste os problemas estruturais.
+
+---
+
+# 7. SEGURANÇA
+
+Relatório completo.
+
+---
+
+# 8. MULTI-TENANCY
+
+Relatório completo.
+
+---
+
+# 9. BANCO DE DADOS
+
+Relatório completo.
+
+---
+
+# 10. ESCALABILIDADE
+
+Explique:
+
+**1.000 → 10.000 → 50.000 → 100.000 usuários**
+
+---
+
+# 11. PERFORMANCE
+
+Gargalos encontrados.
+
+---
+
+# 12. RESILIÊNCIA
+
+Como o sistema reage às falhas.
+
+---
+
+# 13. OBSERVABILIDADE
+
+O que conseguimos enxergar e o que não conseguimos.
+
+---
+
+# 14. CUSTOS
+
+Onde os custos podem explodir.
+
+---
+
+# 15. O QUE QUEBRA PRIMEIRO?
+
+Sua previsão técnica.
+
+---
+
+# 16. ROADMAP
+
+### 🔴 AGORA
+
+### 🟠 ANTES DE 1.000
+
+### 🟡 ANTES DE 10.000
+
+### 🔵 ANTES DE 50.000
+
+### 🟢 ANTES DE 100.000
+
+---
+
+# 17. ARQUITETURA RECOMENDADA
+
+Como deveria evoluir.
+
+---
+
+# 18. OVERENGINEERING A EVITAR
+
+O que NÃO devemos construir agora.
+
+---
+
+# 19. PLANO DE AÇÃO
+
+## 🔴 FAZER IMEDIATAMENTE
+
+1.
+2.
+3.
+4.
+5.
+
+## 🟠 FAZER EM SEGUIDA
+
+1.
+2.
+3.
+4.
+5.
+
+## 🟡 PODE ESPERAR
+
+1.
+2.
+3.
+4.
+5.
+
+## 🟢 NÃO MEXER AGORA
+
+1.
+2.
+3.
+4.
+5.
+
+---
+
+# 20. VEREDITO FINAL
+
+Responda objetivamente:
+
+### PERGUNTA 1
+
+**O sistema atual está tecnicamente preparado para crescer 10x?**
+
+Sim / Não / Parcialmente.
+
+Explique.
+
+### PERGUNTA 2
+
+**Ele está preparado para 100.000 usuários?**
+
+Sim / Não / Com modificações.
+
+Explique.
+
+### PERGUNTA 3
+
+**Quais são os 5 maiores riscos para o negócio?**
+
+Liste.
+
+### PERGUNTA 4
+
+**Qual é o menor conjunto de mudanças que precisamos fazer agora para tornar o sistema significativamente mais preparado para crescer?**
+
+Liste em ordem de prioridade.
+
+---
+
+# REGRAS ABSOLUTAS DA AUDITORIA
+
+1. Não faça elogios genéricos.
+2. Não diga “está bom” sem evidência.
+3. Não presuma que algo funciona. Verifique.
+4. Não invente infraestrutura.
+5. Não invente métricas.
+6. Diferencie claramente:
+
+   * fato observado;
+   * inferência;
+   * hipótese;
+   * recomendação.
+7. Sempre que possível, cite arquivo e linha.
+8. Priorize segurança, escala, custo, disponibilidade e manutenção.
+9. Não proponha reescrever tudo sem necessidade.
+10. Não faça alterações no projeto.
+11. Não instale nada.
+12. Não atualize nada.
+13. Não faça migrations.
+14. Não faça deploy.
+15. Não tente me agradar.
+16. Se algo estiver errado, diga que está errado.
+17. Se algo estiver perigoso, diga que está perigoso.
+18. Se algo estiver excelente, explique tecnicamente por quê.
+19. Se não houver dados suficientes para concluir, escreva:
+    **“NÃO FOI POSSÍVEL DETERMINAR COM OS DADOS DISPONÍVEIS.”**
+20. Não confunda “funciona hoje” com “está preparado para escala”.
+
+---
+
+# PERGUNTA FINAL
+
+Depois de toda a auditoria, quero uma resposta extremamente objetiva para:
+
+> **“Se o (nome do seu sistema) crescer 10x nos próximos meses, quais são os 5 problemas que mais podem colocar o negócio em risco?”**
+
+E:
+
+> **“Qual é o menor conjunto de mudanças que devemos fazer AGORA para reduzir drasticamente esses riscos sem fazer overengineering?”**
+
+---
+
+## COMECE AGORA
+
+Primeiro faça a inspeção completa do repositório.
+
+Não altere absolutamente nada.
+
+Não me dê uma resposta superficial baseada apenas na estrutura das pastas.
+
+Estamos seguro o bastante para crescermos de forma esponencial e com segurança virtual?
+
+**Leia o código necessário para compreender como o sistema realmente funciona antes de emitir o diagnóstico.**
+
+Realizar todas as 25 etapas.

@@ -70,6 +70,15 @@ CREATE TABLE IF NOT EXISTS "AdEvent" (
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS "AdEvent_adId_eventType_idx" ON "AdEvent"("adId", "eventType");
+
+CREATE TABLE IF NOT EXISTS "Feedback" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "rating" INTEGER NOT NULL,
+    "message" TEXT NOT NULL,
+    "userAgent" TEXT,
+    "page" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 `;
 
 // Cria o arquivo SQLite vazio se não existir (Prisma precisa do arquivo)

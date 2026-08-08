@@ -38,14 +38,50 @@ class MeuCorreDB extends Dexie {
   }
 }
 
-// Apps padrão (built-in). Cores aproximadas das marcas.
+// Apps padrão (built-in) com logos oficiais via CDN.
+// Cores aproximadas das marcas.
 // O usuário pode adicionar mais (com upload de imagem) ou ocultar.
 export const DEFAULT_APPS: Omit<DeliveryApp, "id" | "isDefault" | "order">[] = [
-  { name: "iFood", label: "iFood", color: "#ef4444", emoji: "🍽️" },
-  { name: "99Food", label: "99Food", color: "#f97316", emoji: "🟠" },
-  { name: "Lalamove", label: "Lalamove", color: "#f59e0b", emoji: "📦" },
-  { name: "Rappi", label: "Rappi", color: "#ec4899", emoji: "🛍️" },
-  { name: "Loggi", label: "Loggi", color: "#3b82f6", emoji: "📮" },
+  {
+    name: "iFood",
+    label: "iFood",
+    color: "#ef4444",
+    emoji: "🍽️",
+    image:
+      "https://purepng.com/public/uploads/large/purepng.com-ifood-logofood-delivery-ifood-brazil-delivery-logo-931523647772rfdqz.png",
+  },
+  {
+    name: "99Food",
+    label: "99Food",
+    color: "#f97316",
+    emoji: "🟠",
+    image:
+      "https://logodownload.org/wp-content/uploads/2020/02/99food-logo.png",
+  },
+  {
+    name: "Lalamove",
+    label: "Lalamove",
+    color: "#f59e0b",
+    emoji: "📦",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Lalamove_logo.svg/512px-Lalamove_logo.svg.png",
+  },
+  {
+    name: "Rappi",
+    label: "Rappi",
+    color: "#ec4899",
+    emoji: "🛍️",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Rappi_logo.svg/512px-Rappi_logo.svg.png",
+  },
+  {
+    name: "Loggi",
+    label: "Loggi",
+    color: "#3b82f6",
+    emoji: "📮",
+    image:
+      "https://loggi.com/static/img/loggi-logo.png",
+  },
   { name: "Independente/Outros", label: "Independente / Outros", color: "#10b981", emoji: "🚀" },
 ];
 

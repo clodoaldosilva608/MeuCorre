@@ -2,8 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { formatShortDate } from "@/lib/apps";
-import { Download, Trash2, Bell, Grid3x3, Crown, Sparkles } from "lucide-react";
+import {
+  Download,
+  Trash2,
+  Bell,
+  Grid3x3,
+  Crown,
+  Sparkles,
+  Share2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +29,7 @@ interface HeaderProps {
   onOpenApps: () => void;
   onOpenCapture: () => void;
   onOpenLicense: () => void;
+  onOpenShare: () => void;
   isPro: boolean;
 }
 
@@ -32,6 +42,7 @@ export function Header({
   onOpenApps,
   onOpenCapture,
   onOpenLicense,
+  onOpenShare,
   isPro,
 }: HeaderProps) {
   // A data só é calculada depois do mount para evitar hydration mismatch.
@@ -48,7 +59,7 @@ export function Header({
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-xl dark:bg-zinc-950/85 dark:border-zinc-800/80">
       <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3.5">
         <div className="flex items-center gap-2">
           <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-base shadow-lg shadow-emerald-500/25">
@@ -67,10 +78,13 @@ export function Header({
         <div className="flex items-center gap-1.5">
           <span
             suppressHydrationWarning
-            className="hidden min-w-[80px] rounded-full bg-zinc-800 px-2.5 py-1 text-center text-[11px] font-medium capitalize text-zinc-400 sm:inline"
+            className="hidden min-w-[80px] rounded-full bg-zinc-800 px-2.5 py-1 text-center text-[11px] font-medium capitalize text-zinc-400 sm:inline dark:bg-zinc-800 dark:text-zinc-400"
           >
             {dateStr || "\u00A0"}
           </span>
+
+          {/* Theme toggle */}
+          <ThemeToggle />
 
           {/* Capturar por notificação */}
           <Button
@@ -92,6 +106,17 @@ export function Header({
             className="h-8 w-8 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
           >
             <Grid3x3 className="h-4 w-4" />
+          </Button>
+
+          {/* Compartilhar */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenShare}
+            aria-label="Compartilhar com amigos"
+            className="h-8 w-8 rounded-full text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
+          >
+            <Share2 className="h-4 w-4" />
           </Button>
 
           {/* PRO badge ou botão de licença */}

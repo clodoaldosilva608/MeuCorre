@@ -253,3 +253,84 @@ Stage Summary:
 - Quando cliente paga na Kiwify: webhook dispara → assinatura aprovada → licença gerada → cliente redirecionado pra /obrigado?order=XXX → vê licença → clica em "Ativar" → PRO liberado no app
 - Pendente: usuário configurar Thank You Page do produto na Kiwify pra URL https://meucorre-clodoaldosilva608.vercel.app/obrigado (pra cliente voltar automaticamente após pagamento)
 - Limitação: SQLite efêmero em /tmp — licenças geradas somem no cold start (~5min sem tráfego). Pra produção estável, migrar pra Postgres (Neon/Supabase). Cliente que já ativou PRO continua PRO (licença fica no localStorage).
+
+---
+Task ID: 6
+Agent: Super Z (main)
+Task: v6 — Preço de lançamento R$ 18,90 (R$ 97 riscado), trial 15 dias + limite 5/dia, theme toggle claro/escuro, pop-ups (promo, share, feedback), logos oficiais dos apps, admin com email+senha fixo, footer com créditos.
+
+Work Log:
+- Schema Prisma atualizado: adicionado model Feedback (rating, message, userAgent, page)
+- db-init.ts atualizado com CREATE TABLE Feedback no SQL inline
+- Admin auth migrado de senha única pra email+senha:
+  - src/lib/admin-auth.ts: valida token decodificando base64(`${ADMIN_EMAIL}:${ADMIN_PASSWORD}:${ts}`)
+  - /api/admin/login POST: valida email (case-insensitive) + senha (case-sensitive)
+  - /admin/login page: 2 inputs (email + senha)
+- Env vars Vercel atualizadas:
+  - ADMIN_EMAIL=clodoaldo608@gmail.com (production + preview + development)
+  - ADMIN_PASSWORD=Silva88677488@# (production + preview)
+  - PLAN_PRICE=18.90 (production)
+- API /api/feedback criada: valida rating 1-5 + message min 3 chars, salva no Prisma
+- Hook use-trial.ts criado com:
+  - useTrialStatus(isPro): calcula 15 dias de trial + 5 lançamentos/dia após, via localStorage + DB
+  - shouldShowPromoPopup: 1x a cada 4h se free
+  - shouldShowSharePopup: 1x por dia
+  - shouldShowFeedbackPopup: após 3+ corridas, 1x por 30 dias
+- 3 pop-ups criados:
+  - promo-popup.tsx: header gradient, "Faltam X dias do teste grátis" ou "Seu período grátis acabou", R$ 97 riscado + R$ 18,90 destaque, lista de 6 features PRO, CTA "Bora ser PRO"
+  - share-popup.tsx: mensagem descontraída ("E aí, beleza? 🤙 Bora ajudar a galera!"), 4 botões (WhatsApp, Facebook, Twitter/X, Telegram), share nativo mobile, copiar link
+  - feedback-popup.tsx: 5 estrelas interativas, textarea 1000 chars, labels descontraídos ("Caramba, top! 🚀"), salva via POST /api/feedback
+- share-icons.tsx: SVGs inline de WhatsApp, Facebook, Twitter/X, Telegram, X, Heart, Share2, Copy, CheckCheck
+- Theme system:
+  - src/components/theme-provider.tsx: wrapper next-themes
+  - src/components/theme-toggle.tsx: botão Sun/Moon com mounted check (evita hydration mismatch)
+  - globals.css atualizado com :root (light) + .dark (zinc-950 + emerald) usando oklch
+  - layout.tsx: ThemeProvider attribute="class" defaultTheme="dark", removido className="dark" fixo do <html>
+- Logos oficiais adicionados aos DEFAULT_APPS em db.ts:
+  - iFood: purepng.com
+  - 99Food: logodownload.org
+  - Lalamove: wikipedia commons svg
+  - Rappi: wikipedia commons svg
+  - Loggi: loggi.com static
+  - Independente: sem imagem (emoji 🚀)
+- App /app atualizado:
+  - Header recebe onOpenShare, isPro
+  - ThemeToggle integrado no header
+  - Botão Share2 integrado no header
+  - 3 useEffect pra mostrar pop-ups automaticamente (promo 800ms após splash, share 6s, feedback 12s)
+  - handleAddDelivery bloqueia se free + trial expirado + atingiu limite diário (mostra promo popup)
+- Landing page atualizada:
+  - PLAN_PRICE=18.9, ORIGINAL_PRICE=97
+  - Card de preço: R$ 97 riscado + R$ 18,90 destaque + badge "🔥 OFERTA DE LANÇAMENTO"
+  - Comparativo: "R$ 18,90 / de R$ 97,00"
+  - Checkout dialog: total a pagar com R$ 97 riscado + R$ 18,90
+  - Botão: "Pagar R$ 18,90 na Kiwify"
+  - FAQ atualizado: explica oferta de lançamento
+  - Footer: "Criado e desenvolvido por Clodoaldo C Silva" + "© 2026 MeuCorre • Feito no Brasil 🇧🇷 com 💚 pra quem corre atrás"
+- metadata: adicionado creator "Clodoaldo C Silva"
+- Deploy Vercel production feito
+- Validação no browser:
+  - Landing 200, App 200
+  - Admin login: email errado 401, senha errada 401, credenciais corretas 200 ({"ok":true})
+  - /api/feedback valida campos
+  - App abriu: pop-up "Faltam 15 dias do seu teste grátis" + "Bora ser PRO — R$ 18,90" ✓
+  - Pop-up "Bora ajudar a galera!" apareceu 6s depois ✓
+  - ThemeToggle: clicou, mudou pra light (className="light"), botão agora diz "Mudar pra tema escuro" ✓
+  - Admin /admin/login com 2 campos, login com clodoaldo608@gmail.com / Silva88677488@# funcionou ✓
+  - Footer: "Criado e desenvolvido por Clodoaldo C Silva" ✓
+  - Preço: R$ 97,00 riscado + R$ 18,90 destaque + badge oferta de lançamento ✓
+- Lint: 0 erros, 0 warnings
+
+Stage Summary:
+- Tudo em produção: https://meucorre-clodoaldosilva608.vercel.app
+- Tudo que o user pediu foi implementado:
+  ✅ Preço R$ 18,90 lançamento (R$ 97 riscado) na landing
+  ✅ Trial 15 dias + 5 lançamentos/dia após (free) no app
+  ✅ Pop-up "Compre PRO" sempre que abre o app (1x a cada 4h se free)
+  ✅ Theme toggle claro/escuro funcional
+  ✅ Pop-up "Compartilhar com amigos" (linguagem descontraída da galera)
+  ✅ Logos oficiais dos apps (iFood, 99Food, Lalamove, Rappi, Loggi)
+  ✅ Pop-up de feedback (estrelas + texto, salva no DB)
+  ✅ Admin login: clodoaldo608@gmail.com / Silva88677488@# (fixo, só muda se user pedir)
+  ✅ Footer: "Criado e desenvolvido por Clodoaldo C Silva"
+- Pendente: usuário atualizar preço na Kiwify de R$ 97 pra R$ 18,90 (senão cliente paga 97 na hora do checkout)

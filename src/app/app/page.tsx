@@ -21,7 +21,19 @@ import { AdBanner } from "@/components/meucorre/ad-banner";
 import { AdCard } from "@/components/meucorre/ad-card";
 import { SponsoredSplash } from "@/components/meucorre/sponsored-splash";
 import { LicenseDialog } from "@/components/meucorre/license-dialog";
+import { PromoPopup } from "@/components/meucorre/promo-popup";
+import { SharePopup } from "@/components/meucorre/share-popup";
+import { FeedbackPopup } from "@/components/meucorre/feedback-popup";
 import { useAds, activateLicense, checkProStatus } from "@/hooks/use-ads";
+import {
+  useTrialStatus,
+  shouldShowPromoPopup,
+  dismissPromoPopup,
+  shouldShowSharePopup,
+  dismissSharePopup,
+  shouldShowFeedbackPopup,
+  markFeedbackAsked,
+} from "@/hooks/use-trial";
 import {
   useDeliveries,
   useExpenses,
@@ -84,6 +96,9 @@ function HomeContent() {
   const [appManagerOpen, setAppManagerOpen] = useState(false);
   const [captureOpen, setCaptureOpen] = useState(false);
   const [licenseOpen, setLicenseOpen] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Anúncios (busca banner_top, card_list e splash; em PRO retorna vazio)
   const { ads: bannerAds, clickAd: clickBanner } = useAds("banner_top");
@@ -94,10 +109,41 @@ function HomeContent() {
   );
   const [isPro, setIsPro] = useState(false);
 
+  // Status de trial/limite (15 dias grátis + 5 lançamentos/dia após)
+  const trialStatus = useTrialStatus(isPro);
+
   // Verifica status PRO ao montar
   useEffect(() => {
     checkProStatus().then(setIsPro);
   }, []);
+
+  // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
+  useEffect(() => {
+    if (!showSplash && shouldShowPromoPopup(isPro)) {
+      const t = setTimeout(() => setPromoOpen(true), 800);
+      return () => clearTimeout(t);
+    }
+  }, [showSplash, isPro]);
+
+  // Pop-up "Compartilhe com amigos" — 1x por dia, 6s após promo
+  useEffect(() => {
+    if (!showSplash && shouldShowSharePopup(isPro) && !promoOpen) {
+      const t = setTimeout(() => setShareOpen(true), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [showSplash, isPro, promoOpen]);
+
+  // Pop-up de feedback — após 3+ corridas, 1x por mês
+  useEffect(() => {
+    if (!showSplash) {
+      shouldShowFeedbackPopup().then((show) => {
+        if (show) {
+          const t = setTimeout(() => setFeedbackOpen(true), 12000);
+          return () => clearTimeout(t);
+        }
+      });
+    }
+  }, [showSplash]);
 
   // Auto-ativação: se veio da página /obrigado com ?license=xxx, ativa automaticamente
   useEffect(() => {
@@ -213,6 +259,20 @@ function HomeContent() {
     km: number;
     notes?: string;
   }) => {
+    // Bloqueia lançamento se free + trial expirado + atingiu limite diário
+    if (
+      !editingDelivery &&
+      !isPro &&
+      trialStatus.isTrialExpired &&
+      !trialStatus.canLaunch
+    ) {
+      toast.error("Limite diário atingido 😢", {
+        description: `Você já fez ${trialStatus.launchesToday} lançamentos hoje. Upgrade PRO pra lançar ilimitado!`,
+      });
+      setPromoOpen(true);
+      return;
+    }
+
     if (editingDelivery?.id) {
       await updateDelivery(editingDelivery.id, data);
       toast.success("Corrida atualizada!", {
@@ -333,6 +393,7 @@ function HomeContent() {
         onOpenApps={() => setAppManagerOpen(true)}
         onOpenCapture={() => setCaptureOpen(true)}
         onOpenLicense={() => setLicenseOpen(true)}
+        onOpenShare={() => setShareOpen(true)}
       />
 
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">
@@ -532,6 +593,36 @@ function HomeContent() {
         onOpenChange={setLicenseOpen}
         isPro={isPro}
         onActivate={handleActivateLicense}
+      />
+
+      {/* Pop-up "Compre PRO" — aparece sempre que abre o app (free) */}
+      <PromoPopup
+        open={promoOpen}
+        onClose={() => {
+          setPromoOpen(false);
+          dismissPromoPopup();
+        }}
+        trialDaysLeft={trialStatus.trialDaysLeft}
+        isTrialExpired={trialStatus.isTrialExpired}
+        remainingLaunches={trialStatus.remainingLaunches}
+      />
+
+      {/* Pop-up "Compartilhe com amigos" */}
+      <SharePopup
+        open={shareOpen}
+        onClose={() => {
+          setShareOpen(false);
+          dismissSharePopup();
+        }}
+      />
+
+      {/* Pop-up de feedback */}
+      <FeedbackPopup
+        open={feedbackOpen}
+        onClose={() => {
+          setFeedbackOpen(false);
+          markFeedbackAsked();
+        }}
       />
 
       {/* Confirmações */}
