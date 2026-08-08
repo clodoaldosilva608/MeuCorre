@@ -1,14 +1,8 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
-node_modules
+/node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
+.yarn/install-state.gz
 
 # testing
 /coverage
@@ -30,25 +24,57 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local env files
+.env
+.env*.local
+.env.development
+.env.production
+.env.test
 
 # vercel
 .vercel
 
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-local-*
-.claude
-.z-ai-config
+
+# prisma
+/prisma/migrations/
+
+# database locais
+/db/
+*.db
+*.db-journal
+
+# logs
 *.log
 dev.log
-dev.out.log
-test
-prompt
-
 server.log
-# Skills directory
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# arquivos temporários
+/tmp/
+.tool-results/
+tool-results/
+
+# pastas de desenvolvimento (não vão pro GitHub)
 /skills/
+/download/
+/worklog.md
+/dev.log
+/server.log
+
+# prisma gerado localmente (regenerado no install)
+/node_modules/.prisma/
+
+# arquivos do z.ai sandbox
+/.zscripts/
+/.env.local

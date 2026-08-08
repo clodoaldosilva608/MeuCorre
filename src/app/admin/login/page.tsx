@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
         return;
       }
       toast.success("Bem-vindo, admin!");
-      router.push("/admin/ads");
+      router.push("/admin/dashboard");
       router.refresh();
     } catch {
       toast.error("Erro de conexão");
