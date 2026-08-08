@@ -112,9 +112,31 @@ function HomeContent() {
   // Status de trial/limite (15 dias grátis + 5 lançamentos/dia após)
   const trialStatus = useTrialStatus(isPro);
 
-  // Verifica status PRO ao montar
+  // Verifica status PRO ao montar:
+  // 1. Tenta licença no localStorage (PRO ativado manualmente)
+  // 2. Se não tem, busca sessão de usuário logado (login via /login)
+  //    Se user.isPro, salva licenseKey no localStorage e marca como PRO
   useEffect(() => {
-    checkProStatus().then(setIsPro);
+    (async () => {
+      // 1. Licença no localStorage (ativação manual via ?license=xxx)
+      const localPro = await checkProStatus();
+      if (localPro) {
+        setIsPro(true);
+        return;
+      }
+      // 2. Sessão de usuário (login via email/senha)
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (data.user?.isPro && data.user.licenseKey) {
+          // Sincroniza licença do servidor pro localStorage
+          localStorage.setItem("meucorre_license", data.user.licenseKey);
+          setIsPro(true);
+        }
+      } catch {
+        // offline ou não logado — continua free
+      }
+    })();
   }, []);
 
   // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
