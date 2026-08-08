@@ -6,10 +6,10 @@ import { applyRateLimit } from "@/lib/rate-limit";
 // POST /api/auth/login
 // Login de usuário entregador
 export async function POST(req: NextRequest) {
-  // Rate limit: 10 tentativas por IP por 15 min
+  // Rate limit: 30 tentativas por IP por 15 min
   const limited = applyRateLimit(req, {
     windowMs: 15 * 60 * 1000,
-    maxRequests: 10,
+    maxRequests: 30,
   });
   if (limited) return limited;
 

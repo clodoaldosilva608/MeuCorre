@@ -5,11 +5,12 @@ import { db } from "@/lib/db";
 
 // ===== Hook de sincronização entre dispositivos =====
 //
-// CORREÇÃO: passa uid diretamente pra push/pull em vez de depender
-// do state (que é assíncrono e causava o bug de não sincronizar).
+// CORREÇÃO v2: após pull, força reload dos dados via evento customizado
+// que o useLiveQuery detecta. Também garante que o DB está aberto antes
+// de fazer put.
 
 const LAST_SYNC_KEY = "meucorre_last_sync";
-const SYNC_INTERVAL_MS = 60 * 1000; // 1 min
+const SYNC_INTERVAL_MS = 60 * 1000;
 
 export type SyncStatus = "idle" | "syncing" | "synced" | "offline" | "not-logged-in" | "error";
 
@@ -17,6 +18,7 @@ export function useSync() {
   const [status, setStatus] = useState<SyncStatus>("idle");
   const [lastSync, setLastSync] = useState<number>(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [syncVersion, setSyncVersion] = useState(0); // incrementa pra forçar reload
   const syncingRef = useRef(false);
   const uidRef = useRef<string | null>(null);
 
@@ -26,63 +28,92 @@ export function useSync() {
     if (stored) setLastSync(Number(stored));
   }, []);
 
-  // Baixa mudanças do servidor — recebe uid diretamente
+  // Baixa mudanças do servidor (com paginação automática)
   const pull = useCallback(async (uid: string, since: number) => {
     if (syncingRef.current) return;
     syncingRef.current = true;
     setStatus("syncing");
 
     try {
-      const res = await fetch(`/api/sync?since=${since}`);
-      if (!res.ok) {
-        setStatus("error");
-        return;
-      }
-      const data = await res.json();
+      await db.open();
 
-      // Importa corridas do servidor pro IndexedDB
-      if (data.deliveries && data.deliveries.length > 0) {
-        for (const d of data.deliveries) {
-          const local = await db.deliveries.get(d.localId);
-          if (d.deleted) {
-            if (local) await db.deliveries.delete(d.localId);
-          } else if (!local || local.timestamp < d.timestamp) {
-            await db.deliveries.put({
-              id: d.localId,
-              app: d.app,
-              value: d.value,
-              km: d.km,
-              date: d.date,
-              timestamp: d.timestamp,
-              notes: d.notes ?? undefined,
-            });
+      let currentSince = since;
+      let hasChanges = false;
+      let hasMore = true;
+
+      // Loop de paginação — busca 100 por vez até não ter mais
+      while (hasMore) {
+        const res = await fetch(`/api/sync?since=${currentSince}`);
+        if (!res.ok) {
+          setStatus("error");
+          return;
+        }
+        const data = await res.json();
+
+        // Importa corridas
+        if (data.deliveries && data.deliveries.length > 0) {
+          for (const d of data.deliveries) {
+            const local = await db.deliveries.get(d.localId);
+            if (d.deleted) {
+              if (local) {
+                await db.deliveries.delete(d.localId);
+                hasChanges = true;
+              }
+            } else if (!local || local.timestamp < d.timestamp) {
+              await db.deliveries.put({
+                id: d.localId,
+                app: d.app,
+                value: d.value,
+                km: d.km,
+                date: d.date,
+                timestamp: d.timestamp,
+                notes: d.notes ?? undefined,
+              });
+              hasChanges = true;
+            }
           }
+        }
+
+        // Importa despesas
+        if (data.expenses && data.expenses.length > 0) {
+          for (const e of data.expenses) {
+            const local = await db.expenses.get(e.localId);
+            if (e.deleted) {
+              if (local) {
+                await db.expenses.delete(e.localId);
+                hasChanges = true;
+              }
+            } else if (!local || local.timestamp < e.timestamp) {
+              await db.expenses.put({
+                id: e.localId,
+                category: e.category,
+                value: e.value,
+                description: e.description ?? undefined,
+                date: e.date,
+                timestamp: e.timestamp,
+              });
+              hasChanges = true;
+            }
+          }
+        }
+
+        currentSince = data.latestUpdatedAt ?? Date.now();
+        hasMore = data.hasMore === true;
+
+        // Se não veio nada, para
+        if (data.deliveries.length === 0 && data.expenses.length === 0) {
+          hasMore = false;
         }
       }
 
-      // Importa despesas do servidor
-      if (data.expenses && data.expenses.length > 0) {
-        for (const e of data.expenses) {
-          const local = await db.expenses.get(e.localId);
-          if (e.deleted) {
-            if (local) await db.expenses.delete(e.localId);
-          } else if (!local || local.timestamp < e.timestamp) {
-            await db.expenses.put({
-              id: e.localId,
-              category: e.category,
-              value: e.value,
-              description: e.description ?? undefined,
-              date: e.date,
-              timestamp: e.timestamp,
-            });
-          }
-        }
-      }
-
-      const newLastSync = data.latestUpdatedAt ?? Date.now();
-      setLastSync(newLastSync);
-      localStorage.setItem(LAST_SYNC_KEY, String(newLastSync));
+      setLastSync(currentSince);
+      localStorage.setItem(LAST_SYNC_KEY, String(currentSince));
       setStatus("synced");
+
+      if (hasChanges) {
+        setSyncVersion((v) => v + 1);
+        window.dispatchEvent(new CustomEvent("meucorre-sync-complete"));
+      }
     } catch {
       setStatus("offline");
     } finally {
@@ -90,13 +121,15 @@ export function useSync() {
     }
   }, []);
 
-  // Envia mudanças locais pro servidor — recebe uid diretamente
+  // Envia mudanças locais pro servidor
   const push = useCallback(async (uid: string) => {
     if (syncingRef.current) return;
     syncingRef.current = true;
     setStatus("syncing");
 
     try {
+      await db.open();
+
       const localDeliveries = await db.deliveries.toArray();
       const deliveriesPayload = localDeliveries.map((d) => ({
         localId: d.id!,
@@ -164,15 +197,17 @@ export function useSync() {
         setIsLoggedIn(true);
 
         // PRIMEIRO faz push (envia dados locais pro servidor)
-        // DEPOIS faz pull (baixa mudanças de outros dispositivos)
         await push(uid);
-        await pull(uid, 0); // since=0 pra pegar tudo
+        // DEPOIS faz pull (baixa mudanças de outros dispositivos)
+        // since=0 pra pegar TUDO (importante pra novo dispositivo)
+        await pull(uid, 0);
       } catch {
         if (!cancelled) setStatus("offline");
       }
     };
 
-    init();
+    // Delay de 2s pra garantir que o componente montou e DB está pronto
+    const timer = setTimeout(init, 2000);
 
     // Polling a cada 60s
     const interval = setInterval(async () => {
@@ -184,6 +219,7 @@ export function useSync() {
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
       clearInterval(interval);
     };
   }, [push, pull]);
@@ -191,7 +227,6 @@ export function useSync() {
   // Sincroniza agora (chamado após lançar/editar/excluir)
   const syncNow = useCallback(async () => {
     if (!uidRef.current) {
-      // Verifica auth se ainda não tem uid
       try {
         const res = await fetch("/api/auth/me");
         const data = await res.json();
@@ -209,5 +244,5 @@ export function useSync() {
     await push(uidRef.current!);
   }, [push]);
 
-  return { status, lastSync, syncNow, isLoggedIn };
+  return { status, lastSync, syncNow, isLoggedIn, syncVersion };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, type Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,52 +17,101 @@ import {
   Zap,
   Check,
   ArrowRight,
-  Bike,
-  Wallet,
-  BarChart3,
-  Bell,
-  ShieldCheck,
   Infinity as InfinityIcon,
   Star,
-  TrendingUp,
-  Route,
   CreditCard,
   Lock,
+  Fuel,
 } from "lucide-react";
 
 const PLAN_PRICE = 18.9; // Preço de lançamento
 const ORIGINAL_PRICE = 97; // Preço normal (riscado)
 
+// ===== Animações framer-motion reutilizáveis =====
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 28 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+};
+
+const fadeIn: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
+};
+
+const containerStagger: Variants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const itemUp: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
+};
+
+// ===== Dados =====
 const FEATURES = [
   {
-    icon: Bike,
-    title: "Lançamento rápido",
-    desc: "Registre cada corrida em segundos com botões de valor rápido",
+    emoji: "⚡",
+    title: "Lançamento em 3 toques",
+    desc: "Registre a corrida mais rápido do que o cliente abre a porta",
   },
   {
-    icon: Wallet,
+    emoji: "💸",
     title: "Controle de despesas",
-    desc: "Combustível, alimentação, manutenção — saiba seu lucro real",
+    desc: "Gasolina, comida, manutenção — você sabe o lucro real, não o faturamento",
   },
   {
-    icon: BarChart3,
-    title: "Gráficos visuais",
-    desc: "Veja seus ganhos por dia, por app e despesas por categoria",
+    emoji: "📊",
+    title: "Gráficos que mostram a verdade",
+    desc: "Por app, por dia, por categoria. Onde entra e onde sai cada real",
   },
   {
-    icon: Bell,
+    emoji: "🔔",
     title: "Captura por notificação",
-    desc: "Cole a notificação do app e o MeuCorre preenche automaticamente",
+    desc: "Cole a notificação do app e o MeuCorre preenche tudo sozinho",
   },
   {
-    icon: Route,
+    emoji: "🛣️",
     title: "Multi-app",
-    desc: "iFood, 99Food, Lalamove e mais — cadastre outros com imagem oficial",
+    desc: "iFood, 99Food, Lalamove e mais — cadastre outros com a logo oficial",
   },
   {
-    icon: ShieldCheck,
+    emoji: "📴",
     title: "100% offline",
-    desc: "Seus dados ficam só no seu celular. Zero servidor, zero rastreio",
+    desc: "Funciona em subsolo, sem sinal, sem Wi-Fi. Seus dados ficam no seu celular",
+  },
+];
+
+const SCREENSHOTS = [
+  {
+    src: "/screenshots/demo-dashboard-tudo.png",
+    intro: "Tudo numa tela só",
+    desc: "Total, lucro líquido, corridas e km — sem precisar abrir 3 apps diferentes.",
+    alt: "Dashboard do MeuCorre mostrando total, lucro líquido, corridas e quilometragem",
+  },
+  {
+    src: "/screenshots/demo-graficos.png",
+    intro: "Gráficos que mostram a verdade",
+    desc: "Veja pra onde seu dinheiro vai: por app, por dia, por categoria de despesa.",
+    alt: "Gráficos de ganhos e despesas no MeuCorre por app e por dia",
+  },
+  {
+    src: "/screenshots/demo-nova-corrida.png",
+    intro: "Lançar corrida em 3 toques",
+    desc: "Rápido como sua entrega. Toca, lança e já volta pra próxima corrida.",
+    alt: "Tela de nova corrida no MeuCorre com botões de valor rápido",
+  },
+  {
+    src: "/screenshots/demo-despesas.png",
+    intro: "Cada real gasto fica registrado",
+    desc: "Sem surpresa no fim do mês. Gasolina, comida, manutenção — tudo lá dentro.",
+    alt: "Tela de despesas no MeuCorre com categorias de gasto",
   },
 ];
 
@@ -78,152 +128,357 @@ const PRO_FEATURES = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white text-zinc-900">
-      {/* ===== HERO (dark) ===== */}
+    <div className="flex min-h-screen flex-col bg-white text-zinc-900">
+      <Header />
+
+      {/* ===== 1. HERO (dark com glow) ===== */}
       <section className="relative overflow-hidden bg-zinc-950 text-zinc-100">
         {/* Glow background */}
         <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[600px] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-3xl" />
 
         <div className="relative mx-auto max-w-5xl px-4 py-16 md:py-24">
-          {/* Logo */}
-          <div className="flex items-center justify-center gap-2">
+          {/* Logo / brand */}
+          <motion.div
+            variants={fadeIn}
+            initial="hidden"
+            animate="show"
+            className="flex items-center justify-center gap-2"
+          >
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-xl shadow-lg shadow-emerald-500/25">
               ⚡
             </div>
             <span className="text-xl font-extrabold tracking-tight text-emerald-400">
               MeuCorre
             </span>
-          </div>
+          </motion.div>
 
           {/* Headline */}
           <div className="mt-10 text-center">
-            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400"
+            >
               <Star className="h-3 w-3 fill-emerald-400" />
               Feito por entregador, para entregador
-            </div>
-            <h1 className="text-balance text-4xl font-black leading-tight tracking-tight md:text-6xl">
+            </motion.div>
+
+            <motion.h1
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="text-balance text-4xl font-black leading-tight tracking-tight md:text-6xl"
+            >
               Pare de perder dinheiro
               <br />
               <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
                 sem saber
               </span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-pretty text-base text-zinc-400 md:text-lg">
+            </motion.h1>
+
+            <motion.p
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="mx-auto mt-5 max-w-xl text-pretty text-base text-zinc-400 md:text-lg"
+            >
               Controle suas corridas, despesas e lucro líquido em um só lugar.
               Funciona com iFood, 99Food, Lalamove e qualquer outro app.
               100% offline.
-            </p>
+            </motion.p>
 
-            {/* CTAs */}
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            {/* CTAs: Comprar, Usar grátis, Entrar */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
+            >
               <a
                 href="#planos"
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-400"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-400 sm:w-auto"
               >
                 <Zap className="h-4 w-4" />
-                Quero o plano vitalício
+                Comprar plano vitalício
                 <ArrowRight className="h-4 w-4" />
               </a>
               <a
                 href="/app"
-                className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-bold text-zinc-100 transition-all hover:border-zinc-600 hover:bg-zinc-800"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-bold text-zinc-100 transition-all hover:border-zinc-600 hover:bg-zinc-800 sm:w-auto"
               >
                 Usar grátis primeiro
               </a>
               <a
                 href="/login"
-                className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-transparent px-6 py-3 text-sm font-bold text-zinc-300 transition-all hover:border-emerald-500/40 hover:text-emerald-400"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-transparent px-6 py-3 text-sm font-bold text-zinc-300 transition-all hover:border-emerald-500/40 hover:text-emerald-400 sm:w-auto"
               >
                 Entrar
               </a>
-            </div>
+            </motion.div>
 
-            {/* Trust */}
             <p className="mt-4 text-xs text-zinc-500">
               Sem cadastro. Sem cartão. Funciona offline.
             </p>
           </div>
 
           {/* Mockup */}
-          <div className="mx-auto mt-12 max-w-xs">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            className="mx-auto mt-12 max-w-xs"
+          >
             <PhoneMockup />
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ===== PROBLEMA (claro) ===== */}
-      <section className="border-b border-zinc-100 bg-zinc-50 py-16 md:py-24">
-        <div className="mx-auto max-w-3xl px-4 text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
-            A dor que todo entregador conhece
-          </h2>
-          <p className="mt-4 text-base text-zinc-600 md:text-lg">
-            Você trabalha com 2, 3, às vezes 4 apps ao mesmo tempo. No fim do
-            dia, precisa abrir cada um pra saber quanto ganhou. Pior: esquece de
-            lançar a gasolina, o almoço, a manutenção — e o &ldquo;lucro&rdquo;
-            que você achou que tinha some no fim do mês.
-          </p>
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            <PainCard
-              emoji="😵‍💫"
-              title="Faturamento fragmentado"
-              desc="iFood aqui, 99 ali, Lalamove acolá — sem visão total"
-            />
-            <PainCard
-              emoji="⛽"
-              title="Despesas invisíveis"
-              desc="Gasolina e manutenção comem o lucro sem você perceber"
-            />
-            <PainCard
-              emoji="📉"
-              title="Sem saber se valeu a pena"
-              desc="Você trabalha 12h e não sabe quanto realmente ganhou"
-            />
-          </div>
+      {/* ===== 2. A DOR REAL (dark) ===== */}
+      <section className="relative overflow-hidden bg-zinc-950 py-16 text-zinc-100 md:py-24">
+        <div className="mx-auto max-w-3xl px-4">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="text-center"
+          >
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400">
+              A realidade de quem corre
+            </p>
+            <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl">
+              Cê trabalha o dia inteiro.
+              <br />
+              <span className="text-zinc-400">Mas sabe quanto ganhou?</span>
+            </h2>
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="mt-10 space-y-6"
+          >
+            <p className="text-center text-lg leading-relaxed text-zinc-300 md:text-xl">
+              Você sai de casa às <strong className="text-white">6h</strong>,
+              volta às <strong className="text-white">22h</strong>. Rodou{" "}
+              <strong className="text-white">150km</strong>, fez{" "}
+              <strong className="text-white">25 corridas</strong>.
+              <br />
+              <span className="font-semibold text-emerald-400">
+                Mas quanto cê ganhou de verdade?
+              </span>
+            </p>
+
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 md:p-6">
+              <p className="text-center text-base leading-relaxed text-zinc-300 md:text-lg">
+                Abre o iFood: <strong className="text-white">R$ 87</strong>. Abre
+                o 99Food: <strong className="text-white">R$ 54</strong>. Abre o
+                Lalamove: <strong className="text-white">R$ 32</strong>.
+              </p>
+              <p className="mt-4 text-center text-base font-semibold text-red-400 md:text-lg">
+                Mas e a gasolina? E o almoço? E a manutenção?
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            variants={containerStagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mt-10 grid gap-3 sm:grid-cols-3"
+          >
+            {[
+              {
+                emoji: "😵‍💫",
+                title: "Faturamento fragmentado",
+                desc: "iFood aqui, 99 ali, Lalamove acolá — sem visão total",
+              },
+              {
+                emoji: "⛽",
+                title: "Despesas invisíveis",
+                desc: "Gasolina e manutenção comem o lucro sem você perceber",
+              },
+              {
+                emoji: "📉",
+                title: "Sem saber se valeu a pena",
+                desc: "Você trabalha 12h e não sabe quanto realmente ganhou",
+              },
+            ].map((p, i) => (
+              <motion.div key={i} variants={itemUp}>
+                <PainCard
+                  emoji={p.emoji}
+                  title={p.title}
+                  desc={p.desc}
+                  variant="dark"
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.p
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mt-10 text-center text-base text-zinc-400 md:text-lg"
+          >
+            No fim do mês, sobra menos do que cê achava.{" "}
+            <span className="font-semibold text-emerald-400">
+              Bora resolver isso.
+            </span>
+          </motion.p>
         </div>
       </section>
 
-      {/* ===== SOLUÇÃO / FEATURES ===== */}
+      {/* ===== 3. A SOLUÇÃO (claro, fundo branco) ===== */}
       <section className="bg-white py-16 md:py-24">
         <div className="mx-auto max-w-5xl px-4">
-          <div className="text-center">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="text-center"
+          >
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600">
+              <Check className="h-3 w-3" />
+              A solução
+            </p>
             <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
-              Tudo que você precisa,
+              MeuCorre junta tudo
               <br />
               <span className="text-emerald-500">numa tela só</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-600">
-              O MeuCorre resolve o problema de forma simples e direta, sem
-              burocracia
+            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-600 md:text-lg">
+              Sem planilha, sem caderninho, sem abrir 3 apps pra somar. O
+              entregador lança, o app calcula, você decide.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {FEATURES.map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <div
-                  key={i}
-                  className="rounded-2xl border border-zinc-200 bg-white p-5 transition-all hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/5"
-                >
-                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-3 text-sm font-bold text-zinc-900">
-                    {f.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-zinc-600">{f.desc}</p>
+          <motion.div
+            variants={containerStagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mt-12 grid gap-4 sm:grid-cols-2 md:grid-cols-3"
+          >
+            {FEATURES.map((f, i) => (
+              <motion.div
+                key={i}
+                variants={itemUp}
+                className="rounded-2xl border border-zinc-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/5"
+              >
+                <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-500/10 text-2xl">
+                  {f.emoji}
                 </div>
+                <h3 className="mt-3 text-sm font-bold text-zinc-900">
+                  {f.title}
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+                  {f.desc}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ===== 4. VEJA COMO FUNCIONA (galeria de screenshots) ===== */}
+      <section className="border-y border-zinc-100 bg-zinc-50 py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-4">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="text-center"
+          >
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600">
+              Veja como funciona
+            </p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+              Não é promessa. É tela.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-600 md:text-lg">
+              Olha como o MeuCorre trabalha por você — do lançamento ao lucro
+              líquido.
+            </p>
+          </motion.div>
+
+          <div className="mt-12 space-y-10 md:space-y-16">
+            {SCREENSHOTS.map((s, i) => {
+              const isLeft = i % 2 === 0; // card alinhado à esquerda nos índices pares
+              return (
+                <motion.div
+                  key={i}
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true, margin: "-60px" }}
+                  className={[
+                    "max-w-md",
+                    isLeft ? "sm:ml-0 sm:mr-auto" : "sm:ml-auto sm:mr-0",
+                  ].join(" ")}
+                >
+                  <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-xl shadow-zinc-900/5">
+                    {/* Texto acima */}
+                    <div
+                      className={[
+                        "border-b border-zinc-100 p-5",
+                        isLeft ? "text-left" : "text-right",
+                      ].join(" ")}
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+                        {String(i + 1).padStart(2, "0")} / {String(SCREENSHOTS.length).padStart(2, "0")}
+                      </p>
+                      <h3 className="mt-1 text-lg font-extrabold text-zinc-900">
+                        {s.intro}
+                      </h3>
+                    </div>
+
+                    {/* Screenshot */}
+                    <div className="bg-zinc-950 p-2">
+                      <img
+                        src={s.src}
+                        alt={s.alt}
+                        loading="lazy"
+                        className="block w-full rounded-xl"
+                      />
+                    </div>
+
+                    {/* Texto abaixo */}
+                    <div
+                      className={[
+                        "border-t border-zinc-100 p-5",
+                        isLeft ? "text-left" : "text-right",
+                      ].join(" ")}
+                    >
+                      <p className="text-sm leading-relaxed text-zinc-600">
+                        {s.desc}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* ===== DEPOIMENTO ===== */}
+      {/* ===== 5. DEPOIMENTO (dark) ===== */}
       <section className="bg-zinc-950 py-16 text-zinc-100 md:py-20">
         <div className="mx-auto max-w-3xl px-4">
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-10">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-10"
+          >
             <div className="flex gap-1 text-emerald-400">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="h-4 w-4 fill-emerald-400" />
@@ -245,28 +500,39 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ===== PLANOS / CTA ===== */}
-      <section id="planos" className="bg-zinc-50 py-16 md:py-24">
+      {/* ===== 6. OFERTA DE LANÇAMENTO (claro, urgência) ===== */}
+      <section id="planos" className="bg-white py-16 md:py-24">
         <div className="mx-auto max-w-4xl px-4">
-          <div className="text-center">
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600">
-              <InfinityIcon className="h-3 w-3" />
-              Pagamento único — usa para sempre
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="text-center"
+          >
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-600">
+              🔥 Oferta de lançamento — só enquanto durar
             </div>
             <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
               Plano vitalício MeuCorre PRO
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base text-zinc-600">
-              Pague uma vez, use para sempre. Sem assinatura mensal, sem
-              renovação, sem surpresa.
+              Pague uma vez, use para sempre. Sem assinatura, sem renovação, sem
+              surpresa no fim do mês.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="mx-auto mt-10 max-w-md">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mx-auto mt-10 max-w-md"
+          >
             <div className="overflow-hidden rounded-3xl border-2 border-emerald-500 bg-white shadow-xl shadow-emerald-500/10">
               {/* Header */}
               <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 text-center text-white">
@@ -277,9 +543,7 @@ export default function LandingPage() {
                   <span className="mb-2 text-lg font-medium text-white/70 line-through">
                     R$ {ORIGINAL_PRICE},00
                   </span>
-                  <span className="text-5xl font-black">
-                    R$ 18,90
-                  </span>
+                  <span className="text-5xl font-black">R$ 18,90</span>
                 </div>
                 <p className="mt-2 inline-block rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
                   🔥 Oferta de lançamento
@@ -309,6 +573,24 @@ export default function LandingPage() {
               </div>
             </div>
 
+            {/* Urgência */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-40px" }}
+              className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-center"
+            >
+              <p className="text-sm font-semibold text-red-700">
+                <Fuel className="mr-1 inline h-4 w-4" />
+                O preço vai voltar pra R$ 97.
+              </p>
+              <p className="mt-1 text-xs text-red-600">
+                Garanta seu acesso vitalício agora por menos de 1 tanque de
+                gasolina.
+              </p>
+            </motion.div>
+
             {/* Comparação */}
             <div className="mt-6 grid grid-cols-2 gap-3 text-center">
               <div className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -335,43 +617,98 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ===== FAQ ===== */}
-      <section className="bg-white py-16 md:py-20">
+      {/* ===== 7. FAQ ===== */}
+      <section className="border-t border-zinc-100 bg-zinc-50 py-16 md:py-20">
         <div className="mx-auto max-w-2xl px-4">
-          <h2 className="text-center text-2xl font-extrabold tracking-tight text-zinc-900 md:text-3xl">
+          <motion.h2
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="text-center text-2xl font-extrabold tracking-tight text-zinc-900 md:text-3xl"
+          >
             Perguntas frequentes
-          </h2>
-          <div className="mt-8 space-y-3">
-            <FaqItem
-              q="O app funciona sem internet?"
-              a="Sim, 100% offline. Seus dados ficam salvos no seu celular (IndexedDB). Você consegue lançar corridas e ver relatórios mesmo em subsolos ou áreas sem sinal."
-            />
-            <FaqItem
-              q="Como funciona o plano vitalício?"
-              a="Você paga R$ 18,90 (preço de lançamento, depois volta pra R$ 97) uma única vez via Pix ou cartão na Kiwify. Assim que o pagamento é aprovado (em segundos no Pix), sua licença PRO é gerada automaticamente e você já pode ativar no app. Pronto — PRO para sempre, sem mais cobranças."
-            />
-            <FaqItem
-              q="E se eu trocar de celular?"
-              a="Sua licença é vinculada ao seu email. É só ativar a mesma chave no novo aparelho. O backup em nuvem (feature PRO) sincroniza seus dados entre dispositivos."
-            />
-            <FaqItem
-              q="Meus dados são vendidos?"
-              a="Nunca. O MeuCorre é Local-First: nenhum dado de corrida sai do seu celular. Nem mesmo o admin consegue ver seus ganhos. Só armazenamos sua licença."
-            />
-            <FaqItem
-              q="Tem como testar antes de pagar?"
-              a="Sim! O app gratuito tem todas as funcionalidades básicas (corridas, despesas, gráficos). Você só paga se quiser remover anúncios e ter as features PRO."
-            />
-          </div>
+          </motion.h2>
+          <motion.div
+            variants={containerStagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mt-8 space-y-3"
+          >
+            {[
+              {
+                q: "O app funciona sem internet?",
+                a: "Sim, 100% offline. Seus dados ficam salvos no seu celular (IndexedDB). Você consegue lançar corridas e ver relatórios mesmo em subsolos ou áreas sem sinal.",
+              },
+              {
+                q: "Como funciona o plano vitalício?",
+                a: "Você paga R$ 18,90 (preço de lançamento, depois volta pra R$ 97) uma única vez via Pix ou cartão na Kiwify. Assim que o pagamento é aprovado (em segundos no Pix), sua licença PRO é gerada automaticamente e você já pode ativar no app. Pronto — PRO para sempre, sem mais cobranças.",
+              },
+              {
+                q: "E se eu trocar de celular?",
+                a: "Sua licença é vinculada ao seu email. É só ativar a mesma chave no novo aparelho. O backup em nuvem (feature PRO) sincroniza seus dados entre dispositivos.",
+              },
+              {
+                q: "Meus dados são vendidos?",
+                a: "Nunca. O MeuCorre é Local-First: nenhum dado de corrida sai do seu celular. Nem mesmo o admin consegue ver seus ganhos. Só armazenamos sua licença.",
+              },
+              {
+                q: "Tem como testar antes de pagar?",
+                a: "Sim! O app gratuito tem todas as funcionalidades básicas (corridas, despesas, gráficos). Você só paga se quiser remover anúncios e ter as features PRO.",
+              },
+            ].map((item, i) => (
+              <motion.div key={i} variants={itemUp}>
+                <FaqItem q={item.q} a={item.a} />
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* ===== FOOTER ===== */}
-      <footer className="bg-zinc-950 py-10 text-zinc-400">
+      {/* ===== 8. CTA FINAL grande ===== */}
+      <section className="relative overflow-hidden bg-zinc-950 py-20 text-center text-zinc-100 md:py-28">
+        {/* Glow */}
+        <div className="pointer-events-none absolute -bottom-32 left-1/2 h-72 w-[600px] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-3xl" />
+
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          className="relative mx-auto max-w-2xl px-4"
+        >
+          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+            <InfinityIcon className="h-3 w-3" />
+            Pagamento único — usa para sempre
+          </div>
+          <h2 className="text-balance text-3xl font-black tracking-tight md:text-5xl">
+            Bora parar de perder dinheiro?
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-pretty text-base text-zinc-400 md:text-lg">
+            Junte seus apps, suas despesas e seu lucro numa tela só. Hoje, por
+            menos de 1 tanque de gasolina.
+          </p>
+          <a
+            href="#planos"
+            className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-8 py-4 text-base font-bold text-zinc-950 shadow-lg shadow-emerald-500/30 transition-all hover:bg-emerald-400 sm:w-auto md:text-lg"
+          >
+            <Zap className="h-5 w-5" />
+            Garanta seu acesso com desconto
+            <ArrowRight className="h-5 w-5" />
+          </a>
+          <p className="mt-4 text-xs text-zinc-500">
+            Pagamento único • Pix ou cartão • Vitalício • Sem mensalidade
+          </p>
+        </motion.div>
+      </section>
+
+      {/* ===== 9. FOOTER (mantém créditos) ===== */}
+      <footer className="mt-auto bg-zinc-950 py-10 text-zinc-400">
         <div className="mx-auto max-w-5xl px-4">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-2">
@@ -413,20 +750,81 @@ export default function LandingPage() {
 
 // ===== Subcomponentes =====
 
+function Header() {
+  return (
+    <header className="sticky top-0 z-50 border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-md">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+        <a href="#" className="flex items-center gap-2">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-base shadow-lg shadow-emerald-500/25">
+            ⚡
+          </div>
+          <span className="text-base font-extrabold tracking-tight text-emerald-400">
+            MeuCorre
+          </span>
+        </a>
+        <nav className="flex items-center gap-1 sm:gap-2">
+          <a
+            href="#planos"
+            className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-emerald-400 sm:inline-block"
+          >
+            Planos
+          </a>
+          <a
+            href="/app"
+            className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-emerald-400 sm:inline-block"
+          >
+            App grátis
+          </a>
+          <a
+            href="/login"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-100 transition-all hover:border-emerald-500/40 hover:text-emerald-400"
+          >
+            Entrar
+          </a>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
 function PainCard({
   emoji,
   title,
   desc,
+  variant = "light",
 }: {
   emoji: string;
   title: string;
   desc: string;
+  variant?: "light" | "dark";
 }) {
+  const isDark = variant === "dark";
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-left">
+    <div
+      className={[
+        "rounded-2xl border p-4 text-left transition-all",
+        isDark
+          ? "border-zinc-800 bg-zinc-900 hover:border-red-500/40"
+          : "border-zinc-200 bg-white hover:border-emerald-300",
+      ].join(" ")}
+    >
       <div className="text-2xl">{emoji}</div>
-      <p className="mt-2 text-sm font-bold text-zinc-900">{title}</p>
-      <p className="mt-0.5 text-xs text-zinc-600">{desc}</p>
+      <p
+        className={[
+          "mt-2 text-sm font-bold",
+          isDark ? "text-zinc-100" : "text-zinc-900",
+        ].join(" ")}
+      >
+        {title}
+      </p>
+      <p
+        className={[
+          "mt-0.5 text-xs",
+          isDark ? "text-zinc-400" : "text-zinc-600",
+        ].join(" ")}
+      >
+        {desc}
+      </p>
     </div>
   );
 }
@@ -438,6 +836,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between p-4 text-left"
+        aria-expanded={open}
       >
         <span className="text-sm font-semibold text-zinc-900">{q}</span>
         <span
@@ -606,7 +1005,8 @@ function CheckoutDialog({
             Quase lá! Seus dados
           </DialogTitle>
           <DialogDescription className="text-xs text-zinc-500">
-            Plano vitalício MeuCorre PRO — R$ 18,90 (oferta de lançamento, depois R$ 97)
+            Plano vitalício MeuCorre PRO — R$ 18,90 (oferta de lançamento, depois
+            R$ 97)
           </DialogDescription>
         </DialogHeader>
 
@@ -680,9 +1080,7 @@ function CheckoutDialog({
             disabled={!form.name || !form.email || redirecting}
             className="w-full bg-emerald-500 py-4 font-bold text-zinc-950 hover:bg-emerald-400"
           >
-            {redirecting
-              ? "Redirecionando..."
-              : `Pagar R$ 18,90 na Kiwify`}
+            {redirecting ? "Redirecionando..." : `Pagar R$ 18,90 na Kiwify`}
             {!redirecting && <ArrowRight className="ml-1.5 h-4 w-4" />}
           </Button>
 
