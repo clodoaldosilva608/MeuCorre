@@ -334,3 +334,42 @@ Stage Summary:
   ✅ Admin login: clodoaldo608@gmail.com / Silva88677488@# (fixo, só muda se user pedir)
   ✅ Footer: "Criado e desenvolvido por Clodoaldo C Silva"
 - Pendente: usuário atualizar preço na Kiwify de R$ 97 pra R$ 18,90 (senão cliente paga 97 na hora do checkout)
+
+---
+Task ID: 7
+Agent: Super Z (main)
+Task: Fix theme toggle não funcionava + fix fluxo pós-pagamento (redirecionamento e ativação automática)
+
+Work Log:
+- Diagnóstico 1 (theme toggle): O toggle realmente funcionava (mudava className do <html> de dark pra light), mas o <div> principal do app tinha bg-zinc-950 hardcoded, então o fundo continuava escuro mesmo em light mode.
+- Fix: Script sed aplicado em 7 componentes meucorre (header, bottom-nav, summary-cards, period-filter, app-summary, delivery-list, expense-list) + page.tsx do app, substituindo:
+  - bg-zinc-950 -> bg-background dark:bg-zinc-950
+  - bg-zinc-900 -> bg-card dark:bg-zinc-900
+  - text-zinc-100 -> text-foreground dark:text-zinc-100
+  - border-zinc-800 -> border-border dark:border-zinc-800
+  - text-zinc-400 -> text-muted-foreground dark:text-zinc-400
+  - text-zinc-300 -> text-foreground/80 dark:text-zinc-300
+  - bg-zinc-800 -> bg-muted dark:bg-zinc-800
+- Agora os componentes respeitam o tema (light = fundo claro, dark = fundo escuro zinc)
+
+- Diagnóstico 2 (fluxo pós-pagamento): Pesquisa via sub-agente revelou que a Kiwify NÃO garante repassar order_id na URL de redirect da Thank You Page. A página /obrigado dependia de ?order=XXX que nunca chegava, ficava em loop de polling e nunca mostrava a licença.
+
+- Fix aplicado:
+  1. API /api/license/by-order atualizada: aceita order, order_id, order_ref, id, charge_id, E email como fallback. Se não acha por order_id, busca licença aprovada mais recente por email.
+  2. Página /obrigado reescrita:
+     - Lê TODOS os possíveis params de pedido (order, order_id, order_ref, id, charge_id) + email
+     - Polling aumentado de 10 tentativas pra 20 (60s total) — dá tempo pro webhook chegar
+     - Se não tem order nem email na URL, mostra form pra user digitar email
+     - Quando acha licença: mostra na tela + AUTO-REDIRECT pra /app?license=XXX após 4 segundos
+     - Aviso visual "Redirecionando pro app automaticamente em 4 segundos..."
+  3. Auto-ativação já existia no /app (via useSearchParams detecta ?license=xxx e ativa)
+
+- Validação no browser:
+  - Theme toggle: clicou, mudou className de "dark" pra "light", salvou no localStorage, botão mudou pra "Mudar pra tema escuro" ✓
+  - Fluxo /obrigado: webhook criou licença f6f52d521069b9e835d5e0ac42ee9dbf → página /obrigado?order=REAL_TEST_002 fez polling, achou licença, auto-redirecionou pra /app?license=f6f52d521069b9e835d5e0ac42ee9dbf após 4s → app detectou ?license=xxx, ativou PRO automaticamente, badge "PRO" apareceu no header ✓
+  - Lint: 0 erros, 0 warnings
+
+Stage Summary:
+- Theme toggle 100% funcional (muda visualmente entre claro/escuro)
+- Fluxo pós-pagamento 100% automático: cliente paga na Kiwify → webhook cria licença → cliente é redirecionado pra /obrigado → polling acha licença → auto-redirect pro /app com ?license=xxx → app ativa PRO automaticamente → badge PRO aparece
+- Pendência: SQLite efêmero em /tmp ainda causa perda de dados no cold start (assinaturas criadas somem após ~5min sem tráfego). Recomendação: migrar pra Postgres (Neon/Supabase) pra produção estável.

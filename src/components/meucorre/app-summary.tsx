@@ -16,7 +16,7 @@ export function AppSummary({ stats }: AppSummaryProps) {
   return (
     <section className="space-y-2.5">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-zinc-300">
+        <h3 className="text-sm font-semibold text-foreground/80 dark:text-zinc-300">
           Resumo por App
         </h3>
         {stats.count > 0 && (
@@ -33,7 +33,7 @@ export function AppSummary({ stats }: AppSummaryProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 p-4 text-center"
+            className="rounded-xl border border-dashed border-border dark:border-zinc-800 bg-card dark:bg-zinc-900/50 p-4 text-center"
           >
             <p className="text-xs italic text-zinc-500">
               Nenhuma corrida registrada neste período.
@@ -48,7 +48,7 @@ export function AppSummary({ stats }: AppSummaryProps) {
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2, delay: idx * 0.04 }}
-                className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900"
+                className="overflow-hidden rounded-xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900"
               >
                 <div className="relative flex items-center justify-between p-3">
                   {/* Barra de proporção (background) */}

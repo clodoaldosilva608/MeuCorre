@@ -31,7 +31,7 @@ export function BottomNav({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-zinc-800 bg-zinc-950/90 backdrop-blur-xl">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border dark:border-zinc-800 bg-background dark:bg-zinc-950/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-md items-center justify-around px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
         {tabs
           .filter((t) => t.show)
@@ -46,7 +46,7 @@ export function BottomNav({
                   "flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 transition-colors",
                   isActive
                     ? "text-emerald-400"
-                    : "text-zinc-500 hover:text-zinc-300",
+                    : "text-zinc-500 hover:text-foreground/80 dark:text-zinc-300",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >

@@ -26,7 +26,7 @@ export function SummaryCards({ stats, periodLabel }: SummaryCardsProps) {
         className="col-span-2 overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-900 p-5 shadow-lg shadow-emerald-500/5"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-400">
             <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
             Ganhos {periodLabel}
           </div>
@@ -56,7 +56,7 @@ export function SummaryCards({ stats, periodLabel }: SummaryCardsProps) {
         }`}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-400">
             <Wallet
               className={`h-3.5 w-3.5 ${
                 profitPositive ? "text-emerald-400" : "text-red-400"
@@ -96,13 +96,13 @@ export function SummaryCards({ stats, periodLabel }: SummaryCardsProps) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, delay: 0.1 }}
-        className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm"
+        className="rounded-2xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900 p-4 shadow-sm"
       >
-        <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400">
-          <Bike className="h-3.5 w-3.5 text-zinc-300" />
+        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-400">
+          <Bike className="h-3.5 w-3.5 text-foreground/80 dark:text-zinc-300" />
           Corridas
         </div>
-        <h3 className="mt-1 text-2xl font-black text-zinc-100">
+        <h3 className="mt-1 text-2xl font-black text-foreground dark:text-zinc-100">
           {stats.count}
         </h3>
         <p className="text-[10px] text-zinc-500">entregas</p>
@@ -113,13 +113,13 @@ export function SummaryCards({ stats, periodLabel }: SummaryCardsProps) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, delay: 0.15 }}
-        className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm"
+        className="rounded-2xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900 p-4 shadow-sm"
       >
-        <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400">
-          <Route className="h-3.5 w-3.5 text-zinc-300" />
+        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-400">
+          <Route className="h-3.5 w-3.5 text-foreground/80 dark:text-zinc-300" />
           Distância
         </div>
-        <h3 className="mt-1 text-2xl font-black text-zinc-100">
+        <h3 className="mt-1 text-2xl font-black text-foreground dark:text-zinc-100">
           {formatKm(stats.km)}
         </h3>
         <p className="text-[10px] text-zinc-500">

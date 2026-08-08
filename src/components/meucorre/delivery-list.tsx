@@ -22,7 +22,7 @@ export function DeliveryList({
   return (
     <section className="space-y-2.5">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-zinc-300">
+        <h3 className="text-sm font-semibold text-foreground/80 dark:text-zinc-300">
           {deliveries.length === 0
             ? "Corridas"
             : `Últimas ${deliveries.length > 10 ? "10" : deliveries.length} corridas`}
@@ -50,7 +50,7 @@ export function DeliveryList({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20, transition: { duration: 0.15 } }}
                   transition={{ duration: 0.2, delay: idx * 0.03 }}
-                  className="group flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-3.5"
+                  className="group flex items-center justify-between rounded-xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900 p-3.5"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     {meta.image ? (
@@ -69,10 +69,10 @@ export function DeliveryList({
                     )}
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate text-sm font-bold text-zinc-100">
+                        <span className="truncate text-sm font-bold text-foreground dark:text-zinc-100">
                           {meta.label}
                         </span>
-                        <span className="shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[9px] font-medium text-zinc-400">
+                        <span className="shrink-0 rounded bg-muted dark:bg-zinc-800 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground dark:text-zinc-400">
                           {formatTime(d.timestamp)}
                         </span>
                       </div>
@@ -93,7 +93,7 @@ export function DeliveryList({
                       <button
                         onClick={() => onEdit(d)}
                         aria-label={`Editar corrida de ${meta.label}`}
-                        className="grid h-6 w-6 place-items-center rounded text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
+                        className="grid h-6 w-6 place-items-center rounded text-zinc-500 hover:bg-muted dark:bg-zinc-800 hover:text-zinc-200"
                       >
                         <Pencil className="h-3 w-3" />
                       </button>
@@ -118,11 +118,11 @@ export function DeliveryList({
 
 function EmptyState() {
   return (
-    <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 p-6 text-center">
-      <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-full bg-zinc-800 text-2xl">
+    <div className="rounded-xl border border-dashed border-border dark:border-zinc-800 bg-card dark:bg-zinc-900/50 p-6 text-center">
+      <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-full bg-muted dark:bg-zinc-800 text-2xl">
         📭
       </div>
-      <p className="text-sm font-medium text-zinc-300">Nenhuma corrida ainda</p>
+      <p className="text-sm font-medium text-foreground/80 dark:text-zinc-300">Nenhuma corrida ainda</p>
       <p className="mt-0.5 text-xs text-zinc-500">
         Toque no botão <span className="text-emerald-400">+</span> abaixo para
         lançar sua primeira corrida

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Zap,
   Check,
@@ -11,7 +14,7 @@ import {
   Loader2,
   AlertCircle,
   Sparkles,
-  ExternalLink,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,16 +34,26 @@ interface SubData {
   };
 }
 
-export default function ObrigadoPage() {
+function ObrigadoContent() {
+  const searchParams = useSearchParams();
   const [data, setData] = useState<SubData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [pollCount, setPollCount] = useState(0);
+  const [emailInput, setEmailInput] = useState("");
+  const [searching, setSearching] = useState(false);
+
+  // Lê todos os possíveis params de pedido que a Kiwify pode enviar
+  const orderId =
+    searchParams?.get("order") ||
+    searchParams?.get("order_id") ||
+    searchParams?.get("order_ref") ||
+    searchParams?.get("id") ||
+    searchParams?.get("charge_id");
+  const emailParam = searchParams?.get("email") || searchParams?.get("customer_email");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const order = params.get("order");
-    if (!order) {
+    if (!orderId && !emailParam) {
       setLoading(false);
       return;
     }
@@ -51,24 +64,33 @@ export default function ObrigadoPage() {
     const poll = async () => {
       attempts++;
       try {
-        const res = await fetch(`/api/license/by-order?order=${order}`);
+        const params = new URLSearchParams();
+        if (orderId) params.set("order", orderId);
+        if (emailParam) params.set("email", emailParam);
+
+        const res = await fetch(`/api/license/by-order?${params.toString()}`);
         const json = (await res.json()) as SubData;
         if (cancelled) return;
         setData(json);
         setPollCount(attempts);
 
-        // Se ainda não tem licença, tenta de novo em 3s (até 10x = 30s)
         if (!json.found || !json.subscription?.licenseKey) {
-          if (attempts < 10) {
+          // Tenta de novo em 3s (até 20x = 60s — dá tempo pro webhook chegar)
+          if (attempts < 20) {
             setTimeout(poll, 3000);
           } else {
             setLoading(false);
           }
         } else {
           setLoading(false);
+          // Auto-redirect pro app com a licença após 4 segundos
+          // (dá tempo do user ver a licença e copiar se quiser)
+          setTimeout(() => {
+            window.location.href = `/app?license=${json.subscription?.licenseKey}`;
+          }, 4000);
         }
       } catch {
-        if (attempts < 10 && !cancelled) {
+        if (attempts < 20 && !cancelled) {
           setTimeout(poll, 3000);
         } else {
           setLoading(false);
@@ -80,7 +102,32 @@ export default function ObrigadoPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [orderId, emailParam]);
+
+  // Busca manual por email (quando não tem order_id na URL)
+  const searchByEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailInput.trim()) return;
+    setSearching(true);
+    try {
+      const res = await fetch(
+        `/api/license/by-order?email=${encodeURIComponent(emailInput.trim())}`,
+      );
+      const json = (await res.json()) as SubData;
+      setData(json);
+      if (json.found && json.subscription?.licenseKey) {
+        toast.success("Licença encontrada! 🎉");
+      } else {
+        toast.error("Ainda não encontramos sua licença", {
+          description: "Aguarde alguns minutos e tente novamente",
+        });
+      }
+    } catch {
+      toast.error("Erro de conexão");
+    } finally {
+      setSearching(false);
+    }
+  };
 
   const copyLicense = () => {
     if (!data?.subscription?.licenseKey) return;
@@ -106,7 +153,7 @@ export default function ObrigadoPage() {
             <p className="mt-1 text-sm text-zinc-500">
               Aguardando a confirmação da Kiwify
               {pollCount > 0 && (
-                <span className="ml-1 text-zinc-600">({pollCount}/10)</span>
+                <span className="ml-1 text-zinc-600">({pollCount}/20)</span>
               )}
             </p>
           </div>
@@ -118,25 +165,62 @@ export default function ObrigadoPage() {
     );
   }
 
-  // Não encontrado / erro
+  // Não encontrado / sem order nem email — pede email
   if (!data?.found || !data?.subscription?.licenseKey) {
     return (
       <div className="grid min-h-screen place-items-center bg-zinc-950 px-4">
         <div className="w-full max-w-sm space-y-6 text-center">
-          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-amber-500/15 text-3xl">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-amber-500/15">
             <AlertCircle className="h-8 w-8 text-amber-400" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-zinc-100">
-              Pagamento em processamento
+              Pagamento confirmado!
             </h1>
             <p className="mt-2 text-sm text-zinc-400">
-              Sua licença será enviada para o email cadastrado assim que o
-              pagamento for confirmado (geralmente em até 5 minutos para Pix,
-              imediato para cartão).
+              Estamos processando sua licença. Digite o email usado na compra
+              pra buscar sua licença:
             </p>
           </div>
-          <div className="space-y-2">
+
+          <form onSubmit={searchByEmail} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5 text-xs text-zinc-400">
+                <Mail className="h-3 w-3" />
+                Email da compra
+              </Label>
+              <Input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="seu@email.com"
+                required
+                className="border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={searching || !emailInput.trim()}
+              className="w-full bg-emerald-500 font-bold text-zinc-950 hover:bg-emerald-400"
+            >
+              {searching ? (
+                <>
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  Buscando...
+                </>
+              ) : (
+                "Buscar minha licença"
+              )}
+            </Button>
+          </form>
+
+          {data && !data.found && (
+            <p className="text-xs text-amber-400">
+              {data.message || "Licença ainda não disponível"}
+            </p>
+          )}
+
+          <div className="space-y-2 pt-2">
             <Link href="/">
               <Button
                 variant="outline"
@@ -151,6 +235,11 @@ export default function ObrigadoPage() {
               </Button>
             </Link>
           </div>
+
+          <p className="text-[11px] text-zinc-600">
+            💡 Seu pagamento foi confirmado pela Kiwify. A licença pode levar
+            até 5 minutos pra ficar disponível enquanto o webhook é processado.
+          </p>
         </div>
       </div>
     );
@@ -198,16 +287,22 @@ export default function ObrigadoPage() {
               ) : (
                 <>
                   <Copy className="mr-1.5 h-4 w-4" />
-                  Copiar licença
+                  Copiar
                 </>
               )}
             </Button>
             <Link href={`/app?license=${sub.licenseKey}`} className="flex-1">
               <Button className="w-full bg-zinc-100 font-bold text-zinc-950 hover:bg-zinc-200">
                 <Zap className="mr-1.5 h-4 w-4" />
-                Ativar agora
+                Ativar e abrir app
               </Button>
             </Link>
+          </div>
+
+          {/* Aviso de auto-redirect */}
+          <div className="mt-3 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-2 text-[11px] text-emerald-300">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Redirecionando pro app automaticamente em 4 segundos...
           </div>
         </div>
 
@@ -219,25 +314,17 @@ export default function ObrigadoPage() {
           <ol className="space-y-1.5 text-xs text-zinc-400">
             <li className="flex gap-2">
               <span className="font-bold text-emerald-400">1.</span>
-              Abra o app do MeuCorre
+              Clique em &ldquo;Ativar e abrir app&rdquo; acima
             </li>
             <li className="flex gap-2">
               <span className="font-bold text-emerald-400">2.</span>
-              Toque no ícone de coroa 👑 no topo
+              Sua licença PRO será ativada automaticamente neste dispositivo
             </li>
             <li className="flex gap-2">
               <span className="font-bold text-emerald-400">3.</span>
-              Cole a licença e toque em &ldquo;Ativar PRO&rdquo;
-            </li>
-            <li className="flex gap-2">
-              <span className="font-bold text-emerald-400">4.</span>
               Pronto! Anúncios somem + features PRO liberadas 🚀
             </li>
           </ol>
-          <p className="mt-3 text-[11px] text-zinc-500">
-            Ou clique em &ldquo;Ativar agora&rdquo; acima pra ativar
-            automaticamente neste dispositivo.
-          </p>
         </div>
 
         {/* Detalhes */}
@@ -275,12 +362,20 @@ export default function ObrigadoPage() {
         </div>
 
         <Link
-          href="/app"
-          className="block pt-2 text-center text-xs text-zinc-500 hover:text-zinc-300"
+          href={`/app?license=${sub.licenseKey}`}
+          className="block pt-2 text-center text-xs text-emerald-400 hover:text-emerald-300"
         >
-          Ir para o app →
+          Ativar agora e ir pro app →
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function ObrigadoPage() {
+  return (
+    <Suspense fallback={null}>
+      <ObrigadoContent />
+    </Suspense>
   );
 }

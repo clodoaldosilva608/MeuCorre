@@ -379,7 +379,7 @@ function HomeContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <SplashScreen visible={showSplash}>
         {/* Splash patrocinado (apenas se não for PRO e houver anúncio do tipo splash) */}
         {!isPro && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
@@ -461,7 +461,7 @@ function HomeContent() {
             {/* Resumo de despesas por categoria */}
             {expensesByCategory.length > 0 && (
               <section className="space-y-2.5">
-                <h3 className="text-sm font-semibold text-zinc-300">
+                <h3 className="text-sm font-semibold text-foreground/80 dark:text-zinc-300">
                   Despesas por categoria
                 </h3>
                 <div className="space-y-2">
@@ -472,7 +472,7 @@ function HomeContent() {
                     return (
                       <div
                         key={e.category}
-                        className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900"
+                        className="overflow-hidden rounded-xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900"
                       >
                         <div className="relative flex items-center justify-between p-3">
                           <div
@@ -630,10 +630,10 @@ function HomeContent() {
         open={!!confirmDeleteDelivery}
         onOpenChange={(o) => !o && setConfirmDeleteDelivery(null)}
       >
-        <AlertDialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
+        <AlertDialogContent className="border-border dark:border-zinc-800 bg-background dark:bg-zinc-950 text-foreground dark:text-zinc-100">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir corrida?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-muted-foreground dark:text-zinc-400">
               {confirmDeleteDelivery && (
                 <>
                   Esta ação vai remover a corrida de{" "}
@@ -653,7 +653,7 @@ function HomeContent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-zinc-800 text-zinc-300 hover:bg-zinc-800">
+            <AlertDialogCancel className="border-border dark:border-zinc-800 text-foreground/80 dark:text-zinc-300 hover:bg-muted dark:bg-zinc-800">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
@@ -670,10 +670,10 @@ function HomeContent() {
         open={!!confirmDeleteExpense}
         onOpenChange={(o) => !o && setConfirmDeleteExpense(null)}
       >
-        <AlertDialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
+        <AlertDialogContent className="border-border dark:border-zinc-800 bg-background dark:bg-zinc-950 text-foreground dark:text-zinc-100">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir despesa?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-muted-foreground dark:text-zinc-400">
               {confirmDeleteExpense && (
                 <>
                   Remover{" "}
@@ -691,7 +691,7 @@ function HomeContent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-zinc-800 text-zinc-300 hover:bg-zinc-800">
+            <AlertDialogCancel className="border-border dark:border-zinc-800 text-foreground/80 dark:text-zinc-300 hover:bg-muted dark:bg-zinc-800">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
@@ -705,10 +705,10 @@ function HomeContent() {
       </AlertDialog>
 
       <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
-        <AlertDialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
+        <AlertDialogContent className="border-border dark:border-zinc-800 bg-background dark:bg-zinc-950 text-foreground dark:text-zinc-100">
           <AlertDialogHeader>
             <AlertDialogTitle>Apagar TODOS os dados?</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-muted-foreground dark:text-zinc-400">
               Você tem{" "}
               <strong className="text-zinc-200">{allDeliveries.length}</strong>{" "}
               corridas e{" "}
@@ -718,7 +718,7 @@ function HomeContent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-zinc-800 text-zinc-300 hover:bg-zinc-800">
+            <AlertDialogCancel className="border-border dark:border-zinc-800 text-foreground/80 dark:text-zinc-300 hover:bg-muted dark:bg-zinc-800">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction

@@ -59,7 +59,7 @@ export function Header({
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur-xl dark:bg-zinc-950/85 dark:border-zinc-800/80">
+    <header className="sticky top-0 z-40 border-b border-border dark:border-zinc-800/80 bg-background dark:bg-zinc-950/85 backdrop-blur-xl dark:bg-background dark:bg-zinc-950/85 dark:border-border dark:border-zinc-800/80">
       <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3.5">
         <div className="flex items-center gap-2">
           <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-base shadow-lg shadow-emerald-500/25">
@@ -78,7 +78,7 @@ export function Header({
         <div className="flex items-center gap-1.5">
           <span
             suppressHydrationWarning
-            className="hidden min-w-[80px] rounded-full bg-zinc-800 px-2.5 py-1 text-center text-[11px] font-medium capitalize text-zinc-400 sm:inline dark:bg-zinc-800 dark:text-zinc-400"
+            className="hidden min-w-[80px] rounded-full bg-muted dark:bg-zinc-800 px-2.5 py-1 text-center text-[11px] font-medium capitalize text-muted-foreground dark:text-zinc-400 sm:inline dark:bg-muted dark:bg-zinc-800 dark:text-muted-foreground dark:text-zinc-400"
           >
             {dateStr || "\u00A0"}
           </span>
@@ -92,7 +92,7 @@ export function Header({
             size="icon"
             onClick={onOpenCapture}
             aria-label="Capturar por notificação"
-            className="h-8 w-8 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+            className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-muted dark:bg-zinc-800 hover:text-emerald-400"
           >
             <Bell className="h-4 w-4" />
           </Button>
@@ -103,7 +103,7 @@ export function Header({
             size="icon"
             onClick={onOpenApps}
             aria-label="Gerenciar apps de entrega"
-            className="h-8 w-8 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+            className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-muted dark:bg-zinc-800 hover:text-emerald-400"
           >
             <Grid3x3 className="h-4 w-4" />
           </Button>
@@ -114,7 +114,7 @@ export function Header({
             size="icon"
             onClick={onOpenShare}
             aria-label="Compartilhar com amigos"
-            className="h-8 w-8 rounded-full text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
+            className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
           >
             <Share2 className="h-4 w-4" />
           </Button>
@@ -131,7 +131,7 @@ export function Header({
               size="icon"
               onClick={onOpenLicense}
               aria-label="Ativar licença PRO"
-              className="h-8 w-8 rounded-full text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
+              className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
             >
               <Crown className="h-4 w-4" />
             </Button>
@@ -143,7 +143,7 @@ export function Header({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-muted dark:bg-zinc-800 hover:text-foreground dark:text-zinc-100"
                 aria-label="Menu de ações"
               >
                 <Download className="h-4 w-4" />
@@ -151,27 +151,27 @@ export function Header({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-48 border-zinc-800 bg-zinc-900 text-zinc-200"
+              className="w-48 border-border dark:border-zinc-800 bg-card dark:bg-zinc-900 text-zinc-200"
             >
               <DropdownMenuLabel className="text-xs text-zinc-500">
                 Backup / Dados
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-zinc-800" />
+              <DropdownMenuSeparator className="bg-muted dark:bg-zinc-800" />
               <DropdownMenuItem
                 onClick={onExportJSON}
-                className="cursor-pointer focus:bg-zinc-800 focus:text-zinc-100"
+                className="cursor-pointer focus:bg-muted dark:bg-zinc-800 focus:text-foreground dark:text-zinc-100"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Exportar JSON
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={onExportCSV}
-                className="cursor-pointer focus:bg-zinc-800 focus:text-zinc-100"
+                className="cursor-pointer focus:bg-muted dark:bg-zinc-800 focus:text-foreground dark:text-zinc-100"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Exportar CSV
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-zinc-800" />
+              <DropdownMenuSeparator className="bg-muted dark:bg-zinc-800" />
               <DropdownMenuItem
                 onClick={onClearAll}
                 className="cursor-pointer text-red-400 focus:bg-red-950/40 focus:text-red-300"
