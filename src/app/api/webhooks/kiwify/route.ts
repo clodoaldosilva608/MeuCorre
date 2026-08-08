@@ -49,27 +49,32 @@ function isValidStatus(s?: string): s is "paid" | "waiting_payment" | "refunded"
   return !!s && ["paid", "waiting_payment", "refunded", "rejected", "chargedback"].includes(s);
 }
 
-// Extrai o token de validação — pode vir no header X-Kiwify-Signature ou na query ?token=
+// Extrai o token APENAS do header X-Kiwify-Signature (nunca da query string).
+// Tokens na query string vazam em logs de proxy/CDN e são vulneráveis a CSRF.
 function extractToken(req: NextRequest): string | null {
-  const fromHeader = req.headers.get("x-kiwify-signature");
-  if (fromHeader) return fromHeader;
-  const fromQuery = new URL(req.url).searchParams.get("token");
-  if (fromQuery) return fromQuery;
-  return null;
+  return req.headers.get("x-kiwify-signature");
+}
+
+// Comparação constante-tempo pra evitar timing attacks.
+function safeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
 }
 
 export async function POST(req: NextRequest) {
-  // ===== 1. Validar token =====
+  // ===== 1. Validar token (timing-safe + header only) =====
   const expectedToken = process.env.KIWIFY_WEBHOOK_SECRET;
   if (!expectedToken) {
     console.error("[kiwify-webhook] KIWIFY_WEBHOOK_SECRET não configurado");
     return NextResponse.json(
-      { error: "Webhook Kiwify não configurado — adicione KIWIFY_WEBHOOK_SECRET nas env vars" },
+      { error: "Webhook não configurado" },
       { status: 503 },
     );
   }
   const receivedToken = extractToken(req);
-  if (!receivedToken || receivedToken !== expectedToken) {
+  if (!receivedToken || !safeEqual(receivedToken, expectedToken)) {
     console.warn("[kiwify-webhook] Token inválido ou ausente");
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }

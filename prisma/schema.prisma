@@ -45,7 +45,7 @@ model Subscription {
   buyerCity    String?
   // Pagamento
   pixKey       String   @default("meucorre@pix.com")
-  amount       Float    @default(97.0) // R$ 97 vitalício
+  amount       Decimal  @default(18.90) @db.Decimal(10, 2) // R$ — Decimal evita perda de precisão
   paymentMethod String  @default("pix_manual") // pix_manual | kiwify
   // Comprovante (apenas pix_manual)
   receiptUrl   String?
@@ -90,4 +90,7 @@ model Feedback {
   userAgent String?
   page      String?  // em qual página estava (landing, app, etc.)
   createdAt DateTime @default(now())
+
+  @@index([createdAt]) // ordenação por data sem table scan
+  @@index([rating])    // filtro por nota
 }

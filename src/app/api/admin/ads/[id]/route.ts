@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { invalidateAdsCache } from "@/app/api/ads/route";
 
 // PATCH /api/admin/ads/[id] — atualiza anúncio
 export async function PATCH(
@@ -43,6 +44,7 @@ export async function PATCH(
 
   try {
     const ad = await prisma.ad.update({ where: { id }, data });
+    invalidateAdsCache();
     return NextResponse.json({ ad });
   } catch {
     return NextResponse.json({ error: "Anúncio não encontrado" }, { status: 404 });
@@ -61,6 +63,7 @@ export async function DELETE(
   const { id } = await params;
   try {
     await prisma.ad.delete({ where: { id } });
+    invalidateAdsCache();
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Anúncio não encontrado" }, { status: 404 });

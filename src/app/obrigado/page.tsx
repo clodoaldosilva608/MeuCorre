@@ -340,7 +340,7 @@ function ObrigadoContent() {
           <div className="flex justify-between py-1">
             <span className="text-zinc-500">Valor</span>
             <span className="font-bold text-emerald-400">
-              R$ {sub.amount.toFixed(2).replace(".", ",")}
+              R$ {Number(sub.amount).toFixed(2).replace(".", ",")}
             </span>
           </div>
           <div className="flex justify-between py-1">

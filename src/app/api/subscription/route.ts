@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 // ===== Tipos =====
 
@@ -13,10 +14,23 @@ interface CreateSubscriptionBody {
 
 // POST /api/subscription
 // Cria uma nova compra do plano vitalício (status: pending).
-// O cliente recebe a chave Pix para pagar e o ID para acompanhar.
+// Rate limit: 3 criações por IP por hora (anti-spam)
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as CreateSubscriptionBody;
+  // Rate limit
+  const limited = applyRateLimit(req, {
+    windowMs: 60 * 60 * 1000, // 1h
+    maxRequests: 3,
+  });
+  if (limited) return limited;
 
+  let body: CreateSubscriptionBody;
+  try {
+    body = (await req.json()) as CreateSubscriptionBody;
+  } catch {
+    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  // Validação básica
   if (!body.buyerName?.trim() || !body.buyerEmail?.trim()) {
     return NextResponse.json(
       { error: "Nome e email são obrigatórios" },
@@ -24,8 +38,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Validação de email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const email = body.buyerEmail.trim().toLowerCase();
-  const name = body.buyerName.trim();
+  if (!emailRegex.test(email) || email.length > 254) {
+    return NextResponse.json(
+      { error: "Email inválido" },
+      { status: 400 },
+    );
+  }
+
+  const name = body.buyerName.trim().slice(0, 100);
+  if (name.length < 2) {
+    return NextResponse.json(
+      { error: "Nome muito curto" },
+      { status: 400 },
+    );
+  }
 
   // Verifica se já existe uma compra aprovada para este email (não deixa pagar 2x)
   const existing = await prisma.subscription.findFirst({

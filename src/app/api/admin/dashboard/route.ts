@@ -39,7 +39,10 @@ export async function GET() {
 
   const totalViews = ads.reduce((s, a) => s + a.views, 0);
   const totalClicks = ads.reduce((s, a) => s + a.clicks, 0);
-  const totalRevenue = approvedSubs.reduce((s, sub) => s + sub.amount, 0);
+  const totalRevenue = approvedSubs.reduce(
+    (s, sub) => s + Number(sub.amount),
+    0,
+  );
   const ctr = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
 
   return NextResponse.json({

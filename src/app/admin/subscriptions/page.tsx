@@ -102,7 +102,7 @@ export default function AdminSubscriptionsPage() {
     approved: subs.filter((s) => s.status === "approved").length,
     revenue: subs
       .filter((s) => s.status === "approved")
-      .reduce((sum, s) => sum + s.amount, 0),
+      .reduce((sum, s) => sum + Number(s.amount), 0),
   };
 
   return (
@@ -219,7 +219,7 @@ export default function AdminSubscriptionsPage() {
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-sm font-bold text-emerald-400">
-                    R$ {s.amount.toFixed(2).replace(".", ",")}
+                    R$ {Number(s.amount).toFixed(2).replace(".", ",")}
                   </p>
                   {s.status === "pending" && (
                     <Button
@@ -343,7 +343,7 @@ function ReviewDialog({
             Revisar assinatura
           </DialogTitle>
           <DialogDescription className="text-xs text-zinc-500">
-            {sub.buyerName} • R$ {sub.amount.toFixed(2).replace(".", ",")}
+            {sub.buyerName} • R$ {Number(sub.amount).toFixed(2).replace(".", ",")}
           </DialogDescription>
         </DialogHeader>
 

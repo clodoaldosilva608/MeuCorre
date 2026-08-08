@@ -1,20 +1,61 @@
 import { cookies } from "next/headers";
+import { jwtVerify, SignJWT } from "jose";
 
-// Verifica se a requisição tem o cookie de admin válido.
-// Token = base64(`${ADMIN_EMAIL}:${ADMIN_PASSWORD}:${timestamp}`)
+// ===== Admin auth com JWT assinado (HMAC-SHA256) =====
+//
+// Substitui o base64 reversível anterior.
+// O token agora é um JWT assinado com ADMIN_JWT_SECRET (env var).
+// Se o cookie vazar, atacante NÃO consegue extrair a senha.
+
+const SECRET_NAME = "meucorre_admin";
+const ALG = "HS256";
+
+function getSecret(): Uint8Array {
+  const secret =
+    process.env.ADMIN_JWT_SECRET ??
+    // Fallback: deriva do ADMIN_PASSWORD (não ideal, mas garante que funciona)
+    process.env.ADMIN_PASSWORD ??
+    "meucorre-fallback-secret-change-me";
+  return new TextEncoder().encode(secret);
+}
+
+interface AdminPayload {
+  sub: string; // email do admin
+  role: "admin";
+  iat?: number;
+  exp?: number;
+}
+
+// Gera um JWT assinado (válida por 7 dias)
+export async function createAdminToken(email: string): Promise<string> {
+  return new SignJWT({ role: "admin" })
+    .setProtectedHeader({ alg: ALG })
+    .setSubject(email)
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(getSecret());
+}
+
+// Verifica se a requisição tem um JWT admin válido
 export async function isAdminAuthed(): Promise<boolean> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("meucorre_admin")?.value;
-  if (!token) return false;
-
-  const expectedEmail = process.env.ADMIN_EMAIL;
-  const expectedPassword = process.env.ADMIN_PASSWORD;
-  if (!expectedEmail || !expectedPassword) return false;
-
   try {
-    const decoded = Buffer.from(token, "base64").toString("utf-8");
-    const [email, pwd] = decoded.split(":");
-    return email === expectedEmail && pwd === expectedPassword;
+    const cookieStore = await cookies();
+    const token = cookieStore.get(SECRET_NAME)?.value;
+    if (!token) return false;
+
+    const { payload } = await jwtVerify(token, getSecret(), {
+      algorithms: [ALG],
+    });
+
+    // Verifica se o subject bate com o ADMIN_EMAIL configurado
+    const adminPayload = payload as unknown as AdminPayload;
+    const expectedEmail = process.env.ADMIN_EMAIL;
+    if (!expectedEmail) return false;
+
+    return (
+      adminPayload.sub === expectedEmail.toLowerCase() &&
+      adminPayload.role === "admin"
+    );
   } catch {
     return false;
   }

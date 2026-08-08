@@ -544,7 +544,9 @@ function CheckoutDialog({
   // O fluxo de pagamento (Pix ou cartão) acontece na Kiwify.
   // Após o pagamento, a Kiwify dispara o webhook pra /api/webhooks/kiwify
   // e redireciona o usuário pra /obrigado?order=XXX.
-  const handleSubmit = (e: React.FormEvent) => {
+  const [redirecting, setRedirecting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
 
@@ -556,6 +558,21 @@ function CheckoutDialog({
       return;
     }
 
+    setRedirecting(true);
+
+    // 1. Cria sessão de checkout (cookie httpOnly com email)
+    //    Necessário pra /obrigado conseguir buscar a licença depois (anti-IDOR)
+    try {
+      await fetch("/api/license/by-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email.trim().toLowerCase() }),
+      });
+    } catch {
+      // Mesmo se falhar, segue pro checkout (Kiwify cuida do resto)
+    }
+
+    // 2. Redireciona pra Kiwify
     const params = new URLSearchParams({
       email: form.email,
       name: form.name,
@@ -563,7 +580,6 @@ function CheckoutDialog({
     if (form.phone) params.set("phone", form.phone);
 
     const checkoutUrl = `https://pay.kiwify.com.br/${productId}?${params.toString()}`;
-    // Redireciona pra Kiwify
     window.location.href = checkoutUrl;
   };
 
@@ -655,11 +671,13 @@ function CheckoutDialog({
 
           <Button
             type="submit"
-            disabled={!form.name || !form.email}
+            disabled={!form.name || !form.email || redirecting}
             className="w-full bg-emerald-500 py-4 font-bold text-zinc-950 hover:bg-emerald-400"
           >
-            Pagar R$ 18,90 na Kiwify
-            <ArrowRight className="ml-1.5 h-4 w-4" />
+            {redirecting
+              ? "Redirecionando..."
+              : `Pagar R$ 18,90 na Kiwify`}
+            {!redirecting && <ArrowRight className="ml-1.5 h-4 w-4" />}
           </Button>
 
           <p className="flex items-center justify-center gap-1 text-[10px] text-zinc-500">
