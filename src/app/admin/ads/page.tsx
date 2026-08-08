@@ -40,6 +40,8 @@ import {
   Eye,
   MousePointerClick,
   ExternalLink,
+  Search,
+  Loader2,
 } from "lucide-react";
 
 interface Ad {
@@ -387,11 +389,51 @@ function AdForm({
     active: true,
   });
   const [saving, setSaving] = useState(false);
+  const [fetchingPreview, setFetchingPreview] = useState(false);
+
+  const handleFetchPreview = async () => {
+    if (!form.url) {
+      toast.error("Preencha a URL de destino primeiro");
+      return;
+    }
+    setFetchingPreview(true);
+    try {
+      const res = await fetch("/api/admin/ads/preview-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: form.url }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao buscar preview");
+        return;
+      }
+      // Preenche apenas campos vazios (não sobrescreve)
+      setForm((prev) => ({
+        ...prev,
+        title: prev.title || data.title || "",
+        description: prev.description || data.description || "",
+        imageUrl: data.image || prev.imageUrl,
+      }));
+      const filled: string[] = [];
+      if (data.title) filled.push("título");
+      if (data.description) filled.push("descrição");
+      if (data.image) filled.push("imagem");
+      toast.success(
+        filled.length > 0
+          ? `Preview preenchido: ${filled.join(", ")}`
+          : "Nenhum dado Open Graph encontrado na URL",
+      );
+    } catch {
+      toast.error("Erro de conexão");
+    } finally {
+      setFetchingPreview(false);
+    }
+  };
 
   useEffect(() => {
     // Reset do form quando abre (padrão legítimo de sync com prop open).
     if (!open) return;
-    /* eslint-disable react-hooks/set-state-in-effect */
     if (editing) {
       setForm({
         title: editing.title,
@@ -417,7 +459,6 @@ function AdForm({
         active: true,
       });
     }
-    /* eslint-enable react-hooks/set-state-in-effect */
   }, [open, editing]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -523,6 +564,22 @@ function AdForm({
               />
             </div>
           </div>
+
+          {/* Buscar preview */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleFetchPreview}
+            disabled={fetchingPreview || !form.url}
+            className="w-full border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-emerald-400"
+          >
+            {fetchingPreview ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="mr-1.5 h-4 w-4" />
+            )}
+            {fetchingPreview ? "Buscando..." : "Buscar preview"}
+          </Button>
 
           {/* Image URL */}
           <div className="space-y-1.5">

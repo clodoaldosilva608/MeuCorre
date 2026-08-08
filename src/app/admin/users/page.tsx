@@ -28,6 +28,7 @@ import {
   Users,
   Plus,
   Trash2,
+  Pencil,
   Crown,
   Mail,
   Phone,
@@ -45,6 +46,8 @@ interface User {
   licenseKey: string | null;
   phone: string | null;
   city: string | null;
+  active: boolean;
+  trialExtendedUntil: string | null;
   lastLoginAt: string | null;
   createdAt: string;
 }
@@ -58,6 +61,7 @@ export default function AdminUsersPage() {
   const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -192,6 +196,11 @@ export default function AdminUsersPage() {
                         Gratuito
                       </span>
                     )}
+                    {!u.active && (
+                      <span className="shrink-0 rounded-full bg-red-500/15 px-2 py-0.5 text-[9px] font-bold text-red-400">
+                        Inativo
+                      </span>
+                    )}
                   </div>
                   <div className="mt-1.5 space-y-0.5 text-[11px] text-zinc-500">
                     <p className="flex items-center gap-1.5">
@@ -215,6 +224,12 @@ export default function AdminUsersPage() {
                       Cadastrado em {new Date(u.createdAt).toLocaleDateString("pt-BR")}
                       {u.lastLoginAt && ` • Último login: ${new Date(u.lastLoginAt).toLocaleDateString("pt-BR")}`}
                     </p>
+                    {u.trialExtendedUntil && (
+                      <p className="flex items-center gap-1.5 text-emerald-400/70">
+                        <Clock className="h-3 w-3" />
+                        Trial estendido até {new Date(u.trialExtendedUntil).toLocaleDateString("pt-BR")}
+                      </p>
+                    )}
                     {u.licenseKey && (
                       <p className="flex items-center gap-1.5 truncate text-emerald-400/70">
                         <KeyRound className="h-3 w-3" />
@@ -231,13 +246,25 @@ export default function AdminUsersPage() {
                       onCheckedChange={() => togglePro(u)}
                     />
                   </div>
-                  <button
-                    onClick={() => setConfirmDelete(u)}
-                    aria-label="Excluir usuário"
-                    className="grid h-8 w-8 place-items-center rounded text-zinc-400 hover:bg-red-950/40 hover:text-red-400"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        setEditing(u);
+                        setEditOpen(true);
+                      }}
+                      aria-label="Editar usuário"
+                      className="grid h-8 w-8 place-items-center rounded text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(u)}
+                      aria-label="Excluir usuário"
+                      className="grid h-8 w-8 place-items-center rounded text-zinc-400 hover:bg-red-950/40 hover:text-red-400"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -250,6 +277,17 @@ export default function AdminUsersPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreated={load}
+      />
+
+      {/* Dialog editar usuário */}
+      <EditUserDialog
+        open={editOpen}
+        onOpenChange={(o) => {
+          setEditOpen(o);
+          if (!o) setEditing(null);
+        }}
+        user={editing}
+        onSaved={load}
       />
 
       {/* Confirma exclusão */}
@@ -439,6 +477,225 @@ function CreateUserDialog({
               className="bg-emerald-500 font-bold text-zinc-950 hover:bg-emerald-400"
             >
               {saving ? "Criando..." : "Criar usuário"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ===== Dialog editar usuário =====
+
+function toDateInputValue(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  // Ajusta pro fuso local pra não perder um dia
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off * 60_000);
+  return local.toISOString().slice(0, 10);
+}
+
+function EditUserDialog({
+  open,
+  onOpenChange,
+  user,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  user: User | null;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    city: "",
+    password: "",
+    active: true,
+    isPro: false,
+    trialExtendedUntil: "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open || !user) return;
+    setForm({
+      name: user.name,
+      phone: user.phone ?? "",
+      city: user.city ?? "",
+      password: "",
+      active: user.active,
+      isPro: user.isPro,
+      trialExtendedUntil: toDateInputValue(user.trialExtendedUntil),
+    });
+  }, [open, user]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSaving(true);
+    try {
+      const payload: Record<string, unknown> = {
+        name: form.name,
+        phone: form.phone,
+        city: form.city,
+        active: form.active,
+        isPro: form.isPro,
+        trialExtendedUntil: form.trialExtendedUntil || null,
+      };
+      if (form.password) {
+        payload.password = form.password;
+      }
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao atualizar");
+        return;
+      }
+      toast.success("Usuário atualizado");
+      onOpenChange(false);
+      onSaved();
+    } catch {
+      toast.error("Erro de conexão");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!user) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-md gap-0 overflow-y-auto border-zinc-800 bg-zinc-950 p-0 text-zinc-100">
+        <DialogHeader className="border-b border-zinc-800 px-5 py-4">
+          <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-400">
+            <Pencil className="h-4 w-4" />
+            Editar usuário
+          </DialogTitle>
+          <DialogDescription className="text-xs text-zinc-500">
+            {user.email}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSave} className="space-y-3 px-5 py-5">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-400">Nome</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+              className="border-zinc-800 bg-zinc-900 text-zinc-100"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-400">WhatsApp</Label>
+              <Input
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="border-zinc-800 bg-zinc-900 text-zinc-100"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-zinc-400">Cidade</Label>
+              <Input
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                className="border-zinc-800 bg-zinc-900 text-zinc-100"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-400">
+              Redefinir senha (opcional)
+            </Label>
+            <Input
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Deixe vazio para manter"
+              minLength={6}
+              className="border-zinc-800 bg-zinc-900 text-zinc-100"
+            />
+            <p className="text-[10px] text-zinc-600">
+              Mínimo 6 caracteres. Só preencha se quiser redefinir.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-400">
+              Estender trial até (opcional)
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={form.trialExtendedUntil}
+                onChange={(e) =>
+                  setForm({ ...form, trialExtendedUntil: e.target.value })
+                }
+                className="border-zinc-800 bg-zinc-900 text-zinc-100"
+              />
+              {form.trialExtendedUntil && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() =>
+                    setForm({ ...form, trialExtendedUntil: "" })
+                  }
+                  className="border border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+                >
+                  Limpar
+                </Button>
+              )}
+            </div>
+            <p className="text-[10px] text-zinc-600">
+              Estende o trial gratuito do usuário até a data escolhida.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+            <Label className="text-xs text-zinc-400">
+              Usuário ativo (pode fazer login)
+            </Label>
+            <Switch
+              checked={form.active}
+              onCheckedChange={(v) => setForm({ ...form, active: v })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+            <Label className="flex items-center gap-1.5 text-xs text-zinc-400">
+              <Crown className="h-3 w-3 text-emerald-400" />
+              PRO (vitalício)
+            </Label>
+            <Switch
+              checked={form.isPro}
+              onCheckedChange={(v) => setForm({ ...form, isPro: v })}
+            />
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              className="border border-zinc-800 text-zinc-300 hover:bg-zinc-800"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={saving || !form.name}
+              className="bg-emerald-500 font-bold text-zinc-950 hover:bg-emerald-400"
+            >
+              {saving ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
         </form>

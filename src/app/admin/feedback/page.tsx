@@ -11,6 +11,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   MessageSquare,
@@ -19,6 +22,9 @@ import {
   Clock,
   Mail,
   Filter,
+  Save,
+  Loader2,
+  Heart,
 } from "lucide-react";
 
 interface Feedback {
@@ -113,6 +119,9 @@ export default function AdminFeedbackPage() {
           accent="red"
         />
       </div>
+
+      {/* Editor de mensagem de agradecimento */}
+      <ThankYouMessageEditor />
 
       {/* Filtros */}
       <div className="flex items-center gap-2">
@@ -255,6 +264,107 @@ function StatCard({
     <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-3">
       <p className="text-[10px] font-medium text-zinc-500">{label}</p>
       <p className={`mt-1 text-2xl font-black ${color}`}>{value}</p>
+    </div>
+  );
+}
+
+// ===== Editor de mensagem de agradecimento =====
+
+function ThankYouMessageEditor() {
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/settings");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.settings?.feedbackThankYouMessage) {
+          setMessage(data.settings.feedbackThankYouMessage);
+        }
+      } catch {
+        // silencioso — não mostra erro na carga inicial
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: "feedbackThankYouMessage",
+          value: message,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao salvar");
+        return;
+      }
+      toast.success("Mensagem de agradecimento salva");
+    } catch {
+      toast.error("Erro de conexão");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Heart className="h-4 w-4 text-emerald-400" />
+        <Label
+          htmlFor="thank-you-message"
+          className="text-sm font-bold text-zinc-100"
+        >
+          Mensagem de agradecimento automática
+        </Label>
+      </div>
+      <p className="mb-2 text-[11px] text-zinc-500">
+        Exibida no app logo após o usuário enviar um feedback. Mantenha um tom
+        próximo e motivador.
+      </p>
+      <Textarea
+        id="thank-you-message"
+        value={loading ? "Carregando..." : message}
+        onChange={(e) => setMessage(e.target.value)}
+        disabled={loading || saving}
+        rows={3}
+        maxLength={1000}
+        placeholder="Ex: Valeu pelo feedback! 🙏 Seu depoimento ajuda muito..."
+        className="resize-none border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+      />
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-[10px] text-zinc-600">
+          {message.length}/1000 caracteres
+        </span>
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={saving || loading}
+          className="bg-emerald-500 font-bold text-zinc-950 hover:bg-emerald-400"
+        >
+          {saving ? (
+            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-1.5 h-4 w-4" />
+          )}
+          {saving ? "Salvando..." : "Salvar mensagem"}
+        </Button>
+      </div>
     </div>
   );
 }
