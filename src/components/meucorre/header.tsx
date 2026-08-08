@@ -31,6 +31,7 @@ interface HeaderProps {
   onOpenLicense: () => void;
   onOpenShare: () => void;
   isPro: boolean;
+  syncStatus?: "idle" | "syncing" | "synced" | "offline" | "not-logged-in" | "error";
 }
 
 // Cabeçalho fixo no topo: logo ⚡ MeuCorre + data + menu de ações.
@@ -44,6 +45,7 @@ export function Header({
   onOpenLicense,
   onOpenShare,
   isPro,
+  syncStatus,
 }: HeaderProps) {
   // A data só é calculada depois do mount para evitar hydration mismatch.
   // O servidor roda em UTC e o cliente no fuso local do entregador — quando
@@ -118,6 +120,43 @@ export function Header({
           >
             <Share2 className="h-4 w-4" />
           </Button>
+
+          {/* Indicador de sincronização */}
+          {syncStatus && syncStatus !== "not-logged-in" && syncStatus !== "idle" && (
+            <span
+              className="flex items-center gap-0.5 text-[9px] font-medium"
+              title={
+                syncStatus === "syncing"
+                  ? "Sincronizando..."
+                  : syncStatus === "synced"
+                    ? "Dados sincronizados"
+                    : syncStatus === "offline"
+                      ? "Offline — dados salvos localmente"
+                      : syncStatus === "error"
+                        ? "Erro de sincronização"
+                        : ""
+              }
+            >
+              {syncStatus === "syncing" && (
+                <span className="flex items-center gap-0.5 text-blue-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400" />
+                  sync
+                </span>
+              )}
+              {syncStatus === "synced" && (
+                <span className="flex items-center gap-0.5 text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  sync
+                </span>
+              )}
+              {(syncStatus === "offline" || syncStatus === "error") && (
+                <span className="flex items-center gap-0.5 text-amber-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  sync
+                </span>
+              )}
+            </span>
+          )}
 
           {/* PRO badge ou botão de licença */}
           {isPro ? (

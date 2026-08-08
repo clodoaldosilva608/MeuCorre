@@ -127,3 +127,42 @@ model PasswordResetToken {
   @@index([userId])
   @@index([token])
 }
+
+// ===== Sincronização entre dispositivos =====
+// Corridas e despesas sincronizadas do IndexedDB local pro servidor
+// quando o usuário está logado. Permite acessar dados em múltiplos dispositivos.
+
+model SyncedDelivery {
+  id          String   @id @default(cuid())
+  userId      String
+  localId     Int      // ID no IndexedDB do dispositivo de origem
+  app         String
+  value       Decimal  @db.Decimal(10, 2)
+  km          Decimal  @db.Decimal(10, 2) @default(0)
+  date        String   // YYYY-MM-DD
+  timestamp   BigInt
+  notes       String?
+  updatedAt   BigInt   // epoch ms — last-write-wins
+  deleted     Boolean  @default(false) // soft delete pra sync
+
+  @@unique([userId, localId])
+  @@index([userId, updatedAt])
+  @@index([userId, date])
+}
+
+model SyncedExpense {
+  id          String   @id @default(cuid())
+  userId      String
+  localId     Int
+  category    String
+  value       Decimal  @db.Decimal(10, 2)
+  description String?
+  date        String
+  timestamp   BigInt
+  updatedAt   BigInt
+  deleted     Boolean  @default(false)
+
+  @@unique([userId, localId])
+  @@index([userId, updatedAt])
+  @@index([userId, date])
+}

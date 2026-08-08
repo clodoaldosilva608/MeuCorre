@@ -34,6 +34,7 @@ import {
   shouldShowFeedbackPopup,
   markFeedbackAsked,
 } from "@/hooks/use-trial";
+import { useSync } from "@/hooks/use-sync";
 import {
   useDeliveries,
   useExpenses,
@@ -111,6 +112,7 @@ function HomeContent() {
 
   // Status de trial/limite (15 dias grátis + 5 lançamentos/dia após)
   const trialStatus = useTrialStatus(isPro);
+  const { status: syncStatus, syncNow } = useSync();
 
   // Verifica status PRO ao montar:
   // 1. Tenta licença no localStorage (PRO ativado manualmente)
@@ -307,6 +309,8 @@ function HomeContent() {
       });
     }
     setEditingDelivery(null);
+    // Sincroniza com servidor (se logado) em background
+    syncNow();
   };
 
   const handleAddExpense = async (data: {
@@ -326,6 +330,8 @@ function HomeContent() {
       });
     }
     setEditingExpense(null);
+    // Sincroniza com servidor (se logado) em background
+    syncNow();
   };
 
   const handleCapture = async (data: {
@@ -348,6 +354,7 @@ function HomeContent() {
     if (confirmDeleteDelivery?.id) {
       await deleteDelivery(confirmDeleteDelivery.id);
       toast.success("Corrida excluída");
+      syncNow();
     }
     setConfirmDeleteDelivery(null);
   };
@@ -356,6 +363,7 @@ function HomeContent() {
     if (confirmDeleteExpense?.id) {
       await deleteExpense(confirmDeleteExpense.id);
       toast.success("Despesa excluída");
+      syncNow();
     }
     setConfirmDeleteExpense(null);
   };
@@ -416,6 +424,7 @@ function HomeContent() {
         onOpenCapture={() => setCaptureOpen(true)}
         onOpenLicense={() => setLicenseOpen(true)}
         onOpenShare={() => setShareOpen(true)}
+        syncStatus={syncStatus}
       />
 
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">
