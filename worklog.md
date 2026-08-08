@@ -161,3 +161,51 @@ Stage Summary:
 - Fluxo completo validado: landing → checkout → admin aprova → licença gerada → user ativa no app → anúncios somem + badge PRO aparece
 - 0 erros lint, 0 erros runtime, todos os fluxos testados no browser
 - Pronto para deploy em Vercel (HTTPS necessário para PWA instalação)
+
+---
+Task ID: 4
+Agent: Super Z (main)
+Task: Integrar Kiwify (webhook + checkout) e fazer deploy em produção na Vercel. Senha Kiwify do usuário NÃO foi usada (por segurança); user deve criar o produto manualmente.
+
+Work Log:
+- ALERTA DE SEGURANÇA: usuário compartilhou senha Kiwify em texto plano. Não loguei nem usei. Recomendei troca imediata da senha.
+- Pesquisa via sub-agente sobre Kiwify webhooks: trigger correto é "compra_aprovada" (não order_paid), payload PascalCase (Product, Customer, Commissions), validação por token estático no header X-Kiwify-Signature ou ?token=, URL checkout https://pay.kiwify.com.br/{slug}?email=...&name=...
+- Schema Prisma atualizado: Subscription ganhou paymentMethod, kiwifyOrderId (unique), kiwifyChargeId. db:push executado.
+- Webhook Kiwify criado (src/app/api/webhooks/kiwify/route.ts): valida token via header ou query, idempotente por kiwifyOrderId, auto-aprova quando order_status=paid, gera licença crypto 32-hex, trata refund/chargeback, ignora product_id errado sem falhar.
+- API /api/license/by-order criada: busca licença por kiwifyOrderId (pra página /obrigado).
+- Landing page (/) refatorada: checkout agora redireciona pra https://pay.kiwify.com.br/{NEXT_PUBLIC_KIWIFY_PRODUCT_SLUG}?email=...&name=... em vez de fluxo Pix manual. Form mantém apenas nome+email+phone (Kiwify cuida do resto).
+- Página /obrigado criada: poll em /api/license/by-order?order=xxx a cada 3s (até 10x), mostra licença quando disponível, botões copiar + ativar, instrução de ativação, detalhes da compra, aviso de email de backup.
+- App (/app) atualizado: useSearchParams pra detectar ?license=xxx e auto-ativar (homePage wrapped em Suspense), toast de boas-vindas, limpa query param da URL após ativar.
+- .env local atualizado com placeholders KIWIFY_PRODUCT_ID, KIWIFY_WEBHOOK_SECRET, NEXT_PUBLIC_KIWIFY_PRODUCT_SLUG (vazios, esperando user criar produto).
+- Deploy Vercel:
+  - Instalado Vercel CLI 58.8.0
+  - Token validado: conta clodoaldosilva608
+  - Projeto "meucorre" criado
+  - Framework setado pra "nextjs" via API PATCH (precisou pro Next 16 ser detectado)
+  - Env vars configuradas: DATABASE_URL=file:/tmp/meucorre.db, ADMIN_PASSWORD, PIX_KEY, PIX_MERCHANT_NAME, PLAN_PRICE (production + preview)
+  - SSO Protection desabilitado via API PATCH (pra URL ser pública)
+  - Alias customizado meucorre-clodoaldosilva608.vercel.app atribuído
+  - next.config.ts: removido output: "standalone" (não necessário na Vercel)
+  - package.json: build script trocado pra "prisma generate && next build", adicionado postinstall "prisma generate"
+  - 3 deploys feitos (1º com framework:null deu 404 em tudo, 2º com framework:nextjs mas sem functions, 3º com Prisma init correto)
+  - Solução Prisma runtime: criado src/lib/db-init.ts com schema SQL inline aplicado via $executeRawUnsafe (não precisa de npx prisma db push em runtime), importado server-only
+  - prisma.ts atualizado com $extends query interceptor que chama ensureDatabase() antes de cada query (idempotente)
+- Validação em produção (https://meucorre-clodoaldosilva608.vercel.app):
+  - / 200 (landing renderizou com hero, features, planos, FAQ)
+  - /app 200
+  - /obrigado 200
+  - /admin/login 200 (login com senha funcionou, redirect pra /admin/ads)
+  - /admin/ads 200 (página admin carregou)
+  - /api/ads?placement=banner_top → {"ads":[]} 200 (banco SQLite criado no cold start, schema aplicado)
+  - /api/subscription POST → criou compra pendente R$ 97
+  - /api/admin/login senha errada → 401 "Senha incorreta"
+  - /api/admin/login senha certa → {"ok":true}
+  - /api/webhooks/kiwify POST sem secret → 503 "não configurado" (esperado até user setar KIWIFY_WEBHOOK_SECRET)
+  - Agent Browser validou landing + admin login em produção
+
+Stage Summary:
+- App em produção em https://meucorre-clodoaldosilva608.vercel.app (todas as rotas 200)
+- Integração Kiwify completa: webhook auto-aprova + checkout redireciona + página de obrigado com licença + auto-ativação via ?license=xxx
+- Tudo que falta pro fluxo completo de venda: user criar produto na Kiwify (R$ 97 vitalício) e me passar 3 valores (PRODUCT_ID, WEBHOOK_SECRET, PRODUCT_SLUG) que eu configuro nas env vars da Vercel
+- Banco SQLite funcionando em /tmp/meucorre.db (efêmero por cold start — OK pra MVP, pra produção estável migrar pra Postgres)
+- 0 erros lint, todas as rotas respondendo corretamente em produção

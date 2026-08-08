@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -23,8 +22,6 @@ import {
   Bell,
   ShieldCheck,
   Infinity as InfinityIcon,
-  Copy,
-  CheckCheck,
   Star,
   TrendingUp,
   Route,
@@ -517,293 +514,133 @@ function CheckoutDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
-  const [step, setStep] = useState<"form" | "pix" | "done">("form");
-  const [subId, setSubId] = useState<string | null>(null);
-  const [pixKey, setPixKey] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
-    city: "",
-    notes: "",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Quando o usuário submete o form, monta a URL de checkout da Kiwify
+  // com prefill de email/nome e redireciona.
+  // O fluxo de pagamento (Pix ou cartão) acontece na Kiwify.
+  // Após o pagamento, a Kiwify dispara o webhook pra /api/webhooks/kiwify
+  // e redireciona o usuário pra /obrigado?order=XXX.
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("/api/subscription", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          buyerName: form.name,
-          buyerEmail: form.email,
-          buyerPhone: form.phone,
-          buyerCity: form.city,
-          receiptNotes: form.notes,
-        }),
+    if (!form.name || !form.email) return;
+
+    const productId = process.env.NEXT_PUBLIC_KIWIFY_PRODUCT_SLUG ?? "";
+    if (!productId) {
+      toast.error("Produto Kiwify não configurado", {
+        description: "Contate o suporte.",
       });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || "Erro ao criar compra");
-        return;
-      }
-      setSubId(data.id);
-      setPixKey(data.pixKey);
-      setStep("pix");
-    } catch {
-      toast.error("Erro de conexão");
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
 
-  const handleUploadReceipt = async (file: File) => {
-    if (!subId) return;
-    setLoading(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const receipt = reader.result as string;
-        const res = await fetch(`/api/subscription/${subId}/receipt`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ receipt }),
-        });
-        if (res.ok) {
-          toast.success("Comprovante enviado!");
-          setStep("done");
-        } else {
-          const err = await res.json();
-          toast.error(err.error || "Erro ao enviar comprovante");
-        }
-        setLoading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      toast.error("Erro ao ler arquivo");
-      setLoading(false);
-    }
-  };
+    const params = new URLSearchParams({
+      email: form.email,
+      name: form.name,
+    });
+    if (form.phone) params.set("phone", form.phone);
 
-  const copyPix = () => {
-    navigator.clipboard.writeText(pixKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const reset = () => {
-    setStep("form");
-    setSubId(null);
-    setForm({ name: "", email: "", phone: "", city: "", notes: "" });
-    onOpenChange(false);
+    const checkoutUrl = `https://pay.kiwify.com.br/${productId}?${params.toString()}`;
+    // Redireciona pra Kiwify
+    window.location.href = checkoutUrl;
   };
 
   return (
     <Dialog
       open={open}
       onOpenChange={(o) => {
-        if (!o) reset();
-        else onOpenChange(o);
+        if (!o) {
+          setForm({ name: "", email: "", phone: "" });
+        }
+        onOpenChange(o);
       }}
     >
       <DialogContent className="max-w-md gap-0 border-zinc-200 bg-white p-0 text-zinc-900">
         <DialogHeader className="border-b border-zinc-100 px-5 py-4">
           <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-600">
             <CreditCard className="h-4 w-4" />
-            {step === "form" && "Quase lá! Seus dados"}
-            {step === "pix" && "Pague via Pix"}
-            {step === "done" && "Comprovante enviado!"}
+            Quase lá! Seus dados
           </DialogTitle>
           <DialogDescription className="text-xs text-zinc-500">
-            {step === "form" && "Plano vitalício MeuCorre PRO — R$ 97,00"}
-            {step === "pix" && "Escaneie o QR code ou copie a chave"}
-            {step === "done" && "Aguarde a aprovação do admin (até 24h)"}
+            Plano vitalício MeuCorre PRO — R$ {PLAN_PRICE},00
           </DialogDescription>
         </DialogHeader>
 
-        {step === "form" && (
-          <form onSubmit={handleSubmit} className="space-y-3 px-5 py-5">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-600">Nome completo *</Label>
-              <Input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-600">Email *</Label>
-              <Input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
-                className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
-              />
-              <p className="text-[10px] text-zinc-500">
-                Sua licença será enviada para este email
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-600">WhatsApp</Label>
-                <Input
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="(11) 99999-9999"
-                  className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-600">Cidade</Label>
-                <Input
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  placeholder="São Paulo - SP"
-                  className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-600">
-                Observações (opcional)
-              </Label>
-              <Textarea
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                rows={2}
-                placeholder="Algo que queira nos dizer?"
-                className="resize-none border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
-              />
-            </div>
-
-            <div className="rounded-xl bg-emerald-50 p-3 text-center">
-              <p className="text-xs text-zinc-600">Total a pagar</p>
-              <p className="text-2xl font-black text-emerald-600">
-                R$ {PLAN_PRICE},00
-              </p>
-              <p className="text-[10px] text-zinc-500">via Pix • vitalício</p>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading || !form.name || !form.email}
-              className="w-full bg-emerald-500 py-4 font-bold text-zinc-950 hover:bg-emerald-400"
-            >
-              {loading ? "Gerando Pix..." : "Continuar para pagamento"}
-              <ArrowRight className="ml-1.5 h-4 w-4" />
-            </Button>
-          </form>
-        )}
-
-        {step === "pix" && (
-          <div className="space-y-4 px-5 py-5">
-            {/* QR code placeholder — usando um QR code API gratuito */}
-            <div className="flex justify-center">
-              <div className="rounded-2xl border-2 border-emerald-500 bg-white p-3">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pixKey)}`}
-                  alt="QR Code Pix"
-                  className="h-44 w-44"
-                />
-              </div>
-            </div>
-
-            {/* Pix key copy */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-600">
-                Ou copie a chave Pix
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  readOnly
-                  value={pixKey}
-                  className="flex-1 border-zinc-200 bg-zinc-50 font-mono text-xs text-zinc-700"
-                />
-                <Button
-                  type="button"
-                  onClick={copyPix}
-                  variant="outline"
-                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                >
-                  {copied ? (
-                    <CheckCheck className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
-              <strong>Como funciona:</strong>
-              <ol className="mt-1 list-decimal space-y-0.5 pl-4">
-                <li>Pague R$ 97 via Pix usando o QR code ou a chave</li>
-                <li>Tire um print/foto do comprovante</li>
-                <li>Envie o comprovante abaixo</li>
-                <li>
-                  Em até 24h o admin aprova e você recebe a licença por email
-                </li>
-              </ol>
-            </div>
-
-            {/* Upload */}
-            <div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUploadReceipt(f);
-                }}
-                className="hidden"
-                id="receipt-upload"
-              />
-              <Label
-                htmlFor="receipt-upload"
-                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-zinc-950 hover:bg-emerald-400"
-              >
-                {loading ? "Enviando..." : "Enviar comprovante"}
-                <ArrowRight className="h-4 w-4" />
-              </Label>
-            </div>
-
-            <button
-              onClick={() => setStep("form")}
-              className="w-full text-center text-xs text-zinc-500 hover:text-zinc-700"
-            >
-              ← Voltar
-            </button>
+        <form onSubmit={handleSubmit} className="space-y-3 px-5 py-5">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-600">Nome completo *</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+              className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+            />
           </div>
-        )}
-
-        {step === "done" && (
-          <div className="px-5 py-8 text-center">
-            <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-emerald-100">
-              <Check className="h-8 w-8 text-emerald-600" strokeWidth={3} />
-            </div>
-            <h3 className="text-lg font-bold text-zinc-900">
-              Comprovante enviado!
-            </h3>
-            <p className="mt-1 text-sm text-zinc-600">
-              Seu comprovante está sendo analisado. Em até 24h você receberá a
-              sua licença PRO por email.
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-600">Email *</Label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+              className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+            />
+            <p className="text-[10px] text-zinc-500">
+              Sua licença será enviada para este email
             </p>
-            <p className="mt-3 text-xs text-zinc-500">
-              ID da compra: <code className="font-mono">{subId?.slice(0, 12)}</code>
-            </p>
-            <Button
-              onClick={reset}
-              className="mt-6 w-full bg-emerald-500 py-3 font-bold text-zinc-950 hover:bg-emerald-400"
-            >
-              Concluir
-            </Button>
           </div>
-        )}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-600">WhatsApp (opcional)</Label>
+            <Input
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="(11) 99999-9999"
+              className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+            />
+          </div>
+
+          <div className="rounded-xl bg-emerald-50 p-3 text-center">
+            <p className="text-xs text-zinc-600">Total a pagar</p>
+            <p className="text-2xl font-black text-emerald-600">
+              R$ {PLAN_PRICE},00
+            </p>
+            <p className="text-[10px] text-zinc-500">
+              Pagamento único • Pix ou cartão • vitalício
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-zinc-50 p-3 text-[11px] text-zinc-600">
+            <p className="font-semibold text-zinc-700">Como funciona:</p>
+            <ol className="mt-1 list-decimal space-y-0.5 pl-4">
+              <li>Você será redirecionado para o checkout seguro da Kiwify</li>
+              <li>Pague com Pix (aprovação em segundos) ou cartão</li>
+              <li>
+                Sua licença PRO é gerada <strong>automaticamente</strong> após
+                o pagamento
+              </li>
+              <li>
+                Você será redirecionado de volta e verá sua licença na tela
+              </li>
+            </ol>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={!form.name || !form.email}
+            className="w-full bg-emerald-500 py-4 font-bold text-zinc-950 hover:bg-emerald-400"
+          >
+            Pagar R$ {PLAN_PRICE},00 na Kiwify
+            <ArrowRight className="ml-1.5 h-4 w-4" />
+          </Button>
+
+          <p className="flex items-center justify-center gap-1 text-[10px] text-zinc-500">
+            <Lock className="h-2.5 w-2.5" />
+            Pagamento processado pela Kiwify — ambiente seguro
+          </p>
+        </form>
       </DialogContent>
     </Dialog>
   );

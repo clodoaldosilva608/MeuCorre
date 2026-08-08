@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Header } from "@/components/meucorre/header";
 import { SummaryCards } from "@/components/meucorre/summary-cards";
@@ -54,6 +55,17 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
+  // Auto-ativação via ?license=xxx (vindo da página /obrigado)
+  const searchParams = useSearchParams();
+
   // Splash some por ~1.4s no primeiro carregamento
   const [showSplash, setShowSplash] = useState(true);
   useEffect(() => {
@@ -86,6 +98,27 @@ export default function Home() {
   useEffect(() => {
     checkProStatus().then(setIsPro);
   }, []);
+
+  // Auto-ativação: se veio da página /obrigado com ?license=xxx, ativa automaticamente
+  useEffect(() => {
+    const licenseParam = searchParams?.get("license");
+    if (!licenseParam) return;
+    (async () => {
+      const result = await activateLicense(licenseParam);
+      if (result.ok) {
+        toast.success("Licença PRO ativada! 🎉", {
+          description: "Bem-vindo ao MeuCorre PRO!",
+        });
+        setIsPro(true);
+      } else {
+        toast.error(result.error || "Licença inválida");
+      }
+      // Limpa o ?license=xxx da URL sem recarregar a página
+      const url = new URL(window.location.href);
+      url.searchParams.delete("license");
+      window.history.replaceState({}, "", url.toString());
+    })();
+  }, [searchParams]);
 
   const handleActivateLicense = async (key: string) => {
     const result = await activateLicense(key);

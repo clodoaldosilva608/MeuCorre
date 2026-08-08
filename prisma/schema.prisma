@@ -33,7 +33,7 @@ model Ad {
   @@index([placement, active])
 }
 
-// ===== Compras do plano vitalício (Pix manual) =====
+// ===== Compras do plano vitalício (Pix manual OU Kiwify) =====
 
 model Subscription {
   id           String   @id @default(cuid())
@@ -42,12 +42,16 @@ model Subscription {
   buyerEmail   String
   buyerPhone   String?
   buyerCity    String?
-  // Pix
+  // Pagamento
   pixKey       String   @default("meucorre@pix.com")
   amount       Float    @default(97.0) // R$ 97 vitalício
-  // Comprovante
-  receiptUrl   String?  // URL do comprovante enviado (data URL ou path)
-  receiptNotes String?  // observações do comprador
+  paymentMethod String  @default("pix_manual") // pix_manual | kiwify
+  // Comprovante (apenas pix_manual)
+  receiptUrl   String?
+  receiptNotes String?
+  // Kiwify (webhook auto-approve)
+  kiwifyOrderId String? @unique // ID do pedido na Kiwify
+  kiwifyChargeId String? // ID da cobrança na Kiwify
   // Status
   status       String   @default("pending") // pending | approved | rejected
   reviewedAt   DateTime?
@@ -55,13 +59,14 @@ model Subscription {
   reviewNotes  String?
   // Licença gerada quando aprovada
   licenseKey   String?  @unique // chave que libera o PRO no app
-  deviceId     String?  // device que ativou a licença (opcional)
+  deviceId     String?
   activatedAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([status])
   @@index([buyerEmail])
+  @@index([kiwifyOrderId])
 }
 
 // ===== Cliques/visualizações de anúncios (analytics) =====
