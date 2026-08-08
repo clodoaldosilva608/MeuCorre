@@ -30,23 +30,24 @@ export default function LoginPage() {
         return;
       }
 
-      // Limpa dados locais da sessão anterior (evita misturar contas)
+      // Limpa localStorage da sessão anterior
       localStorage.clear();
 
-      // Limpa IndexedDB (corridas/despesas da conta anterior)
-      try {
-        const { db } = await import("@/lib/db");
-        await db.open();
-        await db.deliveries.clear();
-        await db.expenses.clear();
-        console.log("[login] IndexedDB limpo com sucesso");
-      } catch (err) {
-        console.warn("[login] Erro ao limpar IndexedDB:", err);
-      }
+      // Limpa IndexedDB em background (não bloqueia o redirect)
+      import("@/lib/db").then(async ({ db }) => {
+        try {
+          await db.open();
+          await db.deliveries.clear();
+          await db.expenses.clear();
+          console.log("[login] IndexedDB limpo com sucesso");
+        } catch (err) {
+          console.warn("[login] Erro ao limpar IndexedDB:", err);
+        }
+      });
 
       toast.success(`Bem-vindo, ${data.user.name.split(" ")[0]}! 👋`);
-      router.push("/app");
-      router.refresh();
+      // Redirect imediato (não espera limpar IndexedDB)
+      window.location.href = "/app";
     } catch {
       toast.error("Erro de conexão");
     } finally {

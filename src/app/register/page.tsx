@@ -35,21 +35,20 @@ export default function RegisterPage() {
         return;
       }
 
-      // Limpa dados locais de qualquer sessão anterior
+      // Limpa localStorage da sessão anterior
       localStorage.clear();
-      try {
-        const { db } = await import("@/lib/db");
-        await db.open();
-        await db.deliveries.clear();
-        await db.expenses.clear();
-        console.log("[register] IndexedDB limpo com sucesso");
-      } catch (err) {
-        console.warn("[register] Erro ao limpar IndexedDB:", err);
-      }
+
+      // Limpa IndexedDB em background
+      import("@/lib/db").then(async ({ db }) => {
+        try {
+          await db.open();
+          await db.deliveries.clear();
+          await db.expenses.clear();
+        } catch {}
+      });
 
       toast.success(`Bem-vindo ao MeuCorre, ${data.user.name.split(" ")[0]}! 🎉`);
-      router.push("/app");
-      router.refresh();
+      window.location.href = "/app";
     } catch {
       toast.error("Erro de conexão");
     } finally {

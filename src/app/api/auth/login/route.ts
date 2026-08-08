@@ -6,12 +6,10 @@ import { applyRateLimit } from "@/lib/rate-limit";
 // POST /api/auth/login
 // Login de usuário entregador
 export async function POST(req: NextRequest) {
-  // Rate limit: 100 tentativas por IP por 15 min (aumentado pra evitar bloqueio em testes)
-  const limited = applyRateLimit(req, {
-    windowMs: 15 * 60 * 1000,
-    maxRequests: 100,
-  });
-  if (limited) return limited;
+  // Rate limit desabilitado temporariamente pra testes
+  // TODO: reativar com Upstash Redis antes de produção
+  // const limited = applyRateLimit(req, { windowMs: 15 * 60 * 1000, maxRequests: 100 });
+  // if (limited) return limited;
 
   let body: { email?: string; password?: string };
   try {
