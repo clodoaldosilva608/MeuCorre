@@ -47,7 +47,7 @@ export function FeedbackPopup({ open, onClose }: FeedbackPopupProps) {
         return;
       }
       toast.success("Valeu pelo feedback! 🙏", {
-        description: "Vamos usar isso pra melhorar o app",
+        description: data.thankYouMessage ?? "Vamos usar isso pra melhorar o app",
       });
       // Reset
       setRating(0);

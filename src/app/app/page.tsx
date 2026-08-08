@@ -334,6 +334,16 @@ function HomeContent() {
     syncNow();
   };
 
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    // Limpa licença do localStorage
+    localStorage.removeItem("meucorre_license");
+    localStorage.removeItem("meucorre_last_sync");
+    toast.success("Você saiu da sua conta");
+    // Redireciona pra landing page
+    window.location.href = "/";
+  };
+
   const handleCapture = async (data: {
     app: string;
     value: number;
@@ -425,6 +435,7 @@ function HomeContent() {
         onOpenLicense={() => setLicenseOpen(true)}
         onOpenShare={() => setShareOpen(true)}
         syncStatus={syncStatus}
+        onLogout={handleLogout}
       />
 
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">

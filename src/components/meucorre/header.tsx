@@ -10,6 +10,7 @@ import {
   Crown,
   Sparkles,
   Share2,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -30,6 +31,7 @@ interface HeaderProps {
   onOpenCapture: () => void;
   onOpenLicense: () => void;
   onOpenShare: () => void;
+  onLogout: () => void;
   isPro: boolean;
   syncStatus?: "idle" | "syncing" | "synced" | "offline" | "not-logged-in" | "error";
 }
@@ -44,6 +46,7 @@ export function Header({
   onOpenCapture,
   onOpenLicense,
   onOpenShare,
+  onLogout,
   isPro,
   syncStatus,
 }: HeaderProps) {
@@ -217,6 +220,14 @@ export function Header({
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Apagar tudo
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-muted dark:bg-zinc-800" />
+              <DropdownMenuItem
+                onClick={onLogout}
+                className="cursor-pointer focus:bg-muted dark:bg-zinc-800 focus:text-foreground dark:text-zinc-100"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

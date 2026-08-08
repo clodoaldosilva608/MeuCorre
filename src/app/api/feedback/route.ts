@@ -54,5 +54,17 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ ok: true, id: feedback.id });
+  // Busca mensagem de agradecimento configurada pelo admin
+  let thankYouMessage =
+    "Valeu pelo feedback! 🙏 Seu depoimento ajuda muito a gente a melhorar o MeuCorre pra todo mundo. Bora correr atrás! 🏍️⚡";
+  try {
+    const setting = await prisma.setting.findUnique({
+      where: { key: "feedbackThankYouMessage" },
+    });
+    if (setting?.value) thankYouMessage = setting.value;
+  } catch {
+    // usa mensagem padrão
+  }
+
+  return NextResponse.json({ ok: true, id: feedback.id, thankYouMessage });
 }

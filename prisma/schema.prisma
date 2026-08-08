@@ -103,15 +103,18 @@ model User {
   email        String   @unique
   passwordHash String
   isPro        Boolean  @default(false)
-  licenseKey   String?  @unique // vinculado a uma Subscription quando PRO
+  licenseKey   String?  @unique
   phone        String?
   city         String?
+  active       Boolean  @default(true) // admin pode desativar
+  trialExtendedUntil DateTime? // admin pode estender trial
   lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([email])
   @@index([isPro])
+  @@index([active])
 }
 
 // ===== Tokens de recuperação de senha =====
@@ -165,4 +168,13 @@ model SyncedExpense {
   @@unique([userId, localId])
   @@index([userId, updatedAt])
   @@index([userId, date])
+}
+
+// ===== Configurações globais (admin) =====
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  updatedAt DateTime @updatedAt
 }

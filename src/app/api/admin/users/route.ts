@@ -27,6 +27,8 @@ export async function GET(req: NextRequest) {
       licenseKey: true,
       phone: true,
       city: true,
+      active: true,
+      trialExtendedUntil: true,
       lastLoginAt: true,
       createdAt: true,
     },

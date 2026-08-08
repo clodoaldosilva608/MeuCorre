@@ -5,78 +5,35 @@ import { db } from "@/lib/db";
 
 // ===== Hook de sincronização entre dispositivos =====
 //
-// Quando o usuário está logado, sincroniza corridas e despesas
-// entre o IndexedDB local e o servidor (Supabase Postgres).
-//
-// Fluxo:
-// 1. Ao montar, busca /api/auth/me pra ver se está logado
-// 2. Se logado, faz GET /api/sync?since=lastSync pra baixar mudanças
-//    - Importa mudanças do servidor pro IndexedDB (respeitando last-write-wins)
-// 3. Quando local muda (add/update/delete), faz POST /api/sync em background
-// 4. Repete a cada 60s (polling leve)
+// CORREÇÃO: passa uid diretamente pra push/pull em vez de depender
+// do state (que é assíncrono e causava o bug de não sincronizar).
 
 const LAST_SYNC_KEY = "meucorre_last_sync";
 const SYNC_INTERVAL_MS = 60 * 1000; // 1 min
 
 export type SyncStatus = "idle" | "syncing" | "synced" | "offline" | "not-logged-in" | "error";
 
-interface SyncedDeliveryFromServer {
-  id: string;
-  localId: number;
-  app: string;
-  value: number;
-  km: number;
-  date: string;
-  timestamp: number;
-  notes: string | null;
-  updatedAt: number;
-  deleted: boolean;
-}
-
-interface SyncedExpenseFromServer {
-  id: string;
-  localId: number;
-  category: string;
-  value: number;
-  description: string | null;
-  date: string;
-  timestamp: number;
-  updatedAt: number;
-  deleted: boolean;
-}
-
 export function useSync() {
   const [status, setStatus] = useState<SyncStatus>("idle");
   const [lastSync, setLastSync] = useState<number>(0);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const syncingRef = useRef(false);
+  const uidRef = useRef<string | null>(null);
 
-  // Carrega lastSync do localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem(LAST_SYNC_KEY);
     if (stored) setLastSync(Number(stored));
   }, []);
 
-  // Verifica se está logado
-  const checkAuth = useCallback(async (): Promise<string | null> => {
-    try {
-      const res = await fetch("/api/auth/me");
-      const data = await res.json();
-      return data.user?.id ?? null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  // Baixa mudanças do servidor
-  const pull = useCallback(async (uid: string) => {
+  // Baixa mudanças do servidor — recebe uid diretamente
+  const pull = useCallback(async (uid: string, since: number) => {
     if (syncingRef.current) return;
     syncingRef.current = true;
     setStatus("syncing");
 
     try {
-      const res = await fetch(`/api/sync?since=${lastSync}`);
+      const res = await fetch(`/api/sync?since=${since}`);
       if (!res.ok) {
         setStatus("error");
         return;
@@ -85,26 +42,11 @@ export function useSync() {
 
       // Importa corridas do servidor pro IndexedDB
       if (data.deliveries && data.deliveries.length > 0) {
-        for (const d of data.deliveries as SyncedDeliveryFromServer[]) {
-          // Busca local pelo localId
+        for (const d of data.deliveries) {
           const local = await db.deliveries.get(d.localId);
           if (d.deleted) {
-            // Soft delete no servidor → remove do local
             if (local) await db.deliveries.delete(d.localId);
-          } else if (!local) {
-            // Não existe local → importa do servidor
-            await db.deliveries.put({
-              id: d.localId,
-              app: d.app,
-              value: d.value,
-              km: d.km,
-              date: d.date,
-              timestamp: d.timestamp,
-              notes: d.notes ?? undefined,
-            });
-          }
-          // Se existe local e servidor é mais recente, atualiza
-          else if (local.timestamp < d.timestamp) {
+          } else if (!local || local.timestamp < d.timestamp) {
             await db.deliveries.put({
               id: d.localId,
               app: d.app,
@@ -120,23 +62,14 @@ export function useSync() {
 
       // Importa despesas do servidor
       if (data.expenses && data.expenses.length > 0) {
-        for (const e of data.expenses as SyncedExpenseFromServer[]) {
+        for (const e of data.expenses) {
           const local = await db.expenses.get(e.localId);
           if (e.deleted) {
             if (local) await db.expenses.delete(e.localId);
-          } else if (!local) {
+          } else if (!local || local.timestamp < e.timestamp) {
             await db.expenses.put({
               id: e.localId,
-              category: e.category as never,
-              value: e.value,
-              description: e.description ?? undefined,
-              date: e.date,
-              timestamp: e.timestamp,
-            });
-          } else if (local.timestamp < e.timestamp) {
-            await db.expenses.put({
-              id: e.localId,
-              category: e.category as never,
+              category: e.category,
               value: e.value,
               description: e.description ?? undefined,
               date: e.date,
@@ -146,7 +79,6 @@ export function useSync() {
         }
       }
 
-      // Atualiza lastSync
       const newLastSync = data.latestUpdatedAt ?? Date.now();
       setLastSync(newLastSync);
       localStorage.setItem(LAST_SYNC_KEY, String(newLastSync));
@@ -156,17 +88,15 @@ export function useSync() {
     } finally {
       syncingRef.current = false;
     }
-  }, [lastSync]);
+  }, []);
 
-  // Envia mudanças locais pro servidor
-  const push = useCallback(async () => {
-    if (!userId) return;
+  // Envia mudanças locais pro servidor — recebe uid diretamente
+  const push = useCallback(async (uid: string) => {
     if (syncingRef.current) return;
     syncingRef.current = true;
     setStatus("syncing");
 
     try {
-      // Pega todas as corridas locais e envia
       const localDeliveries = await db.deliveries.toArray();
       const deliveriesPayload = localDeliveries.map((d) => ({
         localId: d.id!,
@@ -176,7 +106,7 @@ export function useSync() {
         date: d.date,
         timestamp: d.timestamp,
         notes: d.notes ?? null,
-        updatedAt: d.timestamp, // usa timestamp como updatedAt (simplificação)
+        updatedAt: d.timestamp,
         deleted: false,
       }));
 
@@ -192,7 +122,6 @@ export function useSync() {
         deleted: false,
       }));
 
-      // Envia em batches (máx 500 por tipo)
       const res = await fetch("/api/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -212,56 +141,73 @@ export function useSync() {
     } finally {
       syncingRef.current = false;
     }
-  }, [userId]);
+  }, []);
 
   // Sincronização inicial + polling
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     let cancelled = false;
 
     const init = async () => {
-      const uid = await checkAuth();
-      if (cancelled) return;
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (cancelled) return;
 
-      if (!uid) {
-        setStatus("not-logged-in");
-        return;
+        if (!data.user) {
+          setStatus("not-logged-in");
+          return;
+        }
+
+        const uid = data.user.id;
+        uidRef.current = uid;
+        setIsLoggedIn(true);
+
+        // PRIMEIRO faz push (envia dados locais pro servidor)
+        // DEPOIS faz pull (baixa mudanças de outros dispositivos)
+        await push(uid);
+        await pull(uid, 0); // since=0 pra pegar tudo
+      } catch {
+        if (!cancelled) setStatus("offline");
       }
-
-      setUserId(uid);
-      // Primeiro baixa (importa mudanças de outros dispositivos)
-      await pull(uid);
-      // Depois envia (envia mudanças locais)
-      await push();
     };
 
     init();
 
     // Polling a cada 60s
     const interval = setInterval(async () => {
-      const uid = await checkAuth();
-      if (uid && !cancelled) {
-        await pull(uid);
-      }
+      if (cancelled || !uidRef.current) return;
+      const stored = localStorage.getItem(LAST_SYNC_KEY);
+      const since = stored ? Number(stored) : 0;
+      await pull(uidRef.current, since);
     }, SYNC_INTERVAL_MS);
 
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [checkAuth, pull, push]);
+  }, [push, pull]);
 
-  // Sincroniza após lançar/editar/excluir (chamado externamente)
+  // Sincroniza agora (chamado após lançar/editar/excluir)
   const syncNow = useCallback(async () => {
-    const uid = await checkAuth();
-    if (!uid) {
-      setStatus("not-logged-in");
-      return;
+    if (!uidRef.current) {
+      // Verifica auth se ainda não tem uid
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (data.user) {
+          uidRef.current = data.user.id;
+          setIsLoggedIn(true);
+        } else {
+          setStatus("not-logged-in");
+          return;
+        }
+      } catch {
+        return;
+      }
     }
-    setUserId(uid);
-    await push();
-  }, [checkAuth, push]);
+    await push(uidRef.current!);
+  }, [push]);
 
-  return { status, lastSync, syncNow };
+  return { status, lastSync, syncNow, isLoggedIn };
 }

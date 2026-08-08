@@ -5,7 +5,7 @@ import { hashPassword } from "@/lib/user-auth";
 import crypto from "crypto";
 
 // PATCH /api/admin/users/[id] — atualiza usuário
-// Body: { name?, password?, isPro?, phone?, city? }
+// Body: { name?, password?, isPro?, phone?, city?, active?, trialExtendedUntil?, resetPassword? }
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -21,6 +21,8 @@ export async function PATCH(
     isPro?: boolean;
     phone?: string;
     city?: string;
+    active?: boolean;
+    trialExtendedUntil?: string | null;
   };
   try {
     body = (await req.json()) as typeof body;
@@ -29,37 +31,37 @@ export async function PATCH(
   }
 
   const data: Record<string, unknown> = {};
+
   if (body.name !== undefined) {
     const name = body.name.trim();
-    if (name.length < 2) {
-      return NextResponse.json({ error: "Nome inválido" }, { status: 400 });
-    }
+    if (name.length < 2) return NextResponse.json({ error: "Nome inválido" }, { status: 400 });
     data.name = name;
   }
+
   if (body.password !== undefined) {
-    if (body.password.length < 6) {
-      return NextResponse.json({ error: "Senha deve ter no mínimo 6 caracteres" }, { status: 400 });
-    }
+    if (body.password.length < 6)
+      return NextResponse.json({ error: "Senha mínima 6 caracteres" }, { status: 400 });
     data.passwordHash = await hashPassword(body.password);
   }
-  if (body.phone !== undefined) {
-    data.phone = body.phone.trim().slice(0, 30) || null;
-  }
-  if (body.city !== undefined) {
-    data.city = body.city.trim().slice(0, 100) || null;
+
+  if (body.phone !== undefined) data.phone = body.phone.trim().slice(0, 30) || null;
+  if (body.city !== undefined) data.city = body.city.trim().slice(0, 100) || null;
+  if (body.active !== undefined) data.active = body.active;
+
+  if (body.trialExtendedUntil !== undefined) {
+    data.trialExtendedUntil = body.trialExtendedUntil
+      ? new Date(body.trialExtendedUntil)
+      : null;
   }
 
   // Toggle PRO
   if (body.isPro !== undefined) {
     const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
-    }
+    if (!user) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+
     if (body.isPro && !user.isPro) {
-      // Conceder PRO
       data.isPro = true;
       data.licenseKey = user.licenseKey ?? crypto.randomBytes(16).toString("hex");
-      // Cria Subscription pra auditoria
       await prisma.subscription.create({
         data: {
           buyerName: user.name,
@@ -74,7 +76,6 @@ export async function PATCH(
         },
       });
     } else if (!body.isPro && user.isPro) {
-      // Revogar PRO
       data.isPro = false;
       data.licenseKey = null;
     }
@@ -92,6 +93,9 @@ export async function PATCH(
         licenseKey: true,
         phone: true,
         city: true,
+        active: true,
+        trialExtendedUntil: true,
+        lastLoginAt: true,
         createdAt: true,
       },
     });
@@ -101,7 +105,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/admin/users/[id] — exclui usuário
+// DELETE /api/admin/users/[id]
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
