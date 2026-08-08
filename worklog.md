@@ -373,3 +373,45 @@ Stage Summary:
 - Theme toggle 100% funcional (muda visualmente entre claro/escuro)
 - Fluxo pós-pagamento 100% automático: cliente paga na Kiwify → webhook cria licença → cliente é redirecionado pra /obrigado → polling acha licença → auto-redirect pro /app com ?license=xxx → app ativa PRO automaticamente → badge PRO aparece
 - Pendência: SQLite efêmero em /tmp ainda causa perda de dados no cold start (assinaturas criadas somem após ~5min sem tráfego). Recomendação: migrar pra Postgres (Neon/Supabase) pra produção estável.
+
+---
+Task ID: 8
+Agent: Super Z (main)
+Task: Migrar de SQLite (efêmero em /tmp na Vercel) para Supabase Postgres (persistente).
+
+Work Log:
+- Schema Prisma atualizado: provider "sqlite" → "postgresql", adicionado directUrl
+- .env local atualizado com URLs do Supabase:
+  - DATABASE_URL = postgresql://postgres.pjetmhsevohaqtqfbxrr:Silva88677488@aws-0-sa-east-1.pooler.supabase.com:5432/postgres (Session Pooler, porta 5432)
+  - DIRECT_URL = mesma URL
+- Tentei conexão direta (porta 5432 do db.supabase.co): bloqueada (Supabase novos projetos só permitem acesso via pooler)
+- Conexão via Session Pooler (aws-0-sa-east-1.pooler.supabase.com:5432): ✓ funcionou
+- prisma db push executado com sucesso: 4 tabelas criadas (Ad, Subscription, AdEvent, Feedback)
+- prisma.ts simplificado: removido $extends com ensureDatabase (Postgres é persistente, não precisa criar schema em runtime)
+- db-init.ts mantido no código mas não é mais importado (Postgres usa schema real)
+- Env vars Vercel atualizadas:
+  - DATABASE_URL removido (SQLite) e re-adicionado (Postgres pooler) em production + preview + development
+  - DIRECT_URL adicionado em production + preview
+- Deploy Vercel production feito: https://meucorre-80yqdp477-clodoaldo608-gmailcoms-projects.vercel.app
+- Alias atualizado: https://meucorre-clodoaldosilva608.vercel.app
+- Validação completa (7 cenários):
+  - Landing 200, App 200
+  - /api/ads?placement=banner_top → {"ads":[]} (tabela vazia no Postgres novo)
+  - POST /api/webhooks/kiwify → criou licença a2a171c7f5e03d1e421a00c7104483bf no Postgres ✓
+  - GET /api/license/by-order?order=SUPABASE_TEST_001 → encontrou licença ✓
+  - POST /api/admin/login (clodoaldo608@gmail.com / Silva88677488@#) → {"ok":true} ✓
+  - POST /api/feedback → salvou no Postgres (id cmsjyznfd0001jl047v9m3h68) ✓
+- Teste de PERSISTÊNCIA (o mais importante):
+  - Licença criada, esperou 30s, buscou de novo → AINDA EXISTE ✓ (com SQLite sumiria após cold start)
+  - Admin consegue listar assinaturas aprovadas via cookie → retorna a assinatura criada ✓
+- Validação no browser do fluxo completo:
+  - /obrigado?order=SUPABASE_TEST_001 → polling achou licença → auto-redirect /app?license=a2a171c7... após 4s
+  - App detectou ?license=xxx → ativou PRO → toast "Licença PRO ativada! 🎉" → badge "PRO" no header
+  - Licença salva no localStorage
+
+Stage Summary:
+- MIGRAÇÃO SUPABASE POSTGRES COMPLETA E VALIDADA
+- Persistência real: licenças, assinaturas, anúncios e feedbacks não somem mais no cold start
+- Todas as APIs funcionando com Postgres
+- Fluxo pós-pagamento 100% automático e persistente
+- Pendente: configurar GitHub (https://github.com/clodoaldosilva608/MeuCorre.git) para deploy contínuo — aguardando user enviar GitHub Personal Access Token (PAT)
