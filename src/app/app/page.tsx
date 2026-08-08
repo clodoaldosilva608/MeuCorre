@@ -110,6 +110,9 @@ function HomeContent() {
     new Set(),
   );
   const [isPro, setIsPro] = useState(false);
+  // Nome do usuário logado para saudação personalizada no dashboard.
+  // Vazio enquanto não sabemos se está logado.
+  const [userName, setUserName] = useState<string>("");
 
   // Status de trial/limite (14 dias grátis + 5 lançamentos/dia após)
   const trialStatus = useTrialStatus(isPro);
@@ -119,18 +122,28 @@ function HomeContent() {
   // 1. Tenta licença no localStorage (PRO ativado manualmente)
   // 2. Se não tem, busca sessão de usuário logado (login via /login)
   //    Se user.isPro, salva licenseKey no localStorage e marca como PRO
+  // Aproveitamos o mesmo fetch para guardar o nome do usuário (saudação).
   useEffect(() => {
     (async () => {
       // 1. Licença no localStorage (ativação manual via ?license=xxx)
       const localPro = await checkProStatus();
       if (localPro) {
         setIsPro(true);
+        // Mesmo com licença local, tenta buscar o nome do usuário logado
+        try {
+          const res = await fetch("/api/auth/me");
+          const data = await res.json();
+          if (data.user?.name) setUserName(data.user.name);
+        } catch {
+          // offline ou não logado — sem saudação
+        }
         return;
       }
       // 2. Sessão de usuário (login via email/senha)
       try {
         const res = await fetch("/api/auth/me");
         const data = await res.json();
+        if (data.user?.name) setUserName(data.user.name);
         if (data.user?.isPro && data.user.licenseKey) {
           // Sincroniza licença do servidor pro localStorage
           localStorage.setItem("meucorre_license", data.user.licenseKey);
@@ -347,7 +360,7 @@ function HomeContent() {
     localStorage.removeItem("meucorre_share_dismissed_at");
     localStorage.removeItem("meucorre_feedback_asked_at");
     toast.success("Você saiu da sua conta");
-    window.location.href = "/";
+    window.location.replace("/");
   };
 
   const handleCapture = async (data: {
@@ -428,7 +441,7 @@ function HomeContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
       <SplashScreen visible={showSplash}>
         {/* Splash patrocinado (apenas se não for PRO e houver anúncio do tipo splash) */}
         {!isPro && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
@@ -482,6 +495,17 @@ function HomeContent() {
 
         {/* Cards de resumo sempre visíveis */}
         <SummaryCards stats={stats} periodLabel={periodLabel(period)} />
+
+        {/* Saudação personalizada com o nome do usuário logado.
+            Só renderizamos quando o nome já foi carregado — evita
+            layout shift no SSR e esconde totalmente quando offline. */}
+        {userName && (
+          <div className="flex items-center gap-2 px-1">
+            <h2 className="text-base font-bold text-foreground dark:text-zinc-100">
+              Olá, {userName.split(" ")[0]}! 👋
+            </h2>
+          </div>
+        )}
 
         <PeriodFilter value={period} onChange={setPeriod} />
 

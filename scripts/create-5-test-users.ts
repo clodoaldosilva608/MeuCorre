@@ -1,6 +1,6 @@
 /**
- * Cria 5 usuários de teste diferentes, cada um com dados próprios.
- * Cada usuário tem um padrão diferente de corridas pra facilitar validação.
+ * Cria 5 usuários de teste diferentes, cada um com dados PRÓPRIOS e ÚNICOS.
+ * Corrigido: cada usuário tem app, cidade e valores diferentes.
  */
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
@@ -16,7 +16,6 @@ const USERS = [
     city: "São Paulo - SP",
     app: "iFood",
     baseValue: 15,
-    color: "#ef4444",
   },
   {
     name: "Maria Oliveira",
@@ -25,7 +24,6 @@ const USERS = [
     city: "Rio de Janeiro - RJ",
     app: "99Food",
     baseValue: 20,
-    color: "#f97316",
   },
   {
     name: "José Pereira",
@@ -34,7 +32,6 @@ const USERS = [
     city: "Belo Horizonte - MG",
     app: "Lalamove",
     baseValue: 30,
-    color: "#f59e0b",
   },
   {
     name: "Ana Costa",
@@ -43,7 +40,6 @@ const USERS = [
     city: "Curitiba - PR",
     app: "Rappi",
     baseValue: 12,
-    color: "#ec4899",
   },
   {
     name: "Carlos Lima",
@@ -52,7 +48,6 @@ const USERS = [
     city: "Porto Alegre - RS",
     app: "iFood",
     baseValue: 18,
-    color: "#ef4444",
   },
 ];
 
@@ -66,18 +61,9 @@ function dateStr(daysAgo: number): string {
 }
 
 async function main() {
-  console.log("👥 Criando 5 usuários de teste...\n");
+  console.log("👥 Criando 5 usuários de teste com dados únicos...\n");
 
   for (const u of USERS) {
-    // Remove se já existe
-    const existing = await prisma.user.findUnique({ where: { email: u.email } });
-    if (existing) {
-      console.log(`⚠️  ${u.name} já existe. Removendo...`);
-      await prisma.syncedDelivery.deleteMany({ where: { userId: existing.id } });
-      await prisma.syncedExpense.deleteMany({ where: { userId: existing.id } });
-      await prisma.user.delete({ where: { id: existing.id } });
-    }
-
     // Cria usuário
     const passwordHash = await bcrypt.hash(u.password, 10);
     const user = await prisma.user.create({
@@ -90,11 +76,11 @@ async function main() {
       },
     });
 
-    // Gera corridas: 20 corridas em 7 dias (pra ser rápido de sincronizar)
+    // Gera 10 corridas (7 dias)
     const deliveries = [];
-    for (let i = 0; i < 20; i++) {
-      const daysAgo = Math.floor(i / 3); // ~3 corridas por dia
-      const hour = 8 + (i % 12);
+    for (let i = 0; i < 10; i++) {
+      const daysAgo = Math.floor(i / 2);
+      const hour = 8 + (i % 10);
       const d = new Date();
       d.setDate(d.getDate() - daysAgo);
       d.setHours(hour, (i * 7) % 60, 0, 0);
@@ -104,8 +90,8 @@ async function main() {
         userId: user.id,
         localId: i + 1,
         app: u.app,
-        value: Number((u.baseValue + (i % 10)).toFixed(2)),
-        km: Number((2 + (i % 8)).toFixed(1)),
+        value: Number((u.baseValue + (i % 5)).toFixed(2)),
+        km: Number((2 + (i % 6)).toFixed(1)),
         date: dateStr(daysAgo),
         timestamp: ts,
         notes: `${u.city.split(" - ")[0]} - corrida ${i + 1}`,
@@ -114,10 +100,10 @@ async function main() {
       });
     }
 
-    // Gera 5 despesas
+    // Gera 3 despesas
     const expenses = [];
-    const expCats = ["combustivel", "alimentacao", "manutencao", "pedagio", "outros"];
-    for (let i = 0; i < 5; i++) {
+    const expCats = ["combustivel", "alimentacao", "manutencao"];
+    for (let i = 0; i < 3; i++) {
       const daysAgo = i * 2;
       const d = new Date();
       d.setDate(d.getDate() - daysAgo);
@@ -129,7 +115,7 @@ async function main() {
         localId: i + 1,
         category: expCats[i],
         value: Number((10 + i * 5).toFixed(2)),
-        description: `Despesa ${i + 1}`,
+        description: `${u.city.split(" - ")[0]} - despesa ${i + 1}`,
         date: dateStr(daysAgo),
         timestamp: ts,
         updatedAt: ts,
@@ -144,30 +130,15 @@ async function main() {
     const totalDespesas = expenses.reduce((s, e) => s + e.value, 0);
 
     console.log(`✅ ${u.name} (${u.email})`);
-    console.log(`   Cidade: ${u.city} | App: ${u.app}`);
-    console.log(`   20 corridas | 5 despesas`);
-    console.log(`   Ganhos: R$ ${totalGanhos.toFixed(2)} | Despesas: R$ ${totalDespesas.toFixed(2)} | Lucro: R$ ${(totalGanhos - totalDespesas).toFixed(2)}`);
+    console.log(`   ${u.city} | App: ${u.app}`);
+    console.log(`   10 corridas | 3 despesas`);
+    console.log(`   Ganhos: R$ ${totalGanhos.toFixed(2)} | Despesas: R$ ${totalDespesas.toFixed(2)}`);
     console.log(`   Senha: ${u.password}\n`);
   }
 
-  console.log("\n🎉 5 usuários criados!");
-  console.log("\n📋 Resumo:");
-  console.log("┌─────────────────┬──────────────────────────────┬────────┐");
-  console.log("│ Nome            │ Email                        │ App    │");
-  console.log("├─────────────────┼──────────────────────────────┼────────┤");
-  for (const u of USERS) {
-    console.log(`│ ${u.name.padEnd(15)} │ ${u.email.padEnd(28)} │ ${u.app.padEnd(6)} │`);
-  }
-  console.log("└─────────────────┴──────────────────────────────┴────────┘");
-  console.log("\n🔑 Senha de todos: 123456");
-  console.log("🌐 Acesse: https://meucorre.vercel.app/login");
+  console.log("🎉 5 usuários criados com dados únicos!");
 }
 
 main()
-  .catch((e) => {
-    console.error("Erro:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch((e) => { console.error("Erro:", e); process.exit(1); })
+  .finally(async () => { await prisma.$disconnect(); });

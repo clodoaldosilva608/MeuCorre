@@ -32,7 +32,7 @@ export function BottomNav({
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border dark:border-zinc-800 bg-background dark:bg-zinc-950/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-md items-center justify-around px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto flex max-w-md items-center justify-around gap-1 px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
         {tabs
           .filter((t) => t.show)
           .map((tab) => {
@@ -52,14 +52,14 @@ export function BottomNav({
               >
                 <Icon
                   className={cn(
-                    "h-5 w-5 transition-transform",
+                    "h-4 w-4 transition-transform sm:h-5 sm:w-5",
                     isActive && "scale-110",
                   )}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
                 <span
                   className={cn(
-                    "text-[10px] font-medium",
+                    "text-[9px] font-medium sm:text-[10px]",
                     isActive && "font-semibold",
                   )}
                 >

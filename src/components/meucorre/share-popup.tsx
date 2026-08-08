@@ -87,7 +87,7 @@ export function SharePopup({ open, onClose }: SharePopupProps) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md gap-0 border-zinc-800 bg-zinc-950 p-0 text-zinc-100">
+      <DialogContent className="max-h-[85vh] max-w-md gap-0 overflow-y-auto border-zinc-800 bg-zinc-950 p-0 text-zinc-100">
         <DialogHeader className="border-b border-zinc-800 px-5 py-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-400">

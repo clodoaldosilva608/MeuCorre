@@ -80,7 +80,7 @@ export function Header({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <span
             suppressHydrationWarning
             className="hidden min-w-[80px] rounded-full bg-muted dark:bg-zinc-800 px-2.5 py-1 text-center text-[11px] font-medium capitalize text-muted-foreground dark:text-zinc-400 sm:inline dark:bg-muted dark:bg-zinc-800 dark:text-muted-foreground dark:text-zinc-400"
@@ -97,7 +97,7 @@ export function Header({
             size="icon"
             onClick={onOpenCapture}
             aria-label="Capturar por notificação"
-            className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-muted dark:bg-zinc-800 hover:text-emerald-400"
+            className="hidden h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-muted dark:bg-zinc-800 hover:text-emerald-400 sm:inline-flex"
           >
             <Bell className="h-4 w-4" />
           </Button>
@@ -108,7 +108,7 @@ export function Header({
             size="icon"
             onClick={onOpenApps}
             aria-label="Gerenciar apps de entrega"
-            className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-muted dark:bg-zinc-800 hover:text-emerald-400"
+            className="hidden h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-muted dark:bg-zinc-800 hover:text-emerald-400 sm:inline-flex"
           >
             <Grid3x3 className="h-4 w-4" />
           </Button>
@@ -119,7 +119,7 @@ export function Header({
             size="icon"
             onClick={onOpenShare}
             aria-label="Compartilhar com amigos"
-            className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
+            className="hidden h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400 sm:inline-flex"
           >
             <Share2 className="h-4 w-4" />
           </Button>
@@ -127,7 +127,7 @@ export function Header({
           {/* Indicador de sincronização */}
           {syncStatus && syncStatus !== "not-logged-in" && syncStatus !== "idle" && (
             <span
-              className="flex items-center gap-0.5 text-[9px] font-medium"
+              className="hidden items-center gap-0.5 text-[9px] font-medium sm:flex"
               title={
                 syncStatus === "syncing"
                   ? "Sincronizando..."
@@ -163,7 +163,7 @@ export function Header({
 
           {/* PRO badge ou botão de licença */}
           {isPro ? (
-            <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 px-2 py-1 text-[10px] font-black text-zinc-950 shadow-sm shadow-emerald-500/30">
+            <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 px-1.5 py-1 text-[10px] font-black text-zinc-950 shadow-sm shadow-emerald-500/30 sm:px-2">
               <Sparkles className="h-2.5 w-2.5" />
               PRO
             </span>
@@ -173,7 +173,7 @@ export function Header({
               size="icon"
               onClick={onOpenLicense}
               aria-label="Ativar licença PRO"
-              className="h-8 w-8 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
+              className="h-8 w-8 shrink-0 rounded-full text-muted-foreground dark:text-zinc-400 hover:bg-emerald-500/10 hover:text-emerald-400"
             >
               <Crown className="h-4 w-4" />
             </Button>

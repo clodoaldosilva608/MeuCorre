@@ -3,7 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { formatBRL, formatKm, formatTime, appMeta } from "@/lib/apps";
 import type { Delivery, DeliveryApp } from "@/lib/types";
-import { Pencil, Trash2, Clock } from "lucide-react";
+import { Pencil, Trash2, Clock, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DeliveryListProps {
   deliveries: Delivery[];
@@ -89,7 +95,8 @@ export function DeliveryList({
                         {formatBRL(d.value)}
                       </span>
                     </div>
-                    <div className="flex flex-col gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                    {/* Botões hover (desktop) */}
+                    <div className="hidden flex-col gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 sm:flex">
                       <button
                         onClick={() => onEdit(d)}
                         aria-label={`Editar corrida de ${meta.label}`}
@@ -105,6 +112,36 @@ export function DeliveryList({
                         <Trash2 className="h-3 w-3" />
                       </button>
                     </div>
+                    {/* Menu de 3 pontos (mobile) */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          aria-label={`Ações para corrida de ${meta.label}`}
+                          className="grid h-7 w-7 shrink-0 place-items-center rounded text-zinc-500 hover:bg-muted dark:bg-zinc-800 hover:text-zinc-200 sm:hidden"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-40 border-zinc-800 bg-zinc-900 text-zinc-200"
+                      >
+                        <DropdownMenuItem
+                          onClick={() => onEdit(d)}
+                          className="cursor-pointer focus:bg-zinc-800 focus:text-zinc-100"
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => onDelete(d)}
+                          className="cursor-pointer text-red-400 focus:bg-red-950/40 focus:text-red-300"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </motion.div>
               );

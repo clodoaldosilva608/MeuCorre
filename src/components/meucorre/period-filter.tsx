@@ -24,7 +24,7 @@ export function PeriodFilter({ value, onChange }: PeriodFilterProps) {
           key={opt.key}
           onClick={() => onChange(opt.key)}
           className={cn(
-            "flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition-all",
+            "flex-1 rounded-lg px-1.5 py-1.5 text-[11px] font-semibold transition-all sm:px-2 sm:text-xs",
             value === opt.key
               ? "bg-emerald-500 text-zinc-950 shadow-sm shadow-emerald-500/30"
               : "text-muted-foreground dark:text-zinc-400 hover:bg-muted dark:bg-zinc-800 hover:text-zinc-200",

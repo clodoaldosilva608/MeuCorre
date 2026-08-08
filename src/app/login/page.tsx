@@ -36,10 +36,9 @@ export default function LoginPage() {
       switchDb(data.user.id);
 
       toast.success(`Bem-vindo, ${data.user.name.split(" ")[0]}! 👋`);
-      // window.location.href força um reload completo da página,
-      // garantindo que TODOS os hooks (useLiveQuery, useSync, etc.)
-      // se re-inicializem com o novo database ativo
-      window.location.href = "/app";
+      // Usa replace() que força reload completo (sem cache do Service Worker)
+      // e não adiciona entrada no histórico (usuário não pode voltar pro login)
+      window.location.replace("/app");
     } catch {
       toast.error("Erro de conexão");
     } finally {

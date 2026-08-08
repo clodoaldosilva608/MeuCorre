@@ -118,7 +118,7 @@ export function NotificationCapture({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md gap-0 border-zinc-800 bg-zinc-950 p-0 text-zinc-100">
+      <DialogContent className="max-h-[90vh] max-w-md gap-0 overflow-hidden border-zinc-800 bg-zinc-950 p-0 text-zinc-100">
         <DialogHeader className="border-b border-zinc-800 px-5 py-4">
           <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-400">
             <Bell className="h-4 w-4" />
@@ -130,7 +130,7 @@ export function NotificationCapture({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-5">
+        <div className="max-h-[80vh] overflow-y-auto px-5 py-5">
           {/* Status de permissão */}
           <div className="mb-4 rounded-xl border border-zinc-800 bg-zinc-900 p-3">
             <div className="flex items-start gap-2">

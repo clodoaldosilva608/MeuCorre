@@ -26,7 +26,7 @@ export function Fab({ onClick, variant = "primary", label = "Adicionar" }: FabPr
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
       aria-label={label}
-      className={`fixed bottom-20 right-5 z-50 grid h-14 w-14 place-items-center rounded-full shadow-xl ring-4 ring-zinc-950/40 transition-colors ${colorClass}`}
+      className={`fixed bottom-24 right-5 z-50 grid h-14 w-14 place-items-center rounded-full shadow-xl ring-4 ring-zinc-950/40 transition-colors ${colorClass}`}
     >
       <Plus className="h-7 w-7" strokeWidth={3} />
     </motion.button>

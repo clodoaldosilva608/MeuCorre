@@ -47,7 +47,7 @@ export function PromoPopup({
 }: PromoPopupProps) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md gap-0 overflow-hidden border-zinc-800 bg-zinc-950 p-0 text-zinc-100">
+      <DialogContent className="max-h-[85vh] max-w-md gap-0 overflow-y-auto border-zinc-800 bg-zinc-950 p-0 text-zinc-100">
         {/* Header com gradient */}
         <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-700 p-5 text-center">
           <button
