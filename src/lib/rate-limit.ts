@@ -33,11 +33,28 @@ interface RateLimitResult {
 }
 
 // ===== In-memory fallback =====
+// LIMITES DE SEGURANÇA: Em serverless, o Map é recriado a cada cold start,
+// mas dentro de uma invocação longa pode crescer indefinidamente. Limitamos
+// a MAX_BUCKETS entradas com LRU simples para evitar memory leak.
 interface RateLimitEntry {
   count: number;
   firstAt: number;
 }
+const MAX_BUCKETS = 10000; // limite de segurança contra memory leak
 const buckets = new Map<string, RateLimitEntry>();
+
+// Limpa entradas mais antigas quando o Map excede o limite (LRU simples)
+function enforceBucketLimit() {
+  if (buckets.size <= MAX_BUCKETS) return;
+  // Remove as 50% entradas mais antigas (ordenadas por firstAt)
+  const entries = Array.from(buckets.entries()).sort(
+    ([, a], [, b]) => a.firstAt - b.firstAt,
+  );
+  const toRemove = Math.floor(entries.length / 2);
+  for (let i = 0; i < toRemove; i++) {
+    buckets.delete(entries[i][0]);
+  }
+}
 
 function inMemoryRateLimit(
   identifier: string,
@@ -47,6 +64,7 @@ function inMemoryRateLimit(
   const entry = buckets.get(identifier);
 
   if (!entry || now - entry.firstAt > options.windowMs) {
+    enforceBucketLimit(); // previne memory leak
     buckets.set(identifier, { count: 1, firstAt: now });
     return {
       allowed: true,
@@ -147,17 +165,27 @@ export function isE2ETestBypass(req: NextRequest): boolean {
 
 // Helper: aplica rate limit e retorna 429 se excedido.
 // Faz bypass automático se a request tiver o header X-E2E-Test-Mode válido.
+//
+// PARÂMETRO userId (opcional): Se o usuário estiver logado, o rate limit é
+// aplicado por userId (não por IP). Isso resolve o problema de CGNAT no Brasil
+// onde centenas de usuários legítimos compartilham o mesmo IP público (4G).
+// Em endpoints de auth (login/register), NÃO passar userId (usuário ainda
+// não está logado) — rate limit por IP é mais apropriado para prevenir brute force.
 export async function applyRateLimit(
   req: NextRequest,
   options: RateLimitOptions,
+  userId?: string,
 ): Promise<NextResponse | null> {
   // Bypass para testes E2E — não conta no rate limit
   if (isE2ETestBypass(req)) {
     return null;
   }
 
+  // Se userId fornecido, usa userId como identificador (prioridade sobre IP).
+  // Caso contrário, usa IP (para endpoints de auth onde usuário não está logado).
   const ip = getClientIp(req);
-  const result = await redisRateLimit(ip, options);
+  const identifier = userId ?? ip;
+  const result = await redisRateLimit(identifier, options);
 
   if (!result.allowed) {
     const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);

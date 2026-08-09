@@ -28,7 +28,7 @@ export function useSync() {
     if (stored) setLastSync(Number(stored));
   }, []);
 
-  // Baixa mudanças do servidor (com paginação automática)
+  // Baixa mudanças do servidor (com paginação automática via cursor composto)
   const pull = useCallback(async (uid: string, since: number) => {
     if (syncingRef.current) return;
     syncingRef.current = true;
@@ -45,12 +45,18 @@ export function useSync() {
       }
 
       let currentSince = since;
+      let currentLastId: string | null = null; // cursor tiebreaker
       let hasChanges = false;
       let hasMore = true;
 
-      // Loop de paginação — busca 100 por vez até não ter mais
+      // Loop de paginação — busca PAGE_SIZE por vez até não ter mais
+      // Cursor composto (since, lastId) evita pular registros com mesmo timestamp
       while (hasMore) {
-        const res = await fetch(`/api/sync?since=${currentSince}`);
+        const params = new URLSearchParams();
+        params.set("since", String(currentSince));
+        if (currentLastId) params.set("lastId", currentLastId);
+
+        const res = await fetch(`/api/sync?${params.toString()}`);
         if (!res.ok) {
           setStatus("error");
           return;
@@ -105,6 +111,7 @@ export function useSync() {
         }
 
         const newSince = data.latestUpdatedAt ?? Date.now();
+        currentLastId = data.lastId ?? null; // atualiza cursor tiebreaker
         hasMore = data.hasMore === true;
 
         // Se não veio nada, para
@@ -112,8 +119,9 @@ export function useSync() {
           hasMore = false;
         }
 
-        // Safety: se latestUpdatedAt não avançou desde a última iteração, para
-        if (newSince <= currentSince) {
+        // Safety: se latestUpdatedAt não avançou E lastId não mudou, para
+        // (evita loop infinito se servidor retornar os mesmos registros)
+        if (newSince <= currentSince && !currentLastId) {
           hasMore = false;
         }
         currentSince = newSince;

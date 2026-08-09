@@ -14,10 +14,15 @@ const SECRET_NAME = "meucorre_user";
 const ALG = "HS256";
 
 function getSecret(): Uint8Array {
-  const secret = process.env.USER_JWT_SECRET ?? process.env.ADMIN_JWT_SECRET;
+  // CRÍTICO: NÃO usar ADMIN_JWT_SECRET como fallback.
+  // Se USER_JWT_SECRET não estiver configurado, os tokens de usuário
+  // seriam assinados com a chave master do admin — quebra o princípio
+  // de separação de chaves e cria risco de escalonamento de privilégios.
+  // A env var USER_JWT_SECRET é OBRIGATÓRIA em produção.
+  const secret = process.env.USER_JWT_SECRET;
   if (!secret) {
     throw new Error(
-      "USER_JWT_SECRET ou ADMIN_JWT_SECRET deve estar configurado nas env vars",
+      "USER_JWT_SECRET deve estar configurado nas env vars (não use ADMIN_JWT_SECRET como fallback)",
     );
   }
   return new TextEncoder().encode(secret);
