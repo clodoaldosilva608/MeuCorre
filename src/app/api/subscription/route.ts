@@ -17,7 +17,7 @@ interface CreateSubscriptionBody {
 // Rate limit: 3 criações por IP por hora (anti-spam)
 export async function POST(req: NextRequest) {
   // Rate limit
-  const limited = applyRateLimit(req, {
+  const limited = await applyRateLimit(req, {
     windowMs: 60 * 60 * 1000, // 1h
     maxRequests: 3,
   });

@@ -7,7 +7,7 @@ import { applyRateLimit } from "@/lib/rate-limit";
 // Cadastro de novo usuário entregador
 export async function POST(req: NextRequest) {
   // Rate limit: 3 cadastros por IP por hora
-  const limited = applyRateLimit(req, {
+  const limited = await applyRateLimit(req, {
     windowMs: 60 * 60 * 1000,
     maxRequests: 3,
   });

@@ -7,7 +7,7 @@ import { applyRateLimit } from "@/lib/rate-limit";
 // Rate limit: 5 feedbacks por IP por hora (anti-spam)
 export async function POST(req: NextRequest) {
   // Rate limit
-  const limited = applyRateLimit(req, {
+  const limited = await applyRateLimit(req, {
     windowMs: 60 * 60 * 1000, // 1h
     maxRequests: 5,
   });

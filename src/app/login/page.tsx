@@ -31,14 +31,13 @@ export default function LoginPage() {
         return;
       }
 
-      // Troca para o database isolado do usuário (IndexedDB separado por userId)
-      // Isso garante isolamento total: dados do usuário A nunca aparecem pro usuário B
+      // Troca para o database isolado do usuário
       switchDb(data.user.id);
 
       toast.success(`Bem-vindo, ${data.user.name.split(" ")[0]}! 👋`);
-      // Usa replace() que força reload completo (sem cache do Service Worker)
-      // e não adiciona entrada no histórico (usuário não pode voltar pro login)
-      window.location.replace("/app");
+      // Passa o userId via query param para que o useSync chame switchDb
+      // Isso garante que o DB ativo seja trocado mesmo após reload completo
+      window.location.replace('/app');
     } catch {
       toast.error("Erro de conexão");
     } finally {

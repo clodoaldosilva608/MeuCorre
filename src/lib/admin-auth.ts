@@ -11,11 +11,10 @@ const SECRET_NAME = "meucorre_admin";
 const ALG = "HS256";
 
 function getSecret(): Uint8Array {
-  const secret =
-    process.env.ADMIN_JWT_SECRET ??
-    // Fallback: deriva do ADMIN_PASSWORD (não ideal, mas garante que funciona)
-    process.env.ADMIN_PASSWORD ??
-    "meucorre-fallback-secret-change-me";
+  const secret = process.env.ADMIN_JWT_SECRET;
+  if (!secret) {
+    throw new Error("ADMIN_JWT_SECRET deve estar configurado nas env vars");
+  }
   return new TextEncoder().encode(secret);
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { db } from "@/lib/db";
+import { db, switchDb } from "@/lib/db";
 
 // ===== Hook de sincronização entre dispositivos =====
 //
@@ -36,6 +36,13 @@ export function useSync() {
 
     try {
       await db.open();
+
+      // Se since=0 (primeira sincronização), limpa o DB local antes de importar
+      // Isso garante que dados de outro usuário sejam removidos
+      if (since === 0) {
+        await db.deliveries.clear();
+        await db.expenses.clear();
+      }
 
       let currentSince = since;
       let hasChanges = false;
@@ -134,6 +141,15 @@ export function useSync() {
     setStatus("syncing");
 
     try {
+      // CRÍTICO: Verifica se o DB ativo corresponde ao usuário da sessão
+      // Isso previne o race condition que mistura dados entre usuários
+      const localStorageUserId = localStorage.getItem("meucorre_user_id");
+      if (localStorageUserId !== uid) {
+        console.warn("[sync] Abortando push: userId do localStorage não bate com sessão");
+        setStatus("synced");
+        return;
+      }
+
       await db.open();
 
       const localDeliveries = await db.deliveries.toArray();
@@ -202,10 +218,13 @@ export function useSync() {
         uidRef.current = uid;
         setIsLoggedIn(true);
 
-        // PRIMEIRO faz push (envia dados locais pro servidor)
-        await push(uid);
-        // DEPOIS faz pull (baixa mudanças de outros dispositivos)
-        // since=0 pra pegar TUDO (importante pra novo dispositivo)
+        // Garante que o DB ativo corresponde ao usuário logado
+        const localStorageUserId = localStorage.getItem("meucorre_user_id");
+        if (localStorageUserId !== uid) {
+          switchDb(uid);
+        }
+
+        // SÓ faz pull na inicialização (baixa dados do servidor)
         await pull(uid, 0);
       } catch {
         if (!cancelled) setStatus("offline");
@@ -213,7 +232,7 @@ export function useSync() {
     };
 
     // Delay de 2s pra garantir que o componente montou e DB está pronto
-    const timer = setTimeout(init, 2000);
+    const timer = setTimeout(init, 500);
 
     // Polling a cada 60s
     const interval = setInterval(async () => {
@@ -246,6 +265,13 @@ export function useSync() {
       } catch {
         return;
       }
+    }
+    // CRÍTICO: verifica se o userId do localStorage bate com a sessão
+    // antes de fazer push (previne mistura de dados entre usuários)
+    const localStorageUserId = localStorage.getItem("meucorre_user_id");
+    if (localStorageUserId !== uidRef.current) {
+      console.warn("[syncNow] Abortando: userId do localStorage não bate com sessão");
+      return;
     }
     await push(uidRef.current!);
   }, [push]);

@@ -14,10 +14,12 @@ const SECRET_NAME = "meucorre_user";
 const ALG = "HS256";
 
 function getSecret(): Uint8Array {
-  const secret =
-    process.env.USER_JWT_SECRET ??
-    process.env.ADMIN_JWT_SECRET ??
-    "meucorre-user-fallback-secret";
+  const secret = process.env.USER_JWT_SECRET ?? process.env.ADMIN_JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      "USER_JWT_SECRET ou ADMIN_JWT_SECRET deve estar configurado nas env vars",
+    );
+  }
   return new TextEncoder().encode(secret);
 }
 

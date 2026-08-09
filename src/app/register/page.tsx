@@ -40,7 +40,7 @@ export default function RegisterPage() {
       switchDb(data.user.id);
 
       toast.success(`Bem-vindo ao MeuCorre, ${data.user.name.split(" ")[0]}! 🎉`);
-      window.location.replace("/app");
+      window.location.replace('/app');
     } catch {
       toast.error("Erro de conexão");
     } finally {
