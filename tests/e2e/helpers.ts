@@ -21,6 +21,12 @@ export const TEST_ACCOUNTS = {
   },
 };
 
+// Token para bypass de rate limit em testes E2E.
+// A env var E2E_TEST_BYPASS_TOKEN precisa estar configurada na Vercel.
+// Se não estiver setada localmente, os testes que criam usuários vão
+// falhar por rate limiting (3 cadastros/IP/hora).
+const E2E_BYPASS_TOKEN = process.env.E2E_TEST_BYPASS_TOKEN ?? "";
+
 // Limpa todo o estado do browser (cookies, localStorage, sessionStorage, IndexedDB)
 export async function clearBrowserState(page: Page) {
   await page.context().clearCookies();
@@ -44,18 +50,58 @@ export async function clearBrowserState(page: Page) {
   });
 }
 
-// Registra um novo usuário via /register
+// Registra um novo usuário via /api/auth/register (API direta).
+// Usa o header X-E2E-Test-Mode para bypassar o rate limit de cadastro.
+// Retorna os dados do usuário criado ou lança erro se falhar.
+export async function registerUserViaApi(
+  page: Page,
+  account: { name: string; email: string; password: string },
+): Promise<{ id: string; email: string; isPro: boolean }> {
+  const response = await page.evaluate(
+    async ({ account, bypassToken }) => {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-E2E-Test-Mode": bypassToken,
+        },
+        body: JSON.stringify(account),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(`Register failed: ${data.error || res.status}`);
+      }
+      return data;
+    },
+    { account, bypassToken: E2E_BYPASS_TOKEN },
+  );
+  return response.user;
+}
+
+// Registra um novo usuário e estabelece sessão.
+// Usa a API direta (com bypass de rate limit) — a API já seta o cookie
+// httpOnly meucorre_user, então navegamos direto para /app.
 export async function registerUser(
   page: Page,
   account: { name: string; email: string; password: string },
 ) {
-  await page.goto("/register");
-  // Campos do form usam placeholder (não aria-label/associated label)
-  await page.getByPlaceholder(/joão da silva/i).fill(account.name);
-  await page.getByPlaceholder(/seu@email\.com/i).fill(account.email);
-  await page.getByPlaceholder("••••••••").fill(account.password);
-  await page.getByRole("button", { name: /criar conta/i }).click();
+  await registerUserViaApi(page, account);
+  // A API já setou o cookie — navega para /app direto
+  await page.goto("/app");
+  await page.waitForLoadState("networkidle");
+  // Aguarda splash screen terminar e popups carregarem
+  await page.waitForTimeout(3000);
+}
+
+// Faz login via UI (form /login)
+export async function loginUser(page: Page, email: string, password: string) {
+  await page.goto("/login");
+  await page.getByPlaceholder(/seu@email\.com/i).fill(email);
+  await page.getByPlaceholder("••••••••").fill(password);
+  await page.getByRole("button", { name: /entrar/i }).click();
   await page.waitForURL("**/app", { timeout: 15000 });
+  // Aguarda splash screen e popups carregarem
+  await page.waitForTimeout(3000);
 }
 
 // Fecha o modal de trial/promo/share/feedback se estiver aberto.

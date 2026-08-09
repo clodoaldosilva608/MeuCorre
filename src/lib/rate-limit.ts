@@ -8,6 +8,18 @@ import { NextRequest, NextResponse } from "next/server";
 //
 // Em produção com 100k usuários, DEVE configurar Upstash Redis.
 // Sem Redis, o rate limit é "aproximado" (cada instância conta separadamente).
+//
+// ===== Bypass para testes E2E =====
+//
+// Para permitir que testes E2E (Playwright) criem múltiplos usuários sem
+// serem bloqueados pelo rate limit de cadastro (3/IP/hora), bypassamos o
+// rate limit quando:
+//   1. A request tem header `X-E2E-Test-Mode: <token>`
+//   2. O token bate com a env var `E2E_TEST_BYPASS_TOKEN`
+//
+// Segurança: o token NUNCA é exposto ao client (não é NEXT_PUBLIC_*).
+// Apenas CI/scripts com acesso ao token podem bypassar. Em produção normal,
+// usuários não têm como descobrir o token.
 
 interface RateLimitOptions {
   windowMs: number;
@@ -115,11 +127,35 @@ export function getClientIp(req: NextRequest): string {
   );
 }
 
-// Helper: aplica rate limit e retorna 429 se excedido
+// Helper: verifica se a request tem o header de bypass de teste E2E.
+// Retorna true apenas se o header `X-E2E-Test-Mode` bater com a env var
+// `E2E_TEST_BYPASS_TOKEN`. Usado por testes Playwright/CI para criar
+// múltiplos usuários sem rate limiting.
+export function isE2ETestBypass(req: NextRequest): boolean {
+  const expectedToken = process.env.E2E_TEST_BYPASS_TOKEN;
+  if (!expectedToken) return false; // sem token configurado, sem bypass
+  const receivedToken = req.headers.get("x-e2e-test-mode");
+  if (!receivedToken) return false;
+  // Comparação constante-tempo para evitar timing attacks
+  if (receivedToken.length !== expectedToken.length) return false;
+  let diff = 0;
+  for (let i = 0; i < receivedToken.length; i++) {
+    diff |= receivedToken.charCodeAt(i) ^ expectedToken.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+// Helper: aplica rate limit e retorna 429 se excedido.
+// Faz bypass automático se a request tiver o header X-E2E-Test-Mode válido.
 export async function applyRateLimit(
   req: NextRequest,
   options: RateLimitOptions,
 ): Promise<NextResponse | null> {
+  // Bypass para testes E2E — não conta no rate limit
+  if (isE2ETestBypass(req)) {
+    return null;
+  }
+
   const ip = getClientIp(req);
   const result = await redisRateLimit(ip, options);
 
