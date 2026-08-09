@@ -43,7 +43,14 @@ export function useApps() {
   const dbVersion = useDbVersion();
   const apps = useLiveQuery(
     async () => {
-      await ensureDefaultApps();
+      // ensureDefaultApps pode falhar se dados antigos do IndexedDB
+      // não tiverem campos esperados. Wrap em try-catch para não
+      // crashar o app — apps existentes ainda são retornados.
+      try {
+        await ensureDefaultApps();
+      } catch (e) {
+        console.warn("[useApps] ensureDefaultApps falhou, usando apps existentes:", e);
+      }
       const all = await db.apps.toArray();
       return all.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
     },

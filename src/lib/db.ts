@@ -205,41 +205,58 @@ export const db = {
 // Garante que os apps padrão existam (roda no client, idempotente).
 // Também migra apps existentes para novas imagens locais (se URLs mudaram)
 // e adiciona novos apps padrão (Ryd, Bee) que não existiam antes.
+//
+// RESILIÊNCIA: Toda a migração é envolvida em try-catch. Se qualquer passo
+// falhar (dados antigos corrompidos, schema mismatch, etc.), a função
+// retorna silenciosamente. O app usa os apps que já estão no DB.
 export async function ensureDefaultApps() {
   const current = getActiveDb();
-  const count = await current.apps.count();
 
-  // 1. Se tabela vazia → seed com todos os apps padrão
-  if (count === 0) {
-    await current.apps.bulkAdd(
-      DEFAULT_APPS.map((a, i) => ({ ...a, isDefault: true, order: i })),
-    );
-    return;
-  }
+  try {
+    const count = await current.apps.count();
 
-  // 2. Migração: atualiza imagens de apps padrão existentes (CDN → local)
-  // e adiciona novos apps padrão (Ryd, Bee) que não existiam antes.
-  const existingApps = await current.apps.toArray();
-  const existingNames = new Set(existingApps.map((a) => a.name));
-
-  for (const defaultApp of DEFAULT_APPS) {
-    if (!existingNames.has(defaultApp.name)) {
-      // Novo app padrão (Ryd, Bee) — adiciona com próximo order
-      const maxOrder = existingApps.reduce(
-        (max, a) => Math.max(max, a.order ?? 0),
-        0,
+    // 1. Se tabela vazia → seed com todos os apps padrão
+    if (count === 0) {
+      await current.apps.bulkAdd(
+        DEFAULT_APPS.map((a, i) => ({ ...a, isDefault: true, order: i })),
       );
-      await current.apps.add({
-        ...defaultApp,
-        isDefault: true,
-        order: maxOrder + 1,
-      });
-    } else {
-      // App existente — atualiza imagem se mudou (CDN → local)
-      const existing = existingApps.find((a) => a.name === defaultApp.name);
-      if (existing && existing.isDefault && existing.image !== defaultApp.image) {
-        await current.apps.update(existing.id!, { image: defaultApp.image });
+      return;
+    }
+
+    // 2. Migração: atualiza imagens de apps padrão existentes (CDN → local)
+    // e adiciona novos apps padrão (Ryd, Bee) que não existiam antes.
+    const existingApps = await current.apps.toArray();
+    const existingNames = new Set(existingApps.map((a) => a.name));
+
+    for (const defaultApp of DEFAULT_APPS) {
+      try {
+        if (!existingNames.has(defaultApp.name)) {
+          // Novo app padrão (Ryd, Bee) — adiciona com próximo order
+          const maxOrder = existingApps.reduce(
+            (max, a) => Math.max(max, a.order ?? 0),
+            0,
+          );
+          await current.apps.add({
+            ...defaultApp,
+            isDefault: true,
+            order: maxOrder + 1,
+          });
+          // Atualiza existingApps para o próximo iteration
+          existingApps.push({ ...defaultApp, id: -1, isDefault: true, order: maxOrder + 1 } as DeliveryApp);
+          existingNames.add(defaultApp.name);
+        } else {
+          // App existente — atualiza imagem se mudou (CDN → local)
+          const existing = existingApps.find((a) => a.name === defaultApp.name);
+          if (existing && existing.isDefault && existing.image !== defaultApp.image) {
+            await current.apps.update(existing.id!, { image: defaultApp.image });
+          }
+        }
+      } catch {
+        // Ignora erro em app individual — continua com próximo
       }
     }
+  } catch {
+    // Erro crítico (DB não abre, tabela não existe) — retorna silenciosamente
+    // O app usará [] como fallback (useLiveQuery default)
   }
 }
