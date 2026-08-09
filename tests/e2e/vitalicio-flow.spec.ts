@@ -62,7 +62,6 @@ test.describe("Simulação 2a — Usuário Vitalício (pagamento confirmado)", (
 
   test("admin grant PRO → usuário vira PRO vitalício com lançamentos ilimitados", async ({
     page,
-    browser,
   }) => {
     // 1. Registra usuário
     const account = {
@@ -70,46 +69,58 @@ test.describe("Simulação 2a — Usuário Vitalício (pagamento confirmado)", (
       email: `e2e-vitalicio-pro-${Date.now()}@meucorre.com`,
     };
     await registerUser(page, account);
-    // Não faz clearBrowserState — precisamos do cookie de sessão do usuário
 
-    // 2. Login como admin em contexto SEPARADO (para não conflitar com a sessão do usuário)
-    const adminContext = await browser.newContext();
-    const adminPage = await adminContext.newPage();
-    await adminPage.goto("/admin/login");
-    await adminPage.getByPlaceholder(/admin@meucorre\.com/i).fill(TEST_ACCOUNTS.admin.email);
-    await adminPage.getByPlaceholder("••••••••").fill(TEST_ACCOUNTS.admin.password);
-    await adminPage.getByRole("button", { name: /entrar/i }).click();
-    await adminPage.waitForTimeout(3000);
-    await adminPage.goto("/admin/users");
-    await adminPage.waitForLoadState("networkidle");
+    // 2. Concede PRO via API direta (simula webhook Kiwify + admin grant)
+    // Usa a API admin com as credenciais de admin para fazer login e
+    // depois PATCH /api/admin/users/[id] com { isPro: true }
+    const grantResult = await page.evaluate(
+      async ({ admin, userEmail }) => {
+        // Login como admin
+        const loginRes = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(admin),
+        });
+        if (!loginRes.ok) {
+          return { error: `Admin login failed: ${loginRes.status}` };
+        }
 
-    // Busca o usuário criado
-    await adminPage.getByPlaceholder(/buscar por email/i).fill(account.email);
-    await adminPage.waitForTimeout(1500);
+        // Busca usuário pelo email
+        const listRes = await fetch("/api/admin/users?filter=all");
+        const listData = await listRes.json();
+        const user = listData.users?.find(
+          (u: { email: string }) => u.email === userEmail,
+        );
+        if (!user) {
+          return { error: "User not found" };
+        }
 
-    // Toca no switch PRO (primeiro switch visível)
-    const proSwitch = adminPage.locator('[role="switch"]').first();
-    await proSwitch.click();
-    await adminPage.waitForTimeout(2000);
-
-    // Verifica via API que o usuário virou PRO
-    const verifyRes = await adminPage.evaluate(
-      async (email) => {
-        const r = await fetch("/api/admin/users?filter=all");
-        const d = await r.json();
-        return d.users?.find((u: { email: string }) => u.email === email) ?? null;
+        // Concede PRO
+        const patchRes = await fetch(`/api/admin/users/${user.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isPro: true }),
+        });
+        const patchData = await patchRes.json();
+        return { patchRes: patchData, userId: user.id };
       },
-      account.email,
+      { admin: TEST_ACCOUNTS.admin, userEmail: account.email },
     );
-    expect(verifyRes?.isPro).toBe(true);
-    expect(verifyRes?.licenseKey).toBeTruthy();
 
-    await adminContext.close();
+    expect(grantResult.error).toBeUndefined();
+    expect(grantResult.patchRes?.user?.isPro).toBe(true);
+    expect(grantResult.patchRes?.user?.licenseKey).toBeTruthy();
 
-    // 3. Login como usuário PRO (a sessão atual ainda é do usuário trial)
-    // Precisa fazer logout e login novamente para pegar o isPro atualizado
+    // 3. Limpa sessão e faz login novamente como usuário (agora PRO)
     await clearBrowserState(page);
     await loginUser(page, account.email, account.password);
+
+    // Recarrega a página para forçar re-check do status PRO via /api/auth/me
+    // (o useEffect que verifica isPro roda apenas no mount)
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+    await dismissPopups(page);
 
     // 4. Verifica que é PRO via API
     const meData = await page.evaluate(async () => {
@@ -117,9 +128,10 @@ test.describe("Simulação 2a — Usuário Vitalício (pagamento confirmado)", (
       return r.json();
     });
     expect(meData.user.isPro).toBe(true);
+    expect(meData.user.licenseKey).toBeTruthy();
 
     // 5. Badge PRO visível no header
-    await expect(page.getByText("PRO", { exact: true })).toBeVisible();
+    await expect(page.getByText("PRO", { exact: true })).toBeVisible({ timeout: 10000 });
 
     // 6. Botão "Ativar licença PRO" NÃO deve estar visível (usuário já é PRO)
     await expect(

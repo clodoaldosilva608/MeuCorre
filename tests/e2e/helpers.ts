@@ -116,14 +116,27 @@ export async function registerUser(
 }
 
 // Faz login via UI (form /login)
+// Suprime popups via localStorage (igual registerUser) para não interferir
+// com os cliques do Playwright nos testes.
 export async function loginUser(page: Page, email: string, password: string) {
+  // Seta localStorage para suprimir popups antes de navegar
+  await page.addInitScript(() => {
+    const now = Date.now();
+    localStorage.setItem("meucorre_promo_dismissed_at", String(now));
+    localStorage.setItem("meucorre_share_dismissed_at", String(now));
+    localStorage.setItem("meucorre_feedback_asked_at", String(now));
+    localStorage.setItem("meucorre_first_use", new Date().toISOString());
+  });
+
   await page.goto("/login");
   await page.getByPlaceholder(/seu@email\.com/i).fill(email);
   await page.getByPlaceholder("••••••••").fill(password);
   await page.getByRole("button", { name: /entrar/i }).click();
   await page.waitForURL("**/app", { timeout: 15000 });
-  // Aguarda splash screen e popups carregarem
-  await page.waitForTimeout(3000);
+  // Aguarda splash screen terminar
+  await page.waitForTimeout(2000);
+  // Fecha qualquer popup residual
+  await dismissPopups(page);
 }
 
 // Fecha o modal de trial/promo/share/feedback se estiver aberto.
