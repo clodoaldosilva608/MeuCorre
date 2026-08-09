@@ -221,7 +221,18 @@ export function useSync() {
         // Garante que o DB ativo corresponde ao usuário logado
         const localStorageUserId = localStorage.getItem("meucorre_user_id");
         if (localStorageUserId !== uid) {
-          switchDb(uid);
+          // Verifica flag anti-loop no sessionStorage
+          const switchFlag = sessionStorage.getItem("meucorre_db_switched");
+          if (switchFlag !== uid) {
+            console.log("[sync] Trocando DB para", uid);
+            sessionStorage.setItem("meucorre_db_switched", uid);
+            switchDb(uid);
+            // Recarrega para que useLiveQuery re-inscreva no novo DB
+            window.location.reload();
+            return;
+          }
+          // Se já tentamos (flag existe), continua com o pull
+          sessionStorage.removeItem("meucorre_db_switched");
         }
 
         // SÓ faz pull na inicialização (baixa dados do servidor)
