@@ -145,9 +145,63 @@ export function useDeliveries() {
   }, []);
 
   const clearAll = useCallback(async () => {
+    // CRÍTICO: Antes de limpar o DB local, capturamos todos os registros
+    // para enviá-los ao servidor como "deleted: true". Sem isso, o servidor
+    // mantém os registros ativos e, no próximo pull, eles são re-importados
+    // para o DB local — dando a impressão de que "Apagar tudo" não funcionou.
+    const localDeliveries = await db.deliveries.toArray();
+    const localExpenses = await db.expenses.toArray();
+
+    const now = Date.now();
+
+    // Envia exclusões para o servidor (se logado)
+    if (localDeliveries.length > 0 || localExpenses.length > 0) {
+      try {
+        const deliveriesPayload = localDeliveries.map((d) => ({
+          localId: d.id!,
+          app: d.app,
+          value: d.value,
+          km: d.km,
+          date: d.date,
+          timestamp: d.timestamp,
+          notes: d.notes ?? null,
+          updatedAt: now, // marca como atualizado AGORA (deleta no servidor)
+          deleted: true,
+        }));
+
+        const expensesPayload = localExpenses.map((e) => ({
+          localId: e.id!,
+          category: e.category,
+          value: e.value,
+          description: e.description ?? null,
+          date: e.date,
+          timestamp: e.timestamp,
+          updatedAt: now,
+          deleted: true,
+        }));
+
+        await fetch("/api/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deliveries: deliveriesPayload,
+            expenses: expensesPayload,
+          }),
+        });
+
+        // Atualiza last_sync para now — assim o próximo pull não vai
+        // re-importar esses registros (eles têm updatedAt <= now)
+        localStorage.setItem("meucorre_last_sync", String(now));
+      } catch {
+        // Se falhar (offline), ainda assim limpa localmente.
+        // Quando voltar a conexão, o syncNow enviará os deletes pendentes.
+        // Não atualizamos last_sync — o próximo pull pode re-importar,
+        // mas isso é aceitável em modo offline.
+      }
+    }
+
     // Apaga TODAS as corridas e despesas do DB local.
     // Não apaga a tabela `apps` (apps cadastrados devem persistir).
-    // O sync posterior enviará os registros como "deleted" para o servidor.
     await db.deliveries.clear();
     await db.expenses.clear();
     // Dispara evento para forçar re-render dos componentes que dependem

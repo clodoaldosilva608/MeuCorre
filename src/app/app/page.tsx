@@ -424,9 +424,20 @@ function HomeContent() {
   };
 
   const confirmClearAction = async () => {
-    await clearAll();
-    setConfirmClear(false);
-    toast.success("Todos os dados foram apagados");
+    // clearAll() agora envia exclusões para o servidor (se logado) antes
+    // de limpar o DB local. Aguardamos a conclusão para feedback correto.
+    try {
+      await clearAll();
+      setConfirmClear(false);
+      toast.success("Todos os dados foram apagados", {
+        description: "Corridas e despesas removidas deste dispositivo e do servidor.",
+      });
+    } catch {
+      setConfirmClear(false);
+      toast.error("Erro ao apagar dados", {
+        description: "Tente novamente. Se persistir, recarregue a página.",
+      });
+    }
   };
 
   const handleExportJSON = () => {

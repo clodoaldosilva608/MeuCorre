@@ -244,8 +244,13 @@ export function useSync() {
           sessionStorage.removeItem("meucorre_db_switched");
         }
 
-        // SÓ faz pull na inicialização (baixa dados do servidor)
-        await pull(uid, 0);
+        // SÓ faz pull na inicialização (baixa dados do servidor).
+        // Usa o last_sync do localStorage (se existir) em vez de 0, para
+        // não re-importar registros que já foram sincronizados (incluindo
+        // os que foram marcados como deleted por clearAll).
+        const storedSince = localStorage.getItem(LAST_SYNC_KEY);
+        const initialSince = storedSince ? Number(storedSince) : 0;
+        await pull(uid, initialSince);
       } catch {
         if (!cancelled) setStatus("offline");
       }
