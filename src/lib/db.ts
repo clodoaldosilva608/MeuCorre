@@ -31,6 +31,55 @@ class MeuCorreDB extends Dexie {
       apps: "++id, &name, order, isDefault",
     });
 
+    // Version 3: Migração de apps — atualiza imagens CDN → local
+    // e adiciona novos apps (Ryd, Bee). Usa upgrade hook do Dexie
+    // que roda UMA VEZ quando o DB é aberto com versão antiga.
+    this.version(3).stores({
+      deliveries: "++id, app, value, km, date, timestamp",
+      expenses: "++id, category, value, date, timestamp",
+      apps: "++id, &name, order, isDefault",
+    }).upgrade(async (trans) => {
+      const appsTable = trans.table("apps");
+      const existingApps = await appsTable.toArray();
+      const existingNames = new Set(existingApps.map((a: { name: string }) => a.name));
+
+      // 1. Atualiza imagens de apps padrão existentes (CDN → local)
+      for (const defaultApp of DEFAULT_APPS) {
+        if (existingNames.has(defaultApp.name)) {
+          const existing = existingApps.find(
+            (a: { name: string }) => a.name === defaultApp.name,
+          );
+          if (
+            existing &&
+            existing.isDefault &&
+            existing.image !== defaultApp.image
+          ) {
+            await appsTable.update(existing.id, { image: defaultApp.image });
+          }
+        } else {
+          // 2. Adiciona novos apps (Ryd, Bee)
+          const maxOrder = existingApps.reduce(
+            (max: number, a: { order?: number }) =>
+              Math.max(max, a.order ?? 0),
+            0,
+          );
+          await appsTable.add({
+            ...defaultApp,
+            isDefault: true,
+            order: maxOrder + 1,
+          });
+          // Atualiza existingApps para evitar duplicação
+          existingApps.push({
+            ...defaultApp,
+            id: -1,
+            isDefault: true,
+            order: maxOrder + 1,
+          } as DeliveryApp);
+          existingNames.add(defaultApp.name);
+        }
+      }
+    });
+
     // Seed dos apps padrão ao abrir (se a tabela estiver vazia)
     this.on("populate", async () => {
       const defaults = DEFAULT_APPS.map((a, i) => ({
