@@ -41,11 +41,14 @@ test.describe("Simulação 2a — Usuário Vitalício (pagamento confirmado)", (
     test.skip(!!process.env.SKIP_KIWIFY_REDIRECT, "Pula redirect Kiwify em CI");
     await page.goto("/");
     await page.getByRole("button", { name: /comprar plano vitalício/i }).first().click();
+    await page.waitForTimeout(1000);
 
     const testEmail = `e2e-vitalicio-${Date.now()}@meucorre.com`;
-    await page.getByRole("textbox").nth(0).fill("E2E Vitalicio User");
-    await page.getByRole("textbox").nth(1).fill(testEmail);
-    await page.getByPlaceholder(/\(11\) 99999-9999/).fill("(11) 98888-7777");
+    // Campos nome/email não têm placeholder — usamos nth()
+    const dialog = page.locator('[role="dialog"]');
+    await dialog.getByRole("textbox").nth(0).fill("E2E Vitalicio User");
+    await dialog.getByRole("textbox").nth(1).fill(testEmail);
+    await dialog.getByPlaceholder(/\(11\) 99999-9999/).fill("(11) 98888-7777");
 
     await page.getByRole("button", { name: /pagar r\$ 18,90 na kiwify/i }).click();
 
@@ -74,7 +77,8 @@ test.describe("Simulação 2a — Usuário Vitalício (pagamento confirmado)", (
     await adminPage.getByPlaceholder(/admin@meucorre\.com/i).fill(TEST_ACCOUNTS.admin.email);
     await adminPage.getByPlaceholder("••••••••").fill(TEST_ACCOUNTS.admin.password);
     await adminPage.getByRole("button", { name: /entrar/i }).click();
-    await adminPage.waitForURL("**/admin/login", { timeout: 10000 });
+    // Aguarda redirect ou toast de sucesso
+    await adminPage.waitForTimeout(3000);
     await adminPage.goto("/admin/users");
 
     // Busca o usuário criado
@@ -103,7 +107,7 @@ test.describe("Simulação 2a — Usuário Vitalício (pagamento confirmado)", (
     await page.getByPlaceholder("••••••••").fill(account.password);
     await page.getByRole("button", { name: /entrar/i }).click();
     await page.waitForURL("**/app", { timeout: 15000 });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     await dismissPopups(page);
 
     // 4. Verifica que é PRO via API

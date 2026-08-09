@@ -28,12 +28,14 @@ test.describe("Simulação 2b — Abandono de checkout", () => {
     // 1. Landing → abre checkout
     await page.goto("/");
     await page.getByRole("button", { name: /comprar plano vitalício/i }).first().click();
+    await page.waitForTimeout(1000);
 
     // 2. Preenche dados
     const testEmail = `e2e-abandona-${Date.now()}@meucorre.com`;
-    await page.getByRole("textbox").nth(0).fill("E2E Abandona User");
-    await page.getByRole("textbox").nth(1).fill(testEmail);
-    await page.getByPlaceholder(/\(11\) 99999-9999/).fill("(11) 96666-5555");
+    const dialog = page.locator('[role="dialog"]');
+    await dialog.getByRole("textbox").nth(0).fill("E2E Abandona User");
+    await dialog.getByRole("textbox").nth(1).fill(testEmail);
+    await dialog.getByPlaceholder(/\(11\) 99999-9999/).fill("(11) 96666-5555");
     await page.getByRole("button", { name: /pagar r\$ 18,90 na kiwify/i }).click();
 
     // 3. Chegou no checkout Kiwify
