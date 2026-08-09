@@ -58,12 +58,23 @@ test.describe("Simulação 1 — Usuário Trial", () => {
     expect(meResponse.user.email).toBe(trialAccount.email);
     expect(meResponse.user.isPro).toBe(false);
 
-    // 6. Botão "Ativar licença PRO" deve estar visível (NÃO é PRO)
-    // Agora o menu lateral contém todas as ações — abre o menu e verifica
-    await page.getByRole("button", { name: /menu de ações/i }).click();
+    // 6. Botão "Ativar licença PRO" deve estar visível no header (NÃO é PRO)
+    // O botão Crown fica no header (não no menu lateral)
     await expect(
       page.getByRole("button", { name: /ativar licença pro/i }),
-    ).toBeVisible({ timeout: 2000 });
+    ).toBeVisible({ timeout: 5000 });
+
+    // 7. Abre o menu lateral e verifica que as ações estão disponíveis
+    await page.getByRole("button", { name: /menu de ações/i }).click();
+    await expect(
+      page.getByRole("button", { name: /capturar por notificação/i }),
+    ).toBeVisible({ timeout: 3000 });
+    await expect(
+      page.getByRole("button", { name: /exportar json/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /apagar tudo/i }),
+    ).toBeVisible();
   });
 
   test("lançamentos funcionam no trial (corridas + despesas + gráficos)", async ({
@@ -83,8 +94,8 @@ test.describe("Simulação 1 — Usuário Trial", () => {
     await addCorrida(page, { app: "Lalamove", valor: "R$ 20", km: "8,0", nota: "Corrida 3" });
 
     // Total esperado: R$ 55,00 (25 + 10 + 20) e 3 corridas, 16 km
-    await expect(page.getByRole("heading", { name: "R$55,00" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "3" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "R$ 55,00" }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "3", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: /16,0 km/i })).toBeVisible();
 
     // Adiciona 1 despesa
@@ -97,7 +108,7 @@ test.describe("Simulação 1 — Usuário Trial", () => {
     await page.waitForTimeout(800);
 
     // Lucro líquido = R$ 55 - R$ 20 = R$ 35
-    await expect(page.getByRole("heading", { name: "R$35,00" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "R$ 35,00" })).toBeVisible();
 
     // Vai pra aba Gráficos
     await page.getByRole("button", { name: /gráficos/i }).click();

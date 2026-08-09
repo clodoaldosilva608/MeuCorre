@@ -28,6 +28,9 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
     actionTimeout: 15000,
     navigationTimeout: 30000,
+    // Testes que criam usuários + fazem lançamentos precisam de mais tempo
+    // (registerUser espera 8s para popups, addCorrida ~5s cada)
+    timeout: 120000,
   },
   projects: [
     {

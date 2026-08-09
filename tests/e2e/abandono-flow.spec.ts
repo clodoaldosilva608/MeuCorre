@@ -4,6 +4,7 @@ import {
   clearBrowserState,
   dismissPopups,
   registerUser,
+  addCorrida,
 } from "./helpers";
 
 // ===== Simulação 2b: Abandono de checkout → Trial 14 dias =====
@@ -65,17 +66,18 @@ test.describe("Simulação 2b — Abandono de checkout", () => {
 
     // Faz 6 lançamentos no trial (durante trial, sem limite)
     for (let i = 1; i <= 6; i++) {
-      await page.getByRole("button", { name: /nova corrida/i }).click();
-      await page.getByRole("button", { name: /iFood/i }).click();
-      await page.getByRole("button", { name: "R$ 10" }).click();
-      await page.getByPlaceholder("0,0").fill("3,0");
-      await page.getByPlaceholder(/bairro centro/i).fill(`Trial launch #${i}`);
-      await page.getByRole("button", { name: /lançar corrida/i }).click();
-      await page.waitForTimeout(700);
+      await addCorrida(page, {
+        app: "iFood",
+        valor: "R$ 10",
+        km: "3,0",
+        nota: `Trial launch #${i}`,
+      });
     }
 
     // Total: 6 × R$10 = R$60
-    await expect(page.getByRole("heading", { name: "R$60,00" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "R$ 60,00" }).first(),
+    ).toBeVisible();
 
     // Verifica que NÃO é PRO
     const meData = await page.evaluate(async () => {

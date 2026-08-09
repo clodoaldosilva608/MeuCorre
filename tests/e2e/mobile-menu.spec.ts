@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { clearBrowserState, dismissPopups, registerUser, TEST_ACCOUNTS } from "./helpers";
+import { clearBrowserState, dismissPopups, registerUser, addCorrida, TEST_ACCOUNTS } from "./helpers";
 
 // ===== Verificação do menu lateral mobile (B-da UI) =====
 //
@@ -72,17 +72,11 @@ test.describe("Menu lateral mobile com todas as ações", () => {
     await registerUser(page, account);
     await dismissPopups(page);
 
-    // Adiciona 2 corridas
-    await page.getByRole("button", { name: /nova corrida/i }).click();
-    await page.getByRole("button", { name: /iFood/i }).click();
-    await page.getByRole("button", { name: "R$ 25" }).click();
-    await page.getByPlaceholder("0,0").fill("5,0");
-    await page.getByPlaceholder(/bairro centro/i).fill("Antes do clear");
-    await page.getByRole("button", { name: /lançar corrida/i }).click();
-    await page.waitForTimeout(800);
+    // Adiciona 1 corrida usando o helper addCorrida (lida com popups/overlays)
+    await addCorrida(page, { app: "iFood", valor: "R$ 25", km: "5,0", nota: "Antes do clear" });
 
     // Verifica que tem 1 corrida
-    await expect(page.getByRole("heading", { name: "1" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "1", exact: true })).toBeVisible();
 
     // Abre menu e clica em "Apagar tudo"
     await page.getByRole("button", { name: /menu de ações/i }).click();
@@ -97,7 +91,7 @@ test.describe("Menu lateral mobile com todas as ações", () => {
     await page.getByRole("button", { name: /^apagar tudo$/i }).click();
     await page.waitForTimeout(1000);
 
-    // Agora deve ter 0 corridas e R$0,00
-    await expect(page.getByRole("heading", { name: "R$0,00" })).toBeVisible();
+    // Agora deve ter 0 corridas e R$ 0,00
+    await expect(page.getByRole("heading", { name: "R$ 0,00" }).first()).toBeVisible();
   });
 });

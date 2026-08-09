@@ -36,10 +36,15 @@ test.describe("Pop-up 'Baixar aplicativo'", () => {
     await installItem.click();
     await expect(
       page.getByRole("heading", { name: /instalar aplicativo/i }),
-    ).toBeVisible({ timeout: 2000 });
+    ).toBeVisible({ timeout: 3000 });
 
     // Conteúdo do modal deve mencionar PWA / offline / tela inicial
-    const modalText = await page.locator('[role="dialog"]').textContent();
+    // Usa .last() pois pode haver outros dialogs abertos (trial promo)
+    const installDialog = page
+      .locator('[role="dialog"]')
+      .filter({ has: page.getByRole("heading", { name: /instalar aplicativo/i }) })
+      .last();
+    const modalText = (await installDialog.textContent()) ?? "";
     expect(modalText).toMatch(/offline|tela inicial|pwa/i);
   });
 
@@ -58,8 +63,12 @@ test.describe("Pop-up 'Baixar aplicativo'", () => {
 
     // Deve ter OU o botão "Instalar agora" (Android) OU as instruções
     // "Adicionar à Tela de Início" (iOS) OU a mensagem sobre Chrome/Edge
-    const dialog = page.locator('[role="dialog"]');
-    await expect(dialog).toBeVisible({ timeout: 2000 });
+    // Filtra pelo dialog que contém "Instalar aplicativo"
+    const dialog = page
+      .locator('[role="dialog"]')
+      .filter({ has: page.getByRole("heading", { name: /instalar aplicativo/i }) })
+      .last();
+    await expect(dialog).toBeVisible({ timeout: 3000 });
     const text = (await dialog.textContent()) ?? "";
     const hasInstallButton = /instalar agora/i.test(text);
     const hasIOSInstructions = /adicionar à tela de início/i.test(text);

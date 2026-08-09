@@ -57,6 +57,11 @@ export async function registerUserViaApi(
   page: Page,
   account: { name: string; email: string; password: string },
 ): Promise<{ id: string; email: string; isPro: boolean }> {
+  // Navega para a homepage primeiro para estabelecer a origem (necessário
+  // para fetch com URL relativa funcionar no page.evaluate)
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
   const response = await page.evaluate(
     async ({ account, bypassToken }) => {
       const res = await fetch("/api/auth/register", {
@@ -81,16 +86,33 @@ export async function registerUserViaApi(
 // Registra um novo usuário e estabelece sessão.
 // Usa a API direta (com bypass de rate limit) — a API já seta o cookie
 // httpOnly meucorre_user, então navegamos direto para /app.
+// Antes de navegar, seta localStorage para suprimir popups (trial promo,
+// share, feedback) que interferem com os cliques do Playwright.
 export async function registerUser(
   page: Page,
   account: { name: string; email: string; password: string },
 ) {
   await registerUserViaApi(page, account);
+
+  // Navega para /app e imediatamente seta localStorage para suprimir popups.
+  // Fazemos isso via page.addInitScript para garantir que roda antes de
+  // qualquer componente React montar.
+  await page.addInitScript(() => {
+    const now = Date.now();
+    localStorage.setItem("meucorre_promo_dismissed_at", String(now));
+    localStorage.setItem("meucorre_share_dismissed_at", String(now));
+    localStorage.setItem("meucorre_feedback_asked_at", String(now));
+    localStorage.setItem("meucorre_first_use", new Date().toISOString());
+  });
+
   // A API já setou o cookie — navega para /app direto
   await page.goto("/app");
   await page.waitForLoadState("networkidle");
-  // Aguarda splash screen terminar e popups carregarem
+  // Aguarda splash screen (1.4s) + promo popup (0.8s depois)
+  // Share popup aparece 6s depois do promo, mas vamos fechar o promo primeiro
+  // e depois lidar com o share se aparecer
   await page.waitForTimeout(3000);
+  await dismissPopups(page);
 }
 
 // Faz login via UI (form /login)
@@ -116,6 +138,7 @@ export async function dismissPopups(page: Page) {
     /não.*agora/i,
     /fechar/i,
     /close/i,
+    /bora ajudar a galera/i, // heading do share popup — fecha via botão "Fechar"
   ];
 
   // Tenta até 8 rodadas de fechamento (alguns popups aparecem em sequência)
@@ -137,15 +160,30 @@ export async function dismissPopups(page: Page) {
     }
 
     // Também tenta clicar no botão "X" (Close) que tem apenas aria-label
+    // e no botão "Fechar" do share popup
     try {
-      const closeBtns = page.locator('button[aria-label="Close"], button[aria-label="Fechar"]').all();
-      const btns = await closeBtns;
+      const closeBtns = page.locator(
+        'button[aria-label="Close"], button[aria-label="Fechar"]',
+      );
+      const btns = await closeBtns.all();
       for (const btn of btns) {
         if (await btn.isVisible({ timeout: 100 }).catch(() => false)) {
           await btn.click({ timeout: 1000, force: true }).catch(() => {});
           await page.waitForTimeout(300);
           closedAny = true;
         }
+      }
+    } catch {
+      // ignore
+    }
+
+    // Para popups que têm um botão "Fechar" genérico (share popup)
+    try {
+      const fecharBtn = page.locator("button", { hasText: "Fechar" }).first();
+      if (await fecharBtn.isVisible({ timeout: 100 }).catch(() => false)) {
+        await fecharBtn.click({ timeout: 1000, force: true }).catch(() => {});
+        await page.waitForTimeout(300);
+        closedAny = true;
       }
     } catch {
       // ignore
@@ -160,7 +198,8 @@ export async function dismissPopups(page: Page) {
 }
 
 // Adiciona uma corrida via o form "Nova corrida".
-// Usa eval para clicar nos botões diretamente via JS (bypassa overlays).
+// Assume que os popups (trial, share, etc.) já foram suprimidos via
+// localStorage em registerUser. Usa cliques nativos do Playwright.
 export async function addCorrida(
   page: Page,
   opts: { app?: string; valor?: string; km?: string; nota?: string } = {},
@@ -172,79 +211,35 @@ export async function addCorrida(
 
   // Clica no botão "Nova corrida" (FAB)
   await page.getByRole("button", { name: /nova corrida/i }).click({ timeout: 5000 });
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1000);
 
-  // Encontra o dialog "Nova Corrida" via JS (mais robusto que filter)
-  // e clica nos botões via dispatchEvent (bypassa overlays do PromoPopup)
-  const clickResult = await page.evaluate(
-    ({ app, valor }) => {
-      // Encontra o dialog que contém o heading "Nova Corrida"
-      const dialogs = document.querySelectorAll('[role="dialog"]');
-      let dialog: HTMLElement | null = null;
-      for (const d of dialogs) {
-        const h2 = d.querySelector("h2");
-        if (h2 && h2.textContent && h2.textContent.includes("Nova Corrida")) {
-          dialog = d as HTMLElement;
-          break;
-        }
-      }
-      if (!dialog) return { error: "Dialog Nova Corrida não encontrado" };
-
-      // Clica no botão do app — match EXATO do textContent
-      const buttons = Array.from(dialog.querySelectorAll("button"));
-      const appBtn = buttons.find((b) => (b.textContent || "").trim() === app);
-      if (appBtn) (appBtn as HTMLElement).click();
-
-      // Pequeno delay entre cliques para React processar
-      return { appClicked: !!appBtn, buttonsCount: buttons.length };
-    },
-    { app, valor },
-  );
-  await page.waitForTimeout(400);
-
-  // Clica no valor em um evaluate separado (após o app ser selecionado)
-  await page.evaluate((valor) => {
-    const dialogs = document.querySelectorAll('[role="dialog"]');
-    for (const d of dialogs) {
-      const h2 = d.querySelector("h2");
-      if (h2 && h2.textContent && h2.textContent.includes("Nova Corrida")) {
-        const buttons = Array.from(d.querySelectorAll("button"));
-        const valorBtn = buttons.find((b) => (b.textContent || "").trim() === valor);
-        if (valorBtn) (valorBtn as HTMLElement).click();
-        break;
-      }
-    }
-  }, valor);
-  await page.waitForTimeout(500);
-
-  // Preenche km e nota via fill normal (inputs não são interceptados por overlays)
+  // Localiza o dialog "Nova Corrida" específico
   const dialog = page
     .locator('[role="dialog"]')
     .filter({ has: page.locator("h2", { hasText: "Nova Corrida" }) })
     .last();
-  await dialog.getByPlaceholder("0,0", { exact: true }).fill(km);
-  await dialog.getByPlaceholder(/bairro centro/i).fill(nota);
+  await dialog.waitFor({ state: "visible", timeout: 5000 });
   await page.waitForTimeout(300);
 
-  // Clica em "Lançar Corrida" via JS (bypass overlays)
-  await page.evaluate(() => {
-    const dialogs = document.querySelectorAll('[role="dialog"]');
-    for (const d of dialogs) {
-      const h2 = d.querySelector("h2");
-      if (h2 && h2.textContent && h2.textContent.includes("Nova Corrida")) {
-        const buttons = d.querySelectorAll("button");
-        for (const btn of buttons) {
-          const text = (btn.textContent || "").trim();
-          if (text.includes("Lançar Corrida") && !btn.hasAttribute("disabled")) {
-            (btn as HTMLElement).click();
-            return;
-          }
-        }
-      }
-    }
-  });
+  // Clica no botão do app (force: true pois elementos <p> do dialog
+  // podem interceptar pointer events em layouts com scroll)
+  const appButton = dialog.locator("button", { hasText: app }).first();
+  await appButton.click({ timeout: 3000, force: true });
+  await page.waitForTimeout(300);
 
+  // Clica no valor
+  const valorButton = dialog.locator("button", { hasText: valor }).first();
+  await valorButton.click({ timeout: 3000, force: true });
+  await page.waitForTimeout(300);
+
+  // Preenche km (placeholder "0,0" exact) e nota
+  await dialog.getByPlaceholder("0,0", { exact: true }).fill(km);
+  await dialog.getByPlaceholder(/bairro centro/i).fill(nota);
+  await page.waitForTimeout(200);
+
+  // Submete
+  await dialog.getByRole("button", { name: /lançar corrida/i }).click({ force: true });
   await page.waitForTimeout(1500);
-  // Fecha qualquer toast/popup que apareceu
+  // Fecha qualquer toast que apareceu
   await dismissPopups(page);
 }
