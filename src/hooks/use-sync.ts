@@ -141,11 +141,20 @@ export function useSync() {
     setStatus("syncing");
 
     try {
-      // CRÍTICO: Verifica se o DB ativo corresponde ao usuário da sessão
-      // Isso previne o race condition que mistura dados entre usuários
+      // CRÍTICO: Verifica se o DB ativo corresponde ao usuário da sessão.
+      // Dupla verificação: (1) localStorage userId deve bater com o uid,
+      // (2) o nome do DB ativo deve ser MeuCorreDB_<uid>.
+      // Sem isso, acontece o race condition pós-login onde dados do
+      // usuário anterior (DB ainda ativo) são enviados para o servidor
+      // com o userId do novo usuário logado.
       const localStorageUserId = localStorage.getItem("meucorre_user_id");
-      if (localStorageUserId !== uid) {
-        console.warn("[sync] Abortando push: userId do localStorage não bate com sessão");
+      const expectedDbName = `MeuCorreDB_${uid}`;
+      const activeDbName = db.name;
+      if (localStorageUserId !== uid || activeDbName !== expectedDbName) {
+        console.warn(
+          "[sync] Abortando push: userId/DB não batem com sessão",
+          { localStorageUserId, uid, activeDbName, expectedDbName },
+        );
         setStatus("synced");
         return;
       }
@@ -277,11 +286,18 @@ export function useSync() {
         return;
       }
     }
-    // CRÍTICO: verifica se o userId do localStorage bate com a sessão
-    // antes de fazer push (previne mistura de dados entre usuários)
+    // CRÍTICO: dupla verificação antes de fazer push — userId do localStorage
+    // E nome do DB ativo devem bater com a sessão atual. Previne race
+    // condition pós-login onde dados do usuário anterior ainda estão no DB.
     const localStorageUserId = localStorage.getItem("meucorre_user_id");
-    if (localStorageUserId !== uidRef.current) {
-      console.warn("[syncNow] Abortando: userId do localStorage não bate com sessão");
+    const expectedDbName = `MeuCorreDB_${uidRef.current}`;
+    if (localStorageUserId !== uidRef.current || db.name !== expectedDbName) {
+      console.warn("[syncNow] Abortando: userId/DB não batem com sessão", {
+        localStorageUserId,
+        uid: uidRef.current,
+        activeDbName: db.name,
+        expectedDbName,
+      });
       return;
     }
     await push(uidRef.current!);

@@ -116,9 +116,7 @@ export function LicenseDialog({
 
               {/* Comprar CTA */}
               <a
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/#planos"
                 className="mb-4 flex items-center justify-between rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 text-zinc-950 transition-transform hover:scale-[1.02]"
               >
                 <div>
@@ -126,7 +124,7 @@ export function LicenseDialog({
                     Ainda não tem uma licença?
                   </p>
                   <p className="text-[10px] opacity-90">
-                    Plano vitalício — R$ 97,00 (pagamento único)
+                    Plano vitalício — R$ 18,90 (pagamento único)
                   </p>
                 </div>
                 <div className="flex items-center gap-1 text-xs font-bold">

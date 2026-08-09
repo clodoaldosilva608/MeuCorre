@@ -70,7 +70,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const price = Number(process.env.PLAN_PRICE ?? 97);
+  // Fallback: preço de lançamento atual (R$ 18,90) — não confundir com
+  // o preço regular R$ 97 que é exibido como "preço cheio" na UI.
+  const price = Number(process.env.PLAN_PRICE ?? 18.9);
   const pixKey = process.env.PIX_KEY ?? "meucorre@pix.com.br";
 
   const sub = await prisma.subscription.create({

@@ -123,8 +123,9 @@ function HomeContent() {
   // 2. Se não tem, busca sessão de usuário logado (login via /login)
   //    Se user.isPro, salva licenseKey no localStorage e marca como PRO
   // Aproveitamos o mesmo fetch para guardar o nome do usuário (saudação).
-  // NÃO chamamos switchDb aqui — o DB ativo é determinado pelo
-  // meucorre_user_id no localStorage (setado pelo login via switchDb).
+  // CRÍTICO: se a sessão não bater com o meucorre_user_id do localStorage,
+  // chamamos switchDb imediatamente para evitar exibir dados do usuário
+  // anterior (race condition pós-login).
   useEffect(() => {
     (async () => {
       // 1. Licença no localStorage (PRO ativado manualmente)
@@ -135,6 +136,13 @@ function HomeContent() {
           const res = await fetch("/api/auth/me");
           const data = await res.json();
           if (data.user?.name) setUserName(data.user.name);
+          // Mesmo com licença local, sincroniza o DB se a sessão divergir
+          if (data.user?.id) {
+            const storedUid = localStorage.getItem("meucorre_user_id");
+            if (storedUid !== data.user.id) {
+              switchDb(data.user.id);
+            }
+          }
         } catch {
           // offline ou não logado
         }
@@ -148,6 +156,15 @@ function HomeContent() {
         if (data.user?.isPro && data.user.licenseKey) {
           localStorage.setItem("meucorre_license", data.user.licenseKey);
           setIsPro(true);
+        }
+        // CRÍTICO: sincroniza DB com a sessão ativa.
+        // Se o usuário logado não bate com o meucorre_user_id do localStorage,
+        // trocamos o DB imediatamente para evitar exibir dados de outro usuário.
+        if (data.user?.id) {
+          const storedUid = localStorage.getItem("meucorre_user_id");
+          if (storedUid !== data.user.id) {
+            switchDb(data.user.id);
+          }
         }
       } catch {
         // offline ou não logado — continua free
@@ -352,14 +369,20 @@ function HomeContent() {
     await fetch("/api/auth/logout", { method: "POST" });
     // Troca para database anônimo (sem userId) — dados do usuário ficam isolados
     switchDb(null);
-    // Limpa localStorage (licença, sync, trial — mas NÃO apaga o userId que já foi removido por switchDb)
+    // Limpa TUDO do localStorage relacionado à sessão do usuário.
+    // Antes, algumas chaves (user_id, last_sync) não eram removidas explicitamente,
+    // causando ocasionalmente dados do usuário anterior aparecerem após logout.
+    localStorage.removeItem("meucorre_user_id");
     localStorage.removeItem("meucorre_license");
     localStorage.removeItem("meucorre_last_sync");
     localStorage.removeItem("meucorre_first_use");
     localStorage.removeItem("meucorre_promo_dismissed_at");
     localStorage.removeItem("meucorre_share_dismissed_at");
     localStorage.removeItem("meucorre_feedback_asked_at");
+    // Limpa flag anti-loop do useSync
+    sessionStorage.removeItem("meucorre_db_switched");
     toast.success("Você saiu da sua conta");
+    // Hard redirect para a landing — garante que nenhum estado React persista
     window.location.replace("/");
   };
 
@@ -699,6 +722,11 @@ function HomeContent() {
           markFeedbackAsked();
         }}
       />
+
+      {/* Nota: o pop-up "Baixar aplicativo" (InstallAppPopup) é renderizado
+          dentro do Header, que controla tanto a abertura automática (após
+          3.5s, se ainda não foi dismissado) quanto a abertura manual via
+          item "Baixar aplicativo" no menu lateral. */}
 
       {/* Confirmações */}
       <AlertDialog

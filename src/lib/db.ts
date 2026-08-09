@@ -111,6 +111,10 @@ function getOrCreateDb(): MeuCorreDB {
 
 // Troca o database ativo para o do usuário especificado.
 // Chamado no login/logout.
+// CRÍTICO: fecha o DB anterior (libera handles do IndexedDB), limpa o cache
+// e emite um evento "meucorre-db-switched" para que useLiveQuery se re-inscreva
+// no novo DB. Sem isso, o dashboard mostra dados do usuário anterior até
+// que um reload completo aconteça (race condition pós-login).
 export function switchDb(userId: string | null) {
   if (typeof window === "undefined") return;
   if (userId) {
@@ -118,7 +122,26 @@ export function switchDb(userId: string | null) {
   } else {
     localStorage.removeItem(STORAGE_KEY_USER_ID);
   }
+
+  // Fecha TODOS os DBs cached e limpa o cache — previne que o useLiveQuery
+  // continue lendo do DB do usuário anterior.
+  for (const dbInstance of dbCache.values()) {
+    try {
+      dbInstance.close();
+    } catch {
+      // ignore — DB já pode estar fechado
+    }
+  }
+  dbCache.clear();
+  activeDb = null;
+
+  // Cria o novo DB ativo
   activeDb = getOrCreateDb();
+
+  // Emite evento para que hooks re-inscrevam no novo DB
+  window.dispatchEvent(
+    new CustomEvent("meucorre-db-switched", { detail: { userId, dbName: activeDb.name } }),
+  );
 }
 
 // Inicializa o database ativo (lazy init no client)

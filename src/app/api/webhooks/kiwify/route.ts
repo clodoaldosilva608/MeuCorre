@@ -163,10 +163,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Amount em reais (payload vem em centavos como string)
+    // Fallback: preço de lançamento atual (R$ 18,90) — não confundir com
+    // o preço regular R$ 97 que é exibido como "preço cheio" na UI.
     const amountBRL =
       payload.Commissions?.charge_amount
         ? Number(payload.Commissions.charge_amount) / 100
-        : Number(process.env.PLAN_PRICE ?? 97);
+        : Number(process.env.PLAN_PRICE ?? 18.9);
 
     const licenseKey = crypto.randomBytes(16).toString("hex");
 
@@ -205,7 +207,7 @@ export async function POST(req: NextRequest) {
       buyerName: name,
       buyerEmail: email,
       buyerPhone: customer.mobile,
-      amount: Number(process.env.PLAN_PRICE ?? 97),
+      amount: Number(process.env.PLAN_PRICE ?? 18.9),
       paymentMethod: "kiwify",
       kiwifyOrderId: payload.order_id,
       status: payload.order_status === "waiting_payment" ? "pending" : "rejected",

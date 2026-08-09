@@ -123,9 +123,7 @@ export function PromoPopup({
 
           {/* CTA */}
           <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/#planos"
             className="block w-full rounded-xl bg-emerald-500 py-3.5 text-center text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-400"
           >
             Bora ser PRO — R$ 18,90

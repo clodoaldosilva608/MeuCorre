@@ -1,7 +1,7 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { db, ensureDefaultApps } from "@/lib/db";
 import type {
   DeliveryApp,
@@ -18,16 +18,36 @@ import {
   appMeta,
 } from "@/lib/apps";
 
+// ===== Hook auxiliar: reassina quando o DB ativo muda =====
+//
+// Quando o usuário troca de conta (login/logout), `switchDb()` fecha todos os
+// DBs cached e emite o evento "meucorre-db-switched". Sem este hook, o
+// `useLiveQuery` continuaria inscrito no DB do usuário anterior, mostrando
+// dados stale na tela (race condition pós-login).
+//
+// Retornamos um número que incrementa a cada troca de DB, para ser usado
+// como dep do useLiveQuery.
+function useDbVersion(): number {
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const handler = () => setVersion((v) => v + 1);
+    window.addEventListener("meucorre-db-switched", handler);
+    return () => window.removeEventListener("meucorre-db-switched", handler);
+  }, []);
+  return version;
+}
+
 // ===== Apps =====
 
 export function useApps() {
+  const dbVersion = useDbVersion();
   const apps = useLiveQuery(
     async () => {
       await ensureDefaultApps();
       const all = await db.apps.toArray();
       return all.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
     },
-    [],
+    [dbVersion],
     [] as DeliveryApp[],
   );
 
@@ -94,9 +114,10 @@ export function useApps() {
 // ===== Deliveries =====
 
 export function useDeliveries() {
+  const dbVersion = useDbVersion();
   const allDeliveries = useLiveQuery(
     () => db.deliveries.orderBy("timestamp").reverse().toArray(),
-    [],
+    [dbVersion],
     [] as Delivery[],
   );
 
@@ -124,8 +145,16 @@ export function useDeliveries() {
   }, []);
 
   const clearAll = useCallback(async () => {
+    // Apaga TODAS as corridas e despesas do DB local.
+    // Não apaga a tabela `apps` (apps cadastrados devem persistir).
+    // O sync posterior enviará os registros como "deleted" para o servidor.
     await db.deliveries.clear();
     await db.expenses.clear();
+    // Dispara evento para forçar re-render dos componentes que dependem
+    // do DB (caso useLiveQuery não detecte a mudança imediatamente).
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("meucorre-data-cleared"));
+    }
   }, []);
 
   return {
@@ -140,9 +169,10 @@ export function useDeliveries() {
 // ===== Expenses =====
 
 export function useExpenses() {
+  const dbVersion = useDbVersion();
   const allExpenses = useLiveQuery(
     () => db.expenses.orderBy("timestamp").reverse().toArray(),
-    [],
+    [dbVersion],
     [] as Expense[],
   );
 

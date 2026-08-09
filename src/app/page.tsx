@@ -127,9 +127,16 @@ const PRO_FEATURES = [
 ];
 
 export default function LandingPage() {
+  // Estado global do dialog de checkout — compartilhado entre todos os CTAs
+  // "Comprar plano vitalício" da landing (hero, header, plans section).
+  // Antes, cada CTA era um <a href="#planos"> que só fazia scroll, exigindo
+  // um segundo clique no botão da seção de planos para abrir o dialog.
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const openCheckout = () => setCheckoutOpen(true);
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-zinc-900">
-      <Header />
+      <Header onCheckout={openCheckout} />
 
       {/* ===== 1. HERO (dark com glow) ===== */}
       <section className="relative overflow-hidden bg-zinc-950 text-zinc-100">
@@ -188,21 +195,22 @@ export default function LandingPage() {
               100% offline.
             </motion.p>
 
-            {/* CTAs: Comprar, Usar grátis, Entrar */}
+            {/* CTAs: Comprar (abre dialog), Usar grátis, Entrar */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
               animate="show"
               className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
             >
-              <a
-                href="#planos"
+              <button
+                type="button"
+                onClick={openCheckout}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-400 sm:w-auto"
               >
                 <Zap className="h-4 w-4" />
                 Comprar plano vitalício
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </button>
               <a
                 href="/app"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-bold text-zinc-100 transition-all hover:border-zinc-600 hover:bg-zinc-800 sm:w-auto"
@@ -564,7 +572,14 @@ export default function LandingPage() {
                   ))}
                 </ul>
 
-                <CheckoutButton />
+                <button
+                  type="button"
+                  onClick={openCheckout}
+                  className="mt-6 w-full bg-emerald-500 py-6 text-base font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
+                >
+                  <Zap className="mr-2 inline h-4 w-4" />
+                  Comprar plano vitalício
+                </button>
 
                 <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-zinc-500">
                   <Lock className="h-3 w-3" />
@@ -693,14 +708,15 @@ export default function LandingPage() {
             Junte seus apps, suas despesas e seu lucro numa tela só. Hoje, por
             menos de 1 tanque de gasolina.
           </p>
-          <a
-            href="#planos"
+          <button
+            type="button"
+            onClick={openCheckout}
             className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-8 py-4 text-base font-bold text-zinc-950 shadow-lg shadow-emerald-500/30 transition-all hover:bg-emerald-400 sm:w-auto md:text-lg"
           >
             <Zap className="h-5 w-5" />
             Garanta seu acesso com desconto
             <ArrowRight className="h-5 w-5" />
-          </a>
+          </button>
           <p className="mt-4 text-xs text-zinc-500">
             Pagamento único • Pix ou cartão • Vitalício • Sem mensalidade
           </p>
@@ -744,13 +760,17 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Dialog de checkout — instância única compartilhada entre todos os
+          CTAs "Comprar plano vitalício" da landing page. */}
+      <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
     </div>
   );
 }
 
 // ===== Subcomponentes =====
 
-function Header() {
+function Header({ onCheckout }: { onCheckout: () => void }) {
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
@@ -763,18 +783,27 @@ function Header() {
           </span>
         </a>
         <nav className="flex items-center gap-1 sm:gap-2">
-          <a
-            href="#planos"
+          <button
+            type="button"
+            onClick={onCheckout}
             className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-emerald-400 sm:inline-block"
           >
             Planos
-          </a>
+          </button>
           <a
             href="/app"
             className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-emerald-400 sm:inline-block"
           >
             App grátis
           </a>
+          <button
+            type="button"
+            onClick={onCheckout}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-zinc-950 transition-all hover:bg-emerald-400"
+          >
+            <Zap className="h-3 w-3" />
+            Comprar
+          </button>
           <a
             href="/login"
             className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-100 transition-all hover:border-emerald-500/40 hover:text-emerald-400"
@@ -912,22 +941,6 @@ function PhoneMockup() {
         </div>
       </div>
     </div>
-  );
-}
-
-function CheckoutButton() {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <Button
-        onClick={() => setOpen(true)}
-        className="mt-6 w-full bg-emerald-500 py-6 text-base font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
-      >
-        <Zap className="mr-2 h-4 w-4" />
-        Comprar plano vitalício
-      </Button>
-      <CheckoutDialog open={open} onOpenChange={setOpen} />
-    </>
   );
 }
 

@@ -93,16 +93,39 @@ export default function AdminUsersPage() {
   };
 
   const togglePro = async (user: User) => {
+    const newIsPro = !user.isPro;
+
+    // Atualização otimista: marca o usuário como PRO/free imediatamente
+    // na lista local para que o Switch reflita o estado sem esperar o reload.
+    // Se a API falhar, revertemos chamando load() para buscar o estado real.
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === user.id
+          ? {
+              ...u,
+              isPro: newIsPro,
+              // Se está virando PRO e não tem licença, placeholder null
+              // (a licença real será retornada pela API e carregada no load)
+              licenseKey: newIsPro ? (u.licenseKey ?? null) : null,
+            }
+          : u,
+      ),
+    );
+
     const res = await fetch(`/api/admin/users/${user.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isPro: !user.isPro }),
+      body: JSON.stringify({ isPro: newIsPro }),
     });
     if (res.ok) {
-      toast.success(user.isPro ? "PRO revogado" : "PRO concedido! 🎉");
+      toast.success(newIsPro ? "PRO concedido! 🎉" : "PRO revogado");
+      // Recarrega a lista completa para sincronizar com o servidor
+      // (garante licenseKey correta e qualquer outro campo atualizado).
       load();
     } else {
       toast.error("Erro ao atualizar");
+      // Reverte otimização buscando o estado real do servidor
+      load();
     }
   };
 
