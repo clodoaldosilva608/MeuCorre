@@ -43,49 +43,66 @@ class MeuCorreDB extends Dexie {
   }
 }
 
-// Apps padrão (built-in) com logos oficiais via CDN.
+// Apps padrão (built-in) com logos locais em /public/apps/.
+// Imagens locais são mais rápidas (mesmo domínio, sem CDN externo) e
+// mais confiáveis (sem risco de CDN sair do ar ou bloquear hotlinking).
 export const DEFAULT_APPS: Omit<DeliveryApp, "id" | "isDefault" | "order">[] = [
   {
     name: "iFood",
     label: "iFood",
     color: "#ef4444",
     emoji: "🍽️",
-    image:
-      "https://purepng.com/public/uploads/large/purepng.com-ifood-logofood-delivery-ifood-brazil-delivery-logo-931523647772rfdqz.png",
+    image: "/apps/ifood.png",
   },
   {
     name: "99Food",
     label: "99Food",
     color: "#f97316",
     emoji: "🟠",
-    image:
-      "https://logodownload.org/wp-content/uploads/2020/02/99food-logo.png",
+    image: "/apps/99food.jpg",
   },
   {
     name: "Lalamove",
     label: "Lalamove",
     color: "#f59e0b",
     emoji: "📦",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Lalamove_logo.svg/512px-Lalamove_logo.svg.png",
+    image: "/apps/Lalamove.jpg",
   },
   {
     name: "Rappi",
     label: "Rappi",
     color: "#ec4899",
     emoji: "🛍️",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Rappi_logo.svg/512px-Rappi_logo.svg.png",
+    image: "/apps/Rappi.jpg",
   },
   {
     name: "Loggi",
     label: "Loggi",
     color: "#3b82f6",
     emoji: "📮",
-    image:
-      "https://loggi.com/static/img/loggi-logo.png",
+    image: "/apps/Loggi.jpg",
   },
-  { name: "Independente/Outros", label: "Independente / Outros", color: "#10b981", emoji: "🚀" },
+  {
+    name: "Ryd",
+    label: "Ryd",
+    color: "#8b5cf6",
+    emoji: "🚗",
+    image: "/apps/ryd.png",
+  },
+  {
+    name: "Bee",
+    label: "Bee",
+    color: "#eab308",
+    emoji: "🐝",
+    image: "/apps/bee.png",
+  },
+  {
+    name: "Independente/Outros",
+    label: "Independente / Outros",
+    color: "#10b981",
+    emoji: "🚀",
+    image: "/apps/Independente-Outros.jpg",
+  },
 ];
 
 // ===== Database ativo (pode ser trocado por switchDb) =====
@@ -186,12 +203,43 @@ export const db = {
 } as unknown as MeuCorreDB;
 
 // Garante que os apps padrão existam (roda no client, idempotente).
+// Também migra apps existentes para novas imagens locais (se URLs mudaram)
+// e adiciona novos apps padrão (Ryd, Bee) que não existiam antes.
 export async function ensureDefaultApps() {
   const current = getActiveDb();
   const count = await current.apps.count();
+
+  // 1. Se tabela vazia → seed com todos os apps padrão
   if (count === 0) {
     await current.apps.bulkAdd(
       DEFAULT_APPS.map((a, i) => ({ ...a, isDefault: true, order: i })),
     );
+    return;
+  }
+
+  // 2. Migração: atualiza imagens de apps padrão existentes (CDN → local)
+  // e adiciona novos apps padrão (Ryd, Bee) que não existiam antes.
+  const existingApps = await current.apps.toArray();
+  const existingNames = new Set(existingApps.map((a) => a.name));
+
+  for (const defaultApp of DEFAULT_APPS) {
+    if (!existingNames.has(defaultApp.name)) {
+      // Novo app padrão (Ryd, Bee) — adiciona com próximo order
+      const maxOrder = existingApps.reduce(
+        (max, a) => Math.max(max, a.order ?? 0),
+        0,
+      );
+      await current.apps.add({
+        ...defaultApp,
+        isDefault: true,
+        order: maxOrder + 1,
+      });
+    } else {
+      // App existente — atualiza imagem se mudou (CDN → local)
+      const existing = existingApps.find((a) => a.name === defaultApp.name);
+      if (existing && existing.isDefault && existing.image !== defaultApp.image) {
+        await current.apps.update(existing.id!, { image: defaultApp.image });
+      }
+    }
   }
 }
