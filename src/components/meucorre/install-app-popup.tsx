@@ -244,10 +244,11 @@ export function InstallAppPopup({
             </div>
           ) : deferredPrompt ? (
             // Android/Chrome: botão que dispara o prompt nativo
+            // animate-pulse + ring para chamar atenção do usuário
             <div className="space-y-2">
               <Button
                 onClick={handleInstall}
-                className="w-full bg-emerald-500 py-3 font-bold text-zinc-950 hover:bg-emerald-400"
+                className="w-full animate-pulse bg-emerald-500 py-3 font-bold text-zinc-950 shadow-lg shadow-emerald-500/50 ring-2 ring-emerald-400/60 hover:bg-emerald-400 hover:animate-none"
               >
                 <Download className="mr-1.5 h-4 w-4" />
                 Instalar agora
