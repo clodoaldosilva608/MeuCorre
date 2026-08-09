@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prismaRead } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 
 // GET /api/admin/dashboard — estatísticas gerais pra home do admin
@@ -26,20 +26,20 @@ export async function GET() {
     adStats,
     subRevenue,
   ] = await Promise.all([
-    prisma.ad.count(),
-    prisma.ad.count({ where: { active: true } }),
-    prisma.subscription.count(),
-    prisma.subscription.count({ where: { status: "pending" } }),
-    prisma.subscription.count({ where: { status: "approved" } }),
-    prisma.subscription.count({ where: { status: "rejected" } }),
-    prisma.feedback.count(),
-    prisma.feedback.aggregate({ _avg: { rating: true } }),
+    prismaRead.ad.count(),
+    prismaRead.ad.count({ where: { active: true } }),
+    prismaRead.subscription.count(),
+    prismaRead.subscription.count({ where: { status: "pending" } }),
+    prismaRead.subscription.count({ where: { status: "approved" } }),
+    prismaRead.subscription.count({ where: { status: "rejected" } }),
+    prismaRead.feedback.count(),
+    prismaRead.feedback.aggregate({ _avg: { rating: true } }),
     // Agregação SQL: _sum de views e clicks (1 query, 0 registros na RAM)
-    prisma.ad.aggregate({
+    prismaRead.ad.aggregate({
       _sum: { views: true, clicks: true },
     }),
     // Agregação SQL: _sum de amount apenas das aprovadas (1 query, 0 registros na RAM)
-    prisma.subscription.aggregate({
+    prismaRead.subscription.aggregate({
       where: { status: "approved" },
       _sum: { amount: true },
     }),

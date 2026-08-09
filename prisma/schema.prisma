@@ -178,3 +178,45 @@ model Setting {
   value String
   updatedAt DateTime @updatedAt
 }
+
+// ===== Contas de administrador (multi-admin) =====
+//
+// Antes: admin era hardcoded via env var ADMIN_EMAIL (single-user).
+// Agora: suporta múltiplos admins com roles diferentes.
+// Compatibilidade: se ADMIN_EMAIL estiver configurado e não existir na tabela,
+// esse admin ainda funciona (fallback durante transição).
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("admin") // admin | super_admin
+  active       Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([email])
+  @@index([active])
+}
+
+// ===== Audit log de ações administrativas =====
+//
+// Registra quem fez o quê, quando, e em qual recurso.
+// Essencial para rastreabilidade e compliance.
+
+model AdminAction {
+  id        String   @id @default(cuid())
+  adminId   String   // ID do AdminUser (ou email se fallback)
+  adminEmail String
+  action    String   // create | update | delete | toggle_pro | etc.
+  resource  String   // user | subscription | ad | feedback | etc.
+  resourceId String? // ID do recurso afetado
+  details   String?  // JSON com detalhes da ação
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([resource, createdAt])
+}

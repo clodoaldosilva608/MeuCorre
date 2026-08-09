@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminToken } from "@/lib/admin-auth";
+import { createAdminToken, verifyAdminPassword } from "@/lib/admin-auth";
+import { logger } from "@/lib/logger";
 
 // POST /api/admin/login
-// Auth por email + senha (env vars ADMIN_EMAIL e ADMIN_PASSWORD).
-// Seta cookie httpOnly com JWT assinado (HMAC-SHA256).
+// Auth por email + senha. Suporta 2 modos:
+// 1. MULTI-ADMIN: tabela AdminUser no banco (múltiplos admins com roles)
+// 2. LEGACY: env vars ADMIN_EMAIL + ADMIN_PASSWORD (single admin, fallback)
 //
+// Seta cookie httpOnly com JWT assinado (HMAC-SHA256).
 // Proteção contra brute force: máx 5 tentativas por IP a cada 15 min.
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000; // 15 min
@@ -66,24 +69,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const expectedEmail = process.env.ADMIN_EMAIL;
-  const expectedPassword = process.env.ADMIN_PASSWORD;
-  if (!expectedEmail || !expectedPassword) {
-    return NextResponse.json(
-      { error: "Servidor sem credenciais admin configuradas" },
-      { status: 500 },
-    );
-  }
+  // Verifica credenciais (tenta AdminUser table primeiro, depois env vars)
+  const result = await verifyAdminPassword(email.trim(), password);
 
-  // Comparação timing-safe da senha
-  const passwordMatch =
-    password.length === expectedPassword.length &&
-    password.split("").every((c, i) => c === expectedPassword[i]);
-
-  if (
-    email.trim().toLowerCase() !== expectedEmail.toLowerCase() ||
-    !passwordMatch
-  ) {
+  if (!result.valid) {
+    logger.warn("Admin login falhou", { email, ip });
     return NextResponse.json(
       {
         error: `Email ou senha incorretos. ${remaining} tentativa(s) restante(s).`,
@@ -92,8 +82,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Gera JWT assinado
-  const token = await createAdminToken(expectedEmail.toLowerCase());
+  // Determina source (db ou env) para o token
+  const source = result.role === "super_admin" && email.trim().toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase()
+    ? "env"
+    : "db";
+
+  // Gera JWT assinado com role e source
+  const token = await createAdminToken(
+    email.trim().toLowerCase(),
+    result.role,
+    source,
+  );
+
+  logger.info("Admin login sucesso", { email: email.trim(), role: result.role, ip });
 
   const res = NextResponse.json({ ok: true });
   res.cookies.set("meucorre_admin", token, {

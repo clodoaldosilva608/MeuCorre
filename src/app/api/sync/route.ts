@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 // ===== Sincronização de dados entre dispositivos =====
 //
@@ -13,6 +14,9 @@ import { getUserSession } from "@/lib/user-auth";
 //   Envia mudanças locais (corridas + despesas criadas/editadas/excluídas).
 //   Usa $transaction com Promise.all para bulk upsert (1 roundtrip ao banco
 //   em vez de N roundtrips sequenciais). Last-write-wins baseado em updatedAt.
+//
+// RATE LIMIT: 60 syncs/min por usuário (GET + POST combinados).
+// Previne abuso sem afetar usuários legítimos (sync normal é 1-2x/min).
 
 const PAGE_SIZE = 2000;
 const MAX_PUSH_BATCH = 500;
@@ -23,6 +27,14 @@ export async function GET(req: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+
+  // Rate limit por userId (não por IP) — resolve CGNAT brasileiro
+  const limited = await applyRateLimit(
+    req,
+    { windowMs: 60 * 1000, maxRequests: 60 },
+    session.sub,
+  );
+  if (limited) return limited;
 
   const { searchParams } = new URL(req.url);
   const since = BigInt(searchParams.get("since") ?? "0");
@@ -135,6 +147,14 @@ export async function POST(req: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+
+  // Rate limit por userId (não por IP) — resolve CGNAT brasileiro
+  const limited = await applyRateLimit(
+    req,
+    { windowMs: 60 * 1000, maxRequests: 60 },
+    session.sub,
+  );
+  if (limited) return limited;
 
   let body: SyncPushBody;
   try {
