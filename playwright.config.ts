@@ -19,6 +19,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1, // Um worker só para evitar race conditions entre contas
+  timeout: 120000, // Testes que criam usuários + fazem lançamentos precisam de mais tempo
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: baseUrl,
@@ -28,9 +29,6 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
     actionTimeout: 15000,
     navigationTimeout: 30000,
-    // Testes que criam usuários + fazem lançamentos precisam de mais tempo
-    // (registerUser espera 8s para popups, addCorrida ~5s cada)
-    timeout: 120000,
   },
   projects: [
     {
