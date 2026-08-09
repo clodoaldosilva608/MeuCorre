@@ -4,5 +4,6 @@
       "path": "/api/cron/purge-ad-events",
       "schedule": "0 3 * * *"
     }
-  ]
+  ],
+  "buildCommand": "prisma generate && prisma db push --accept-data-loss && next build"
 }

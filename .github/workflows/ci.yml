@@ -35,6 +35,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
+          # CI não tem DATABASE_URL real — prisma db push é pulado
+          # (prisma generate não precisa de DB, só next build precisa compilar)
           DATABASE_URL: "postgresql://fake:fake@localhost:5432/fake"
           DIRECT_URL: "postgresql://fake:fake@localhost:5432/fake"
           ADMIN_EMAIL: "ci@test.com"
@@ -46,6 +48,13 @@ jobs:
           NEXT_PUBLIC_KIWIFY_PRODUCT_SLUG: "ci-slug"
           PLAN_PRICE: "18.9"
           NEXT_PUBLIC_APP_URL: "https://ci.test"
+
+      - name: Push DB schema (only if DATABASE_URL is real)
+        if: env.DATABASE_URL != 'postgresql://fake:fake@localhost:5432/fake'
+        run: npx prisma db push --accept-data-loss
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
   # Job 2: E2E tests (só roda em push para main, não em PRs)
   e2e:
