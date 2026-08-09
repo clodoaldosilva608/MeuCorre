@@ -18,11 +18,11 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               // Allow Next.js inline scripts (hash-based CSP é mais seguro mas complexo)
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pay.kiwify.com.br",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pay.kiwify.com.br https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://pay.kiwify.com.br https://api.qrserver.com",
+              "connect-src 'self' https://pay.kiwify.com.br https://api.qrserver.com https://va.vercel-scripts.com",
               "frame-src 'self' https://pay.kiwify.com.br",
               "object-src 'none'",
               "base-uri 'self'",
