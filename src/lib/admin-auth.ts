@@ -63,11 +63,16 @@ export async function isAdminAuthed(): Promise<boolean> {
 
     // Modo DB: verifica se admin ainda existe e está ativo
     if (adminPayload.source === "db") {
-      const admin = await prisma.adminUser.findUnique({
-        where: { email: adminPayload.sub },
-        select: { active: true },
-      });
-      return admin?.active === true;
+      try {
+        const admin = await prisma.adminUser.findUnique({
+          where: { email: adminPayload.sub },
+          select: { active: true },
+        });
+        return admin?.active === true;
+      } catch {
+        // Tabela AdminUser pode não existir ainda — falha seguro (não autoriza)
+        return false;
+      }
     }
 
     // Modo ENV (legacy): verifica contra ADMIN_EMAIL
@@ -102,21 +107,26 @@ export async function verifyAdminPassword(
   email: string,
   password: string,
 ): Promise<{ valid: boolean; role?: "admin" | "super_admin" }> {
-  // 1. Tenta tabela AdminUser primeiro
-  const admin = await prisma.adminUser.findUnique({
-    where: { email: email.toLowerCase() },
-  });
+  // 1. Tenta tabela AdminUser primeiro (se existir no banco)
+  try {
+    const admin = await prisma.adminUser.findUnique({
+      where: { email: email.toLowerCase() },
+    });
 
-  if (admin && admin.active) {
-    const valid = await bcrypt.compare(password, admin.passwordHash);
-    if (valid) {
-      // Atualiza lastLoginAt
-      await prisma.adminUser.update({
-        where: { id: admin.id },
-        data: { lastLoginAt: new Date() },
-      });
-      return { valid: true, role: admin.role as "admin" | "super_admin" };
+    if (admin && admin.active) {
+      const valid = await bcrypt.compare(password, admin.passwordHash);
+      if (valid) {
+        // Atualiza lastLoginAt
+        await prisma.adminUser.update({
+          where: { id: admin.id },
+          data: { lastLoginAt: new Date() },
+        });
+        return { valid: true, role: admin.role as "admin" | "super_admin" };
+      }
     }
+  } catch {
+    // Tabela AdminUser pode não existir ainda (antes de prisma db push).
+    // Ignora erro e faz fallback para env vars.
   }
 
   // 2. Fallback: env var ADMIN_EMAIL + ADMIN_PASSWORD (legacy)
