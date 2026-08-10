@@ -20,6 +20,7 @@ import { NotificationCapture } from "@/components/meucorre/notification-capture"
 const Charts = lazy(() =>
   import("@/components/meucorre/charts").then((m) => ({ default: m.Charts })),
 );
+import { OffersList } from "@/components/meucorre/offers-list";
 import { Fab } from "@/components/meucorre/fab";
 import { BottomNav, type Tab } from "@/components/meucorre/bottom-nav";
 import { SplashScreen } from "@/components/meucorre/splash-screen";
@@ -779,6 +780,10 @@ function HomeContent() {
               expensesByCategory={expensesByCategory}
             />
           </Suspense>
+        )}
+
+        {activeTab === "ofertas" && (
+          <OffersList isPro={isPro} />
         )}
 
         {/* Rodapé */}

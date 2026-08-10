@@ -24,8 +24,10 @@ import {
   Fuel,
 } from "lucide-react";
 
-const PLAN_PRICE = 18.9; // Preço de lançamento
-const ORIGINAL_PRICE = 97; // Preço normal (riscado)
+const PLAN_PRICE = 18.9; // Preço vitalício (oferta promocional limitada)
+const ANNUAL_PRICE = 97; // Preço do plano anual
+const MONTHLY_PRICE = 14.9; // Preço do plano mensal
+const ORIGINAL_PRICE = 97; // Mantido para compat (era o preço do vitalício antes, agora é o anual)
 
 // ===== Animações framer-motion reutilizáveis =====
 const fadeUp: Variants = {
@@ -132,7 +134,17 @@ export default function LandingPage() {
   // Antes, cada CTA era um <a href="#planos"> que só fazia scroll, exigindo
   // um segundo clique no botão da seção de planos para abrir o dialog.
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const openCheckout = () => setCheckoutOpen(true);
+  const [selectedPlan, setSelectedPlan] = useState<
+    "monthly" | "annual" | "lifetime"
+  >("lifetime");
+  const openCheckout = () => {
+    setSelectedPlan("lifetime");
+    setCheckoutOpen(true);
+  };
+  const openCheckoutWithPlan = (plan: "monthly" | "annual" | "lifetime") => {
+    setSelectedPlan(plan);
+    setCheckoutOpen(true);
+  };
 
   // ===== Referral: detecta ?ref=CODE na URL e salva no localStorage =====
   useEffect(() => {
@@ -579,9 +591,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== 6. OFERTA DE LANÇAMENTO (claro, urgência) ===== */}
+      {/* ===== 6. PLANOS (3 tiers: mensal / anual / vitalício) ===== */}
       <section id="planos" className="bg-white py-16 text-zinc-900 md:py-24">
-        <div className="mx-auto max-w-4xl px-4">
+        <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
             initial="hidden"
@@ -590,115 +602,175 @@ export default function LandingPage() {
             className="text-center"
           >
             <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-orange-hot/40 bg-orange-hot/10 px-3 py-1 text-xs font-bold text-orange-hot">
-              🔥 Oferta de lançamento — só enquanto durar
+              🔥 Escolha seu plano — sem fidelidade
             </div>
             <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
-              Plano vitalício MeuCorre PRO
+              MeuCorre PRO — você escolhe como pagar
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base text-zinc-600">
-              Pague uma vez, use para sempre. Sem assinatura, sem renovação, sem
-              surpresa no fim do mês.
+              Mensal flexível, anual com economia, ou vitalício por tempo
+              limitado. Todos com as mesmas features PRO.
             </p>
           </motion.div>
 
+          {/* Grid de 3 planos */}
+          <motion.div
+            variants={containerStagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mx-auto mt-10 grid max-w-4xl gap-4 md:grid-cols-3"
+          >
+            {/* MENSAL */}
+            <motion.div
+              variants={itemUp}
+              className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+            >
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                Mensal
+              </p>
+              <p className="mt-2 text-xs text-zinc-500">Flexível, cancele quando quiser</p>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-4xl font-black text-zinc-900">
+                  R$ 14,90
+                </span>
+                <span className="text-xs text-zinc-500">/mês</span>
+              </div>
+              <ul className="mt-4 space-y-2 text-xs text-zinc-700">
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
+                  Todas as features PRO
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
+                  Cancele a qualquer momento
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
+                  Sem fidelidade
+                </li>
+              </ul>
+              <button
+                type="button"
+                onClick={() => openCheckoutWithPlan("monthly")}
+                className="mt-5 w-full rounded-xl border-2 border-zinc-300 bg-white py-3 text-sm font-bold text-zinc-700 transition-all hover:border-neon hover:text-neon"
+              >
+                Assinar mensal
+              </button>
+            </motion.div>
+
+            {/* ANUAL — destaque "mais popular" */}
+            <motion.div
+              variants={itemUp}
+              className="relative flex flex-col rounded-2xl border-2 border-neon bg-white p-5 shadow-neon"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-neon px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
+                Mais popular
+              </div>
+              <p className="text-xs font-bold uppercase tracking-wider text-neon">
+                Anual
+              </p>
+              <p className="mt-2 text-xs text-zinc-500">
+                Economize 46% vs mensal
+              </p>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-4xl font-black text-zinc-900">R$ 97</span>
+                <span className="text-xs text-zinc-500">/ano</span>
+              </div>
+              <p className="mt-1 text-[10px] text-zinc-500">
+                ≈ R$ 8,08/mês
+              </p>
+              <ul className="mt-4 space-y-2 text-xs text-zinc-700">
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
+                  Todas as features PRO
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
+                  12 meses pelo preço de ~6,5
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
+                  Renovação automática (cancele antes)
+                </li>
+              </ul>
+              <button
+                type="button"
+                onClick={() => openCheckoutWithPlan("annual")}
+                className="btn-neon mt-5 w-full py-3 text-sm"
+              >
+                Assinar anual
+              </button>
+            </motion.div>
+
+            {/* VITALÍCIO — oferta limitada */}
+            <motion.div
+              variants={itemUp}
+              className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-gold bg-zinc-950 p-5 text-white shadow-lg"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
+                🔥 Oferta limitada
+              </div>
+              <p className="text-xs font-bold uppercase tracking-wider text-gold">
+                Vitalício
+              </p>
+              <p className="mt-2 text-xs text-zinc-400">
+                Pague uma vez, use para sempre
+              </p>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-4xl font-black text-gold">R$ 18,90</span>
+              </div>
+              <p className="mt-1 text-[10px] text-zinc-500 line-through">
+                de R$ 97,00 (preço anual)
+              </p>
+              <ul className="mt-4 space-y-2 text-xs text-zinc-300">
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
+                  Pagamento único — sem renovação
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
+                  Acesso vitalício a todas as features
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
+                  Todas as atualizações futuras
+                </li>
+              </ul>
+              <button
+                type="button"
+                onClick={() => openCheckoutWithPlan("lifetime")}
+                className="mt-5 w-full rounded-xl bg-gold py-3 text-sm font-bold text-zinc-950 transition-all hover:bg-yellow-400"
+              >
+                <Zap className="mr-1 inline h-3.5 w-3.5" />
+                Garantir vitalício
+              </button>
+              <p className="mt-2 text-center text-[10px] text-orange-hot">
+                ⚠️ Pode acabar a qualquer momento
+              </p>
+            </motion.div>
+          </motion.div>
+
+          {/* Reassurance row */}
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, margin: "-60px" }}
-            className="mx-auto mt-10 max-w-md"
+            viewport={{ once: true, margin: "-40px" }}
+            className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500"
           >
-            <div className="overflow-hidden rounded-3xl border-2 border-neon bg-white shadow-neon">
-              {/* Header */}
-              <div className="bg-gradient-to-br from-neon to-neon-soft p-6 text-center text-zinc-950">
-                <p className="text-xs font-semibold uppercase tracking-wider opacity-90">
-                  ⚡ MeuCorre PRO
-                </p>
-                <div className="mt-2 flex items-end justify-center gap-2">
-                  <span className="mb-2 text-lg font-medium text-zinc-950/60 line-through">
-                    R$ {ORIGINAL_PRICE},00
-                  </span>
-                  <span className="text-5xl font-black text-gold">R$ 18,90</span>
-                </div>
-                <p className="mt-2 inline-block rounded-full bg-zinc-950/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
-                  🔥 Oferta de lançamento
-                </p>
-                <p className="mt-2 text-xs opacity-90">
-                  pagamento único • vitalício • sem mensalidade
-                </p>
-              </div>
-
-              {/* Features list */}
-              <div className="p-6">
-                <ul className="space-y-2.5">
-                  {PRO_FEATURES.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-neon" />
-                      <span className="text-zinc-700">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  type="button"
-                  onClick={openCheckout}
-                  className="btn-neon mt-6 w-full py-6 text-base"
-                >
-                  <Zap className="mr-2 inline h-4 w-4" />
-                  Comprar plano vitalício
-                </button>
-
-                <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-zinc-500">
-                  <Lock className="h-3 w-3" />
-                  Pagamento via Pix • Ativação em até 24h
-                </p>
-              </div>
-            </div>
-
-            {/* Urgência */}
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: "-40px" }}
-              className="mt-6 rounded-2xl border border-orange-hot/30 bg-orange-hot/5 p-4 text-center"
-            >
-              <p className="text-sm font-semibold text-orange-hot">
-                <Fuel className="mr-1 inline h-4 w-4" />
-                O preço vai voltar pra R$ 97.
-              </p>
-              <p className="mt-1 text-xs text-orange-hot/80">
-                Garanta seu acesso vitalício agora por menos de 1 tanque de
-                gasolina.
-              </p>
-            </motion.div>
-
-            {/* Comparação */}
-            <div className="mt-6 grid grid-cols-2 gap-3 text-center">
-              <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                <p className="text-xs font-semibold text-zinc-500">
-                  Plano gratuito
-                </p>
-                <p className="mt-1 text-2xl font-black text-zinc-900">R$ 0</p>
-                <p className="mt-1 text-[10px] text-zinc-500">
-                  14 dias grátis + 5 corridas/dia após
-                </p>
-              </div>
-              <div className="rounded-xl border-2 border-neon bg-neon/5 p-4">
-                <p className="text-xs font-semibold text-neon">
-                  Plano PRO vitalício
-                </p>
-                <p className="mt-1 text-2xl font-black text-neon">
-                  R$ 18,90
-                </p>
-                <p className="mt-0.5 text-[10px] text-zinc-500 line-through">
-                  de R$ {ORIGINAL_PRICE},00
-                </p>
-                <p className="mt-1 text-[10px] text-neon">
-                  Sem anúncios + features avançadas
-                </p>
-              </div>
-            </div>
+            <span className="flex items-center gap-1">
+              <Lock className="h-3 w-3" /> Pagamento via Pix ou cartão
+            </span>
+            <span className="flex items-center gap-1">
+              <Check className="h-3 w-3 text-neon" /> Ativação automática
+            </span>
+            <span className="flex items-center gap-1">
+              <Check className="h-3 w-3 text-neon" /> 14 dias de trial grátis
+            </span>
+            <span className="flex items-center gap-1">
+              <Check className="h-3 w-3 text-neon" /> Sem fidelidade
+            </span>
           </motion.div>
         </div>
       </section>
@@ -837,7 +909,12 @@ export default function LandingPage() {
 
       {/* Dialog de checkout — instância única compartilhada entre todos os
           CTAs "Comprar plano vitalício" da landing page. */}
-      <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
+      <CheckoutDialog
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        selectedPlan={selectedPlan}
+        onPlanChange={setSelectedPlan}
+      />
     </div>
   );
 }
@@ -1021,9 +1098,13 @@ function PhoneMockup() {
 function CheckoutDialog({
   open,
   onOpenChange,
+  selectedPlan,
+  onPlanChange,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  selectedPlan: "monthly" | "annual" | "lifetime";
+  onPlanChange: (p: "monthly" | "annual" | "lifetime") => void;
 }) {
   const [form, setForm] = useState({
     name: "",
@@ -1037,6 +1118,13 @@ function CheckoutDialog({
   // Após o pagamento, a Kiwify dispara o webhook pra /api/webhooks/kiwify
   // e redireciona o usuário pra /obrigado?order=XXX.
   const [redirecting, setRedirecting] = useState(false);
+
+  // Preços e labels por plano
+  const PLAN_INFO = {
+    monthly: { price: MONTHLY_PRICE, label: "Mensal", period: "/mês" },
+    annual: { price: ANNUAL_PRICE, label: "Anual", period: "/ano" },
+    lifetime: { price: PLAN_PRICE, label: "Vitalício", period: "" },
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1065,9 +1153,15 @@ function CheckoutDialog({
     }
 
     // 2. Redireciona pra Kiwify
+    //    NOTA: o plano selecionado (monthly/annual/lifetime) é passado como
+    //    parâmetro para o webhook /api/webhooks/kiwify processar e gravar no
+    //    User.subscriptionPlan. O Kiwify pode ter diferentes produtos para
+    //    cada plano; aqui usamos o mesmo productId e o webhook decide com
+    //    base no parâmetro plan.
     const params = new URLSearchParams({
       email: form.email,
       name: form.name,
+      plan: selectedPlan,
     });
     if (form.phone) params.set("phone", form.phone);
 
@@ -1092,12 +1186,50 @@ function CheckoutDialog({
             Quase lá! Seus dados
           </DialogTitle>
           <DialogDescription className="text-xs text-zinc-500">
-            Plano vitalício MeuCorre PRO — R$ 18,90 (oferta de lançamento, depois
-            R$ 97)
+            MeuCorre PRO — {PLAN_INFO[selectedPlan].label} • pago via Pix ou
+            cartão
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3 px-5 py-5">
+          {/* Seletor de plano dentro do dialog — permite mudar antes de pagar */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-zinc-600">Plano selecionado</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(["monthly", "annual", "lifetime"] as const).map((p) => {
+                const info = PLAN_INFO[p];
+                const isSelected = selectedPlan === p;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => onPlanChange(p)}
+                    className={`rounded-lg border-2 p-2 text-center transition-all ${
+                      isSelected
+                        ? "border-neon bg-neon/5"
+                        : "border-zinc-200 bg-white hover:border-zinc-300"
+                    }`}
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                      {info.label}
+                    </p>
+                    <p className="mt-0.5 text-sm font-black text-zinc-900">
+                      R$ {info.price.toFixed(2).replace(".", ",")}
+                      <span className="text-[10px] font-normal text-zinc-500">
+                        {info.period}
+                      </span>
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedPlan === "lifetime" && (
+              <p className="text-[10px] text-orange-hot">
+                ⚠️ Oferta promocional — pode acabar a qualquer momento
+              </p>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <Label className="text-xs text-zinc-600">Nome completo *</Label>
             <Input
@@ -1167,7 +1299,9 @@ function CheckoutDialog({
             disabled={!form.name || !form.email || redirecting}
             className="btn-neon w-full py-4"
           >
-            {redirecting ? "Redirecionando..." : `Pagar R$ 18,90 na Kiwify`}
+            {redirecting
+              ? "Redirecionando..."
+              : `Pagar R$ ${PLAN_INFO[selectedPlan].price.toFixed(2).replace(".", ",")} na Kiwify`}
             {!redirecting && <ArrowRight className="ml-1.5 h-4 w-4" />}
           </Button>
 

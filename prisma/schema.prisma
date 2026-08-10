@@ -108,6 +108,12 @@ model User {
   city         String?
   active       Boolean  @default(true) // admin pode desativar
   trialExtendedUntil DateTime? // admin pode estender trial
+  // ===== Sub-fase 1: plano de assinatura =====
+  // Plano atual do usuário: monthly (R$14,90/mês), annual (R$97/ano), lifetime (R$18,90 vitalício)
+  // null = ainda no trial/free. isPro=true indica acesso PRO ativo (vitalício ou assinatura não expirada).
+  subscriptionPlan    String?  // "monthly" | "annual" | "lifetime"
+  subscriptionStatus  String?  // "active" | "expired" | "cancelled" | "trialing"
+  subscriptionExpiresAt DateTime? // null para lifetime
   lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -115,6 +121,44 @@ model User {
   @@index([email])
   @@index([isPro])
   @@index([active])
+  @@index([subscriptionStatus])
+}
+
+// ===== Loja — Ofertas de produtos parceiros (Sub-fase 1) =====
+//
+// Produtos com desconto cadastrados pelo admin (modelagem afiliado).
+// O usuário vê os cards na aba "Ofertas" do dashboard e clica para
+// ser redirecionado ao link do parceiro (com UTM tracking).
+//
+// Curadoria do admin: apenas produtos relevantes para entregadores
+// (mochila térmica, capa de chuva, suporte, equipamentos, etc).
+
+model Offer {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  // Preço com desconto (ex: R$ 89,90)
+  price         Decimal  @db.Decimal(10, 2)
+  // Preço original (ex: R$ 149,90) — usado para calcular % desconto
+  originalPrice Decimal? @db.Decimal(10, 2)
+  // URL externa da imagem (hot-linked, não armazenamos o arquivo)
+  imageUrl      String
+  // URL de afiliado do produto (Amazon, Mercado Livre, Shopee, etc)
+  productUrl    String
+  // Categoria para filtro: "equipamentos" | "combustivel" | "seguro" | "ferramentas" | "outros"
+  category      String   @default("equipamentos")
+  // Apenas usuários PRO veem essa oferta (upsell incentive)
+  proOnly       Boolean  @default(false)
+  active        Boolean  @default(true)
+  startsAt      DateTime @default(now())
+  endsAt        DateTime?
+  clicks        Int      @default(0) // contador de cliques para analytics
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([active, startsAt])
+  @@index([category])
+  @@index([proOnly])
 }
 
 // ===== Tokens de recuperação de senha =====

@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Bike, Wallet, BarChart3 } from "lucide-react";
+import { Bike, Wallet, BarChart3, ShoppingBag } from "lucide-react";
 
-export type Tab = "corridas" | "despesas" | "graficos";
+export type Tab = "corridas" | "despesas" | "graficos" | "ofertas";
 
 interface BottomNavProps {
   active: Tab;
@@ -12,7 +12,7 @@ interface BottomNavProps {
   hasDeliveries: boolean;
 }
 
-// Barra de navegação inferior (mobile-first) — tabs Corridas / Despesas / Gráficos.
+// Barra de navegação inferior (mobile-first) — tabs Corridas / Despesas / Gráficos / Ofertas.
 export function BottomNav({
   active,
   onChange,
@@ -22,6 +22,12 @@ export function BottomNav({
   const tabs: { key: Tab; label: string; icon: typeof Bike; show: boolean }[] = [
     { key: "corridas", label: "Corridas", icon: Bike, show: true },
     { key: "despesas", label: "Despesas", icon: Wallet, show: true },
+    {
+      key: "ofertas",
+      label: "Ofertas",
+      icon: ShoppingBag,
+      show: true,
+    },
     {
       key: "graficos",
       label: "Gráficos",
