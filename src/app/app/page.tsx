@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { Clock, AlertCircle } from "lucide-react";
 import { Header } from "@/components/meucorre/header";
 import { SummaryCards } from "@/components/meucorre/summary-cards";
 import { PeriodFilter, periodLabel } from "@/components/meucorre/period-filter";
@@ -529,6 +530,46 @@ function HomeContent() {
 
         {/* Cards de resumo sempre visíveis */}
         <SummaryCards stats={stats} periodLabel={periodLabel(period)} />
+
+        {/* Banner de Trial — contagem regressiva permanente na dashboard.
+            Visível apenas para usuários free (não-PRO) enquanto o trial está ativo.
+            Mostra dias restantes e CTA para upgrade. */}
+        {!isPro && trialStatus.isTrialActive && trialStatus.trialDaysLeft > 0 && (
+          <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-500" />
+              <span className="text-sm font-medium text-amber-300">
+                {trialStatus.trialDaysLeft} {trialStatus.trialDaysLeft === 1 ? "dia restante" : "dias restantes"} do teste grátis
+              </span>
+            </div>
+            <button
+              onClick={() => setLicenseOpen(true)}
+              className="text-xs font-bold text-amber-400 underline-offset-2 hover:underline"
+            >
+              Virar PRO →
+            </button>
+          </div>
+        )}
+
+        {/* Banner de Trial expirado — mostra limite de lançamentos */}
+        {!isPro && trialStatus.isTrialExpired && (
+          <div className="flex items-center justify-between rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-400" />
+              <span className="text-sm font-medium text-red-300">
+                {trialStatus.remainingLaunches > 0
+                  ? `${trialStatus.remainingLaunches} ${trialStatus.remainingLaunches === 1 ? "lançamento restante" : "lançamentos restantes"} hoje`
+                  : "Limite diário atingido"}
+              </span>
+            </div>
+            <button
+              onClick={() => setLicenseOpen(true)}
+              className="text-xs font-bold text-red-400 underline-offset-2 hover:underline"
+            >
+              Virar PRO →
+            </button>
+          </div>
+        )}
 
         {/* Saudação personalizada com o nome do usuário logado.
             Só renderizamos quando o nome já foi carregado — evita
