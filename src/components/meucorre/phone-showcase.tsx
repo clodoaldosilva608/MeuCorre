@@ -4,6 +4,15 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ===== iPhone 3D Showcase com Demo Interativa =====
+//
+// O app /app é desenhado para tela mobile de 375px (iPhone padrão).
+// O iPhone mockup tem tela de 260px. Para o app caber sem cortes,
+// carregamos o iframe com width=375px e aplicamos transform: scale()
+// para reduzir proporcionalmente à tela do mockup.
+//
+// Escala = SCREEN_W / 375 = 260 / 375 ≈ 0.693
+// O iframe fica com 375px de largura "virtual" mas é visualmente
+// reduzido para 260px via CSS transform.
 
 const DEMO_STEPS = [
   { tab: "corridas", title: "Corridas", desc: "5 corridas de iFood, 99Food, Lalamove e Rappi — total, lucro líquido e km rodado" },
@@ -14,13 +23,17 @@ const DEMO_STEPS = [
 
 const AUTOPLAY_MS = 6000;
 
-// Dimensões FIXAS em pixels — não usar % ou aspect-ratio
-// 3D transforms quebram width:100%, então tudo deve ser fixo
-const PHONE_W = 280;
-const PHONE_H = 560;
+// Dimensões do iPhone mockup
+const PHONE_W = 290;
+const PHONE_H = 580;
 const BORDER = 10;
-const SCREEN_W = PHONE_W - BORDER * 2; // 260
-const SCREEN_H = PHONE_H - BORDER * 2; // 540
+const SCREEN_W = PHONE_W - BORDER * 2; // 270
+const SCREEN_H = PHONE_H - BORDER * 2; // 560
+
+// O /app é desenhado para 375px (mobile). Escala para caber na tela.
+const APP_VIRTUAL_WIDTH = 375;
+const APP_VIRTUAL_HEIGHT = 720; // altura suficiente para mostrar tudo
+const SCALE = SCREEN_W / APP_VIRTUAL_WIDTH; // 270/375 ≈ 0.72
 
 export function PhoneShowcase() {
   const [mode, setMode] = useState<"demo" | "interactive">("demo");
@@ -77,19 +90,19 @@ export function PhoneShowcase() {
         </button>
       </div>
 
-      {/* Container externo — sem 3D aqui, apenas perspective */}
+      {/* Container do iPhone com perspective 3D */}
       <div
         style={{ perspective: "1000px" }}
         onMouseEnter={() => mode === "demo" && setIsPaused(true)}
         onMouseLeave={() => mode === "demo" && setIsPaused(false)}
       >
-        {/* Aura neon */}
+        {/* Aura neon atrás do telefone */}
         <div
           className="pointer-events-none absolute -z-10 rounded-[3rem] bg-neon/15 blur-3xl"
-          style={{ width: PHONE_W + 40, height: PHONE_H + 40, left: -20, top: -20 }}
+          style={{ width: PHONE_W + 60, height: PHONE_H + 60, left: -30, top: -30 }}
         />
 
-        {/* Phone com rotação 3D — largura FIXA para não colapsar */}
+        {/* Phone com rotação 3D */}
         <motion.div
           style={{
             width: PHONE_W,
@@ -103,14 +116,13 @@ export function PhoneShowcase() {
             transition: { duration: 0.4 },
           }}
         >
-          {/* Frame do telefone — largura e altura FIXAS */}
+          {/* Frame do telefone */}
           <div
-            className="relative rounded-[2.5rem] border-zinc-700 bg-zinc-950"
+            className="relative rounded-[2.5rem] bg-zinc-950"
             style={{
               width: PHONE_W,
               height: PHONE_H,
-              borderWidth: BORDER,
-              borderStyle: "solid",
+              border: `${BORDER}px solid #3f3f46`,
               boxShadow:
                 "0 25px 60px -15px rgba(0,0,0,0.8), 0 0 30px rgba(57,255,20,0.1)",
             }}
@@ -123,10 +135,10 @@ export function PhoneShowcase() {
               <div className="absolute right-2.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-zinc-700" />
             </div>
 
-            {/* Tela — dimensões FIXAS em px */}
+            {/* Tela — overflow hidden para cortar o que exceder */}
             <div
               className="relative overflow-hidden rounded-[1.8rem] bg-zinc-950"
-              style={{ width: SCREEN_W, height: SCREEN_H, margin: "0 auto", marginTop: 0 }}
+              style={{ width: SCREEN_W, height: SCREEN_H, margin: "0 auto" }}
             >
               {/* Loading */}
               {!iframeLoaded && (
@@ -138,17 +150,22 @@ export function PhoneShowcase() {
                 </div>
               )}
 
-              {/* Iframe — largura e altura FIXAS em px (não 100%) */}
+              {/* Iframe escalado — o app vê 375px de largura mas é visualmente reduzido */}
               <iframe
                 ref={iframeRef}
                 src="/app?demo=1"
                 style={{
                   border: "none",
-                  width: SCREEN_W,
-                  height: SCREEN_H,
+                  // Largura virtual do app (375px = iPhone padrão)
+                  width: APP_VIRTUAL_WIDTH,
+                  // Altura virtual (suficiente para mostrar todo o conteúdo)
+                  height: APP_VIRTUAL_HEIGHT,
                   position: "absolute",
                   top: 0,
                   left: 0,
+                  // Escala proporcional para caber na tela do mockup
+                  transform: `scale(${SCALE})`,
+                  transformOrigin: "top left",
                 }}
                 title="MeuCorre Demo"
                 onLoad={() => setIframeLoaded(true)}
@@ -156,7 +173,7 @@ export function PhoneShowcase() {
               />
 
               {/* Status bar overlay */}
-              <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex h-7 items-center justify-between px-4 text-[8px] font-semibold text-white/60">
+              <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex h-6 items-center justify-between px-3 text-[7px] font-semibold text-white/50">
                 <span>
                   {new Date().toLocaleTimeString("pt-BR", {
                     hour: "2-digit",
