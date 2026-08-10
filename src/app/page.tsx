@@ -158,23 +158,29 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col bg-ink text-white">
       <Header onCheckout={openCheckout} />
 
-      {/* ===== 1. HERO — banner em tela cheia com botões responsivos ===== */}
+      {/* ===== 1. HERO — fundo limpo com glow neon (pronto para animação futura) ===== */}
       <section className="relative overflow-hidden bg-ink">
-        {/* Banner em tela cheia (background) */}
-        <div className="absolute inset-0">
-          <img
-            src="/banner-meucorre.png"
-            alt="MeuCorre — Pare de perder dinheiro sem saber"
-            className="h-full w-full object-cover object-center"
-            loading="eager"
-            fetchPriority="high"
+        {/* Glow neon radial — substitui a imagem de fundo, deixa o hero limpo
+            para receber animação temática (entregador / fastfood / encomendas) */}
+        <div className="pointer-events-none absolute inset-0">
+          {/* Glow superior esquerdo */}
+          <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-neon/15 blur-3xl" />
+          {/* Glow inferior direito */}
+          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-neon/10 blur-3xl" />
+          {/* Glow central sutil */}
+          <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-neon/5 blur-3xl" />
+          {/* Grade sutil de fundo (grid pattern) */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, #39ff14 1px, transparent 1px), linear-gradient(to bottom, #39ff14 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
           />
-          {/* Overlay escurecido para legibilidade do texto sobreposto */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />
         </div>
 
-        {/* Conteúdo sobreposto ao banner */}
+        {/* Conteúdo do hero (texto + CTAs) */}
         <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col items-center justify-center px-4 py-16 text-center md:py-24">
           {/* Logo / brand */}
           <motion.div
