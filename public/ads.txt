@@ -1,0 +1,15 @@
+# ads.txt — Google AdSense
+#
+# Este arquivo autoriza o Google AdSense a vender anúncios no MeuCorre.
+# O Google verifica este arquivo em https://meucorre.vercel.app/ads.txt
+#
+# INSTRUÇÕES:
+# 1. Acesse https://www.google.com/adsense/
+# 2. Faça login e adicione o site meucorre.vercel.app
+# 3. O Google vai mostrar seu ID de publisher (pub-XXXXXXXXXXXXXXXX)
+# 4. Substitua o pub-XXXXXXXXXXXXXXXX abaixo pelo seu ID real
+# 5. Configure a env var NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-XXXXXXXXXXXXXXXX no Vercel
+# 6. Aguarde aprovação (pode levar dias a semanas)
+#
+# Linha de autorização padrão do Google AdSense:
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

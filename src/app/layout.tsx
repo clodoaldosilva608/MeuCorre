@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -13,6 +14,14 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// ===== Google AdSense =====
+// Carregado apenas se NEXT_PUBLIC_ADSENSE_CLIENT estiver configurado.
+// O script é carregado de forma assíncrona para não bloquear o render.
+// Para ativar: configure NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-XXXXXXXXXXXXXXXX
+// no Vercel e adicione o arquivo /public/ads.txt com o conteúdo:
+//   google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
 // Metadata do PWA MeuCorre — instalável na tela inicial do entregador.
 export const metadata: Metadata = {
@@ -72,6 +81,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        {/* Google AdSense — só carrega se configurado */}
+        {ADSENSE_CLIENT && (
+          <Script
+            id="adsense-script"
+            async
+            strategy="afterInteractive"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+          />
+        )}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >

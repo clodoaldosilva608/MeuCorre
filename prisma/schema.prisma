@@ -58,6 +58,8 @@ model Subscription {
   reviewedAt   DateTime?
   reviewedBy   String?
   reviewNotes  String?
+  // Plano adquirido (Sub-fase 1): "monthly" | "annual" | "lifetime"
+  plan         String?  // null = compatibilidade com registros antigos
   // Licença gerada quando aprovada
   licenseKey   String?  @unique // chave que libera o PRO no app
   deviceId     String?
@@ -68,6 +70,7 @@ model Subscription {
   @@index([status])
   @@index([buyerEmail])
   @@index([kiwifyOrderId])
+  @@index([plan, status])
 }
 
 // ===== Cliques/visualizações de anúncios (analytics) =====

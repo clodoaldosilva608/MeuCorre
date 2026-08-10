@@ -5,6 +5,7 @@ import { motion, type Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AdSense } from "@/components/adsense";
 import {
   Dialog,
   DialogContent,
@@ -145,6 +146,27 @@ export default function LandingPage() {
     setSelectedPlan(plan);
     setCheckoutOpen(true);
   };
+
+  // ===== Status da oferta vitalício (contador de vagas + cutoff) =====
+  // Busca do backend quantos vitalícios já foram vendidos e se a oferta
+  // ainda está disponível. Atualiza a UI para mostrar urgência real.
+  const [lifetimeStatus, setLifetimeStatus] = useState<{
+    available: boolean;
+    remaining: number;
+    totalSold: number;
+    maxSales: number;
+    cutoffDate: string;
+    cutoffPassed: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/lifetime-status", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => setLifetimeStatus(data))
+      .catch(() => {
+        // Se falhar, assume disponível (não bloqueia compra)
+      });
+  }, []);
 
   // ===== Referral: detecta ?ref=CODE na URL e salva no localStorage =====
   useEffect(() => {
@@ -479,6 +501,14 @@ export default function LandingPage() {
 
       {/* ===== 4. VEJA COMO FUNCIONA (galeria de screenshots) ===== */}
       <section className="border-y border-zinc-200 bg-zinc-50 py-16 text-zinc-900 md:py-24">
+        {/* AdSense — banner horizontal discreto entre seções (só aparece se configurado) */}
+        <div className="mx-auto mb-12 max-w-3xl px-4">
+          <AdSense
+            slot="1111111111"
+            format="horizontal"
+            className="min-h-[90px] rounded-lg"
+          />
+        </div>
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
@@ -703,52 +733,109 @@ export default function LandingPage() {
               </button>
             </motion.div>
 
-            {/* VITALÍCIO — oferta limitada */}
-            <motion.div
-              variants={itemUp}
-              className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-gold bg-zinc-950 p-5 text-white shadow-lg"
-            >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
-                🔥 Oferta limitada
-              </div>
-              <p className="text-xs font-bold uppercase tracking-wider text-gold">
-                Vitalício
-              </p>
-              <p className="mt-2 text-xs text-zinc-400">
-                Pague uma vez, use para sempre
-              </p>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-black text-gold">R$ 18,90</span>
-              </div>
-              <p className="mt-1 text-[10px] text-zinc-500 line-through">
-                de R$ 97,00 (preço anual)
-              </p>
-              <ul className="mt-4 space-y-2 text-xs text-zinc-300">
-                <li className="flex items-start gap-1.5">
-                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
-                  Pagamento único — sem renovação
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
-                  Acesso vitalício a todas as features
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
-                  Todas as atualizações futuras
-                </li>
-              </ul>
-              <button
-                type="button"
-                onClick={() => openCheckoutWithPlan("lifetime")}
-                className="mt-5 w-full rounded-xl bg-gold py-3 text-sm font-bold text-zinc-950 transition-all hover:bg-yellow-400"
+            {/* VITALÍCIO — oferta limitada com contador de vagas */}
+            {lifetimeStatus?.available !== false && (
+              <motion.div
+                variants={itemUp}
+                className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-gold bg-zinc-950 p-5 text-white shadow-lg"
               >
-                <Zap className="mr-1 inline h-3.5 w-3.5" />
-                Garantir vitalício
-              </button>
-              <p className="mt-2 text-center text-[10px] text-orange-hot">
-                ⚠️ Pode acabar a qualquer momento
-              </p>
-            </motion.div>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
+                  🔥 Oferta limitada
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-gold">
+                  Vitalício
+                </p>
+                <p className="mt-2 text-xs text-zinc-400">
+                  Pague uma vez, use para sempre
+                </p>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-gold">R$ 18,90</span>
+                </div>
+                <p className="mt-1 text-[10px] text-zinc-500 line-through">
+                  de R$ 97,00 (preço anual)
+                </p>
+
+                {/* Contador de vagas restantes */}
+                {lifetimeStatus && (
+                  <div className="mt-2 rounded-lg border border-gold/30 bg-gold/5 p-2 text-center">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gold">
+                      {lifetimeStatus.remaining <= 50
+                        ? "⚠️ Últimas vagas!"
+                        : "Vagas restantes"}
+                    </p>
+                    <p className="text-lg font-black text-gold">
+                      {lifetimeStatus.remaining}
+                      <span className="text-xs font-normal text-zinc-500">
+                        {" "}
+                        / {lifetimeStatus.maxSales}
+                      </span>
+                    </p>
+                    {lifetimeStatus.cutoffDate && (
+                      <p className="text-[9px] text-zinc-500">
+                        até{" "}
+                        {new Date(lifetimeStatus.cutoffDate).toLocaleDateString(
+                          "pt-BR",
+                          { day: "2-digit", month: "2-digit", year: "numeric" },
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <ul className="mt-4 space-y-2 text-xs text-zinc-300">
+                  <li className="flex items-start gap-1.5">
+                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
+                    Pagamento único — sem renovação
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
+                    Acesso vitalício a todas as features
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
+                    Todas as atualizações futuras
+                  </li>
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => openCheckoutWithPlan("lifetime")}
+                  className="mt-5 w-full rounded-xl bg-gold py-3 text-sm font-bold text-zinc-950 transition-all hover:bg-yellow-400"
+                >
+                  <Zap className="mr-1 inline h-3.5 w-3.5" />
+                  Garantir vitalício
+                </button>
+                <p className="mt-2 text-center text-[10px] text-orange-hot">
+                  ⚠️ Pode acabar a qualquer momento
+                </p>
+              </motion.div>
+            )}
+
+            {/* Banner de cutoff — mostra quando vitalício NÃO está disponível */}
+            {lifetimeStatus?.available === false && (
+              <motion.div
+                variants={itemUp}
+                className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-zinc-300 bg-zinc-100 p-5 text-zinc-500"
+              >
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-zinc-400 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
+                  Esgotado
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                  Vitalício
+                </p>
+                <p className="mt-2 text-xs text-zinc-500">
+                  Oferta encerrada
+                </p>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="text-2xl font-black text-zinc-400 line-through">
+                    R$ 18,90
+                  </span>
+                </div>
+                <p className="mt-4 text-center text-xs text-zinc-500">
+                  As 500 vagas acabaram!<br />
+                  Escolha mensal ou anual abaixo.
+                </p>
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Reassurance row */}
