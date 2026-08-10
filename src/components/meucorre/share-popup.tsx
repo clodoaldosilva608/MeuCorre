@@ -25,46 +25,56 @@ import { toast } from "sonner";
 interface SharePopupProps {
   open: boolean;
   onClose: () => void;
+  referralLink?: string;
+  referralReward?: number;
 }
 
 const APP_URL = "https://meucorre.vercel.app";
 const SHARE_TEXT =
   "Ô meu parceiro, achei esse app MeuCorre que ajuda pacas quem é entregador! Controla corrida, despesa, lucro líquido... tudo num lugar só. Bora testar! 🏍️⚡";
 
-export function SharePopup({ open, onClose }: SharePopupProps) {
+export function SharePopup({ open, onClose, referralLink, referralReward }: SharePopupProps) {
   const [copied, setCopied] = useState(false);
+
+  // Se tem referralLink, usa ele (com ?ref=CODE) em vez da URL base
+  const shareUrl = referralLink || APP_URL;
+  const shareText = referralLink && referralReward
+    ? `${SHARE_TEXT} Se cadastra pelo meu link e quando você virar PRO eu ganho R$ ${referralReward.toFixed(2)}! 💰`
+    : SHARE_TEXT;
 
   const shareLinks = [
     {
       name: "WhatsApp",
       icon: WhatsappIcon,
       color: "#25D366",
-      url: `https://wa.me/?text=${encodeURIComponent(SHARE_TEXT + " " + APP_URL)}`,
+      url: `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`,
     },
     {
       name: "Facebook",
       icon: Facebook,
       color: "#1877F2",
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(APP_URL)}&quote=${encodeURIComponent(SHARE_TEXT)}`,
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`,
     },
     {
       name: "Twitter / X",
       icon: Twitter,
       color: "#000000",
-      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_TEXT)}&url=${encodeURIComponent(APP_URL)}`,
+      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
     },
     {
       name: "Telegram",
       icon: Telegram,
       color: "#0088CC",
-      url: `https://t.me/share/url?url=${encodeURIComponent(APP_URL)}&text=${encodeURIComponent(SHARE_TEXT)}`,
+      url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
     },
   ];
 
   const copyLink = () => {
-    navigator.clipboard.writeText(APP_URL);
+    navigator.clipboard.writeText(shareUrl);
     setCopied(true);
-    toast.success("Link copiado!");
+    toast.success("Link copiado!", {
+      description: referralLink ? "Seu link de indicação foi copiado" : undefined,
+    });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -73,8 +83,8 @@ export function SharePopup({ open, onClose }: SharePopupProps) {
       try {
         await navigator.share({
           title: "MeuCorre — App pra entregador",
-          text: SHARE_TEXT,
-          url: APP_URL,
+          text: shareText,
+          url: shareUrl,
         });
         onClose();
       } catch {
@@ -92,7 +102,7 @@ export function SharePopup({ open, onClose }: SharePopupProps) {
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-400">
               <Heart className="h-4 w-4 fill-emerald-400" />
-              Bora ajudar a galera!
+              {referralLink ? "Indique e Ganhe!" : "Bora ajudar a galera!"}
             </DialogTitle>
             <button
               onClick={onClose}
@@ -103,7 +113,9 @@ export function SharePopup({ open, onClose }: SharePopupProps) {
             </button>
           </div>
           <DialogDescription className="mt-1 text-xs text-zinc-400">
-            Ajuda o MeuCorre a chegar em mais entregadores 🙏
+            {referralLink && referralReward
+              ? `Cada amigo que virar PRO = R$ ${referralReward.toFixed(2)} pra você via PIX 💰`
+              : "Ajuda o MeuCorre a chegar em mais entregadores 🙏"}
           </DialogDescription>
         </DialogHeader>
 

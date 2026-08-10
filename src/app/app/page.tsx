@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Clock, AlertCircle } from "lucide-react";
+import { Clock, AlertCircle, Gift, Share2 } from "lucide-react";
 import { Header } from "@/components/meucorre/header";
 import { SummaryCards } from "@/components/meucorre/summary-cards";
 import { PeriodFilter, periodLabel } from "@/components/meucorre/period-filter";
@@ -102,6 +102,13 @@ function HomeContent() {
   const [promoOpen, setPromoOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [referralData, setReferralData] = useState<{
+    active: boolean;
+    code: string;
+    link: string;
+    rewardAmount: number;
+    stats: { total: number; converted: number; paid: number; totalEarned: number };
+  } | null>(null);
 
   // Anúncios (busca banner_top, card_list e splash; em PRO retorna vazio)
   const { ads: bannerAds, clickAd: clickBanner } = useAds("banner_top");
@@ -169,6 +176,24 @@ function HomeContent() {
       }
     })();
   }, []);
+
+  // ===== Referral: busca dados da campanha quando usuário é PRO =====
+  useEffect(() => {
+    if (!isPro) {
+      setReferralData(null);
+      return;
+    }
+    fetch("/api/referral/code")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.active && data.code) {
+          setReferralData(data);
+        } else {
+          setReferralData(null);
+        }
+      })
+      .catch(() => setReferralData(null));
+  }, [isPro]);
 
   // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
   useEffect(() => {
@@ -568,6 +593,47 @@ function HomeContent() {
           </div>
         )}
 
+        {/* ===== Banner de Referral "Indique e Ganhe" =====
+            Visível apenas para usuários PRO quando a campanha está ativa.
+            Mostra recompensa (R$5), total ganho e botão para compartilhar. */}
+        {isPro && referralData && (
+          <div className="overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <Gift className="h-4 w-4 shrink-0 text-emerald-400" />
+                  <span className="text-sm font-bold text-emerald-400">
+                    Indique e Ganhe R$ {referralData.rewardAmount.toFixed(2)}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-zinc-400">
+                  Cada amigo que virar PRO = R$ {referralData.rewardAmount.toFixed(2)} pra você via PIX
+                </p>
+                {referralData.stats.total > 0 && (
+                  <div className="mt-2 flex gap-3 text-[11px]">
+                    <span className="text-zinc-500">
+                      Indicados: <strong className="text-zinc-300">{referralData.stats.total}</strong>
+                    </span>
+                    <span className="text-zinc-500">
+                      Convertidos: <strong className="text-emerald-400">{referralData.stats.converted}</strong>
+                    </span>
+                    <span className="text-zinc-500">
+                      Ganho: <strong className="text-emerald-400">R$ {referralData.stats.totalEarned.toFixed(2)}</strong>
+                    </span>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setShareOpen(true)}
+                className="shrink-0 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-zinc-950 transition-colors hover:bg-emerald-400"
+              >
+                <Share2 className="mr-1 inline h-3.5 w-3.5" />
+                Indicar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Saudação personalizada com o nome do usuário logado.
             Só renderizamos quando o nome já foi carregado — evita
             layout shift no SSR e esconde totalmente quando offline. */}
@@ -754,13 +820,15 @@ function HomeContent() {
         remainingLaunches={trialStatus.remainingLaunches}
       />
 
-      {/* Pop-up "Compartilhe com amigos" */}
+      {/* Pop-up "Compartilhe com amigos" / "Indique e Ganhe" */}
       <SharePopup
         open={shareOpen}
         onClose={() => {
           setShareOpen(false);
           dismissSharePopup();
         }}
+        referralLink={referralData?.link}
+        referralReward={referralData?.rewardAmount}
       />
 
       {/* Pop-up de feedback */}
