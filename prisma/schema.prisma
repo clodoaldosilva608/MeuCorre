@@ -144,8 +144,10 @@ model Offer {
   price         Decimal  @db.Decimal(10, 2)
   // Preço original (ex: R$ 149,90) — usado para calcular % desconto
   originalPrice Decimal? @db.Decimal(10, 2)
-  // URL externa da imagem (hot-linked, não armazenamos o arquivo)
+  // URL externa da imagem (hot-linked) OU data URL base64 (upload)
   imageUrl      String
+  // URL de vídeo do produto (YouTube/Vimeo) — opcional
+  videoUrl      String?
   // URL de afiliado do produto (Amazon, Mercado Livre, Shopee, etc)
   productUrl    String
   // Categoria para filtro: "equipamentos" | "combustivel" | "seguro" | "ferramentas" | "outros"

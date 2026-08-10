@@ -50,6 +50,7 @@ interface Offer {
   price: number;
   originalPrice: number | null;
   imageUrl: string;
+  videoUrl: string | null;
   productUrl: string;
   category: string;
   proOnly: boolean;
@@ -414,12 +415,15 @@ function OfferDialog({
     price: "",
     originalPrice: "",
     imageUrl: "",
+    videoUrl: "",
     productUrl: "",
     category: "equipamentos",
     proOnly: false,
     active: true,
     endsAt: "",
   });
+  const [imageMode, setImageMode] = useState<"url" | "upload">("url");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -432,6 +436,7 @@ function OfferDialog({
             ? String(editing.originalPrice)
             : "",
           imageUrl: editing.imageUrl,
+          videoUrl: editing.videoUrl ?? "",
           productUrl: editing.productUrl,
           category: editing.category,
           proOnly: editing.proOnly,
@@ -440,6 +445,8 @@ function OfferDialog({
             ? new Date(editing.endsAt).toISOString().slice(0, 16)
             : "",
         });
+        // Detecta se é data URL (upload) ou URL externa
+        setImageMode(editing.imageUrl.startsWith("data:") ? "upload" : "url");
       } else {
         setForm({
           title: "",
@@ -447,28 +454,93 @@ function OfferDialog({
           price: "",
           originalPrice: "",
           imageUrl: "",
+          videoUrl: "",
           productUrl: "",
           category: "equipamentos",
           proOnly: false,
           active: true,
           endsAt: "",
         });
+        setImageMode("url");
       }
     }
   }, [open, editing]);
+
+  // Converte arquivo de imagem para base64 data URL
+  const handleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validações
+    if (!file.type.startsWith("image/")) {
+      toast.error("Arquivo deve ser uma imagem");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máximo 2MB)");
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setForm((prev) => ({ ...prev, imageUrl: base64 }));
+        setUploadingImage(false);
+        toast.success("Imagem carregada");
+      };
+      reader.onerror = () => {
+        setUploadingImage(false);
+        toast.error("Erro ao ler imagem");
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setUploadingImage(false);
+      toast.error("Erro ao processar imagem");
+    }
+  };
+
+  // Extrai ID do YouTube para embed
+  function getYouTubeEmbedUrl(url: string): string | null {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return `https://www.youtube.com/embed/${match[1]}`;
+    }
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
+    // Limpa preço — remove R$, espaços, e converte vírgula para ponto
+    const cleanPrice = form.price
+      .replace(/R\$\s*/gi, "")
+      .replace(/\s/g, "")
+      .replace(",", ".");
+    const priceNum = parseFloat(cleanPrice);
+
+    const cleanOrigPrice = form.originalPrice
+      ? form.originalPrice
+          .replace(/R\$\s*/gi, "")
+          .replace(/\s/g, "")
+          .replace(",", ".")
+      : "";
+    const origNum = cleanOrigPrice ? parseFloat(cleanOrigPrice) : null;
+
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
-      price: parseFloat(form.price.replace(",", ".")),
-      originalPrice: form.originalPrice
-        ? parseFloat(form.originalPrice.replace(",", "."))
-        : null,
+      price: priceNum,
+      originalPrice: origNum,
       imageUrl: form.imageUrl.trim(),
+      videoUrl: form.videoUrl.trim() || null,
       productUrl: form.productUrl.trim(),
       category: form.category,
       proOnly: form.proOnly,
@@ -593,10 +665,13 @@ function OfferDialog({
                 }
                 placeholder="Descrição do produto e do desconto"
                 required
-                maxLength={500}
-                rows={2}
+                maxLength={1000}
+                rows={4}
                 className="border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
               />
+              <p className="text-[10px] text-zinc-500">
+                {form.description.length}/1000 caracteres
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -604,11 +679,14 @@ function OfferDialog({
               <Input
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
-                placeholder="89.90"
+                placeholder="19.90"
                 required
                 inputMode="decimal"
                 className="border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
               />
+              <p className="text-[10px] text-zinc-500">
+                Digite apenas números (ex: 19.90 ou 19,90)
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -620,26 +698,104 @@ function OfferDialog({
                 onChange={(e) =>
                   setForm({ ...form, originalPrice: e.target.value })
                 }
-                placeholder="149.90"
+                placeholder="39.90"
                 inputMode="decimal"
                 className="border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
               />
             </div>
 
+            {/* Imagem — URL ou Upload */}
+            <div className="space-y-1.5 md:col-span-2">
+              <Label className="text-xs text-zinc-400">Imagem do produto *</Label>
+              {/* Tabs URL / Upload */}
+              <div className="flex gap-1 rounded-lg border border-zinc-700 bg-zinc-950 p-1">
+                <button
+                  type="button"
+                  onClick={() => setImageMode("url")}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    imageMode === "url"
+                      ? "bg-emerald-500 text-zinc-950"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  Link da imagem
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageMode("upload")}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    imageMode === "upload"
+                      ? "bg-emerald-500 text-zinc-950"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  Upload de imagem
+                </button>
+              </div>
+
+              {imageMode === "url" ? (
+                <Input
+                  value={form.imageUrl.startsWith("data:") ? "" : form.imageUrl}
+                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                  placeholder="https://m.media-amazon.com/images/I/..."
+                  required={imageMode === "url"}
+                  className="border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+                />
+              ) : (
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    className="block w-full text-xs text-zinc-400 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-500 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-zinc-950 hover:file:bg-emerald-400"
+                  />
+                  {uploadingImage && (
+                    <p className="text-[10px] text-zinc-500">
+                      <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
+                      Carregando imagem...
+                    </p>
+                  )}
+                  {form.imageUrl.startsWith("data:") && (
+                    <p className="text-[10px] text-emerald-400">
+                      ✓ Imagem carregada ({(form.imageUrl.length / 1024).toFixed(0)}KB base64)
+                    </p>
+                  )}
+                </div>
+              )}
+              <p className="text-[10px] text-zinc-500">
+                {imageMode === "url"
+                  ? "URL externa HTTPS com extensão .jpg/.png/.webp/.gif/.svg"
+                  : "Máximo 2MB. Formatos: JPG, PNG, WebP, GIF, SVG."}
+              </p>
+            </div>
+
+            {/* Vídeo do produto (opcional) */}
             <div className="space-y-1.5 md:col-span-2">
               <Label className="text-xs text-zinc-400">
-                URL da imagem (HTTPS) *
+                Vídeo do produto (opcional)
               </Label>
               <Input
-                value={form.imageUrl}
-                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                placeholder="https://m.media-amazon.com/images/I/..."
-                required
+                value={form.videoUrl}
+                onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..."
                 className="border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
               />
               <p className="text-[10px] text-zinc-500">
-                URL externa da imagem (HTTPS). Será exibida via hot-link.
+                Link do YouTube ou Vimeo. Será exibido como preview no card da oferta.
               </p>
+              {form.videoUrl && getYouTubeEmbedUrl(form.videoUrl) && (
+                <div className="mt-2 overflow-hidden rounded-lg border border-zinc-700">
+                  <div className="aspect-video bg-zinc-950">
+                    <iframe
+                      src={getYouTubeEmbedUrl(form.videoUrl)!}
+                      className="h-full w-full"
+                      title="Preview do vídeo"
+                      allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
@@ -651,13 +807,12 @@ function OfferDialog({
                 onChange={(e) =>
                   setForm({ ...form, productUrl: e.target.value })
                 }
-                placeholder="https://www.amazon.com.br/dp/B0XXX?tag=meucorre-20"
+                placeholder="https://meli.la/2TBA26a ou https://www.amazon.com.br/dp/B0XXX"
                 required
                 className="border-zinc-700 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
               />
               <p className="text-[10px] text-zinc-500">
-                Link de afiliado. O MeuCorre anexa UTM tracking
-                automaticamente para atribuir conversões.
+                Link de afiliado. O MeuCorre anexa UTM tracking automaticamente.
               </p>
             </div>
 

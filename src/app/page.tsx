@@ -93,28 +93,28 @@ const FEATURES = [
 
 const SCREENSHOTS = [
   {
-    src: "/screenshots/demo-dashboard-tudo.png",
+    src: "/screenshots/07-dashboard-corridas.png",
     intro: "Tudo numa tela só",
     desc: "Total, lucro líquido, corridas e km — sem precisar abrir 3 apps diferentes.",
     alt: "Dashboard do MeuCorre mostrando total, lucro líquido, corridas e quilometragem",
   },
   {
-    src: "/screenshots/demo-graficos.png",
+    src: "/screenshots/09-dashboard-graficos.png",
     intro: "Gráficos que mostram a verdade",
     desc: "Veja pra onde seu dinheiro vai: por app, por dia, por categoria de despesa.",
     alt: "Gráficos de ganhos e despesas no MeuCorre por app e por dia",
   },
   {
-    src: "/screenshots/demo-nova-corrida.png",
-    intro: "Lançar corrida em 3 toques",
-    desc: "Rápido como sua entrega. Toca, lança e já volta pra próxima corrida.",
-    alt: "Tela de nova corrida no MeuCorre com botões de valor rápido",
-  },
-  {
-    src: "/screenshots/demo-despesas.png",
+    src: "/screenshots/08-dashboard-despesas.png",
     intro: "Cada real gasto fica registrado",
     desc: "Sem surpresa no fim do mês. Gasolina, comida, manutenção — tudo lá dentro.",
     alt: "Tela de despesas no MeuCorre com categorias de gasto",
+  },
+  {
+    src: "/screenshots/12-dashboard-mobile.png",
+    intro: "Funciona no celular, offline",
+    desc: "Lance corridas em 3 toques, mesmo sem internet. Seus dados ficam no seu aparelho.",
+    alt: "Dashboard do MeuCorre no celular, funcionando offline",
   },
 ];
 
@@ -950,36 +950,100 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ===== 9. FOOTER (mantém créditos) ===== */}
+      {/* ===== 9. FOOTER (completo com links e redes sociais) ===== */}
       <footer className="mt-auto bg-ink py-10 text-zinc-400">
         <div className="mx-auto max-w-5xl px-4">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="flex items-center gap-2">
-              <div className="grid h-7 w-7 place-items-center rounded-lg bg-neon text-sm">
-                ⚡
+          {/* Grid de colunas */}
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            {/* Coluna 1 — Produto */}
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="grid h-7 w-7 place-items-center rounded-lg bg-neon text-sm">
+                  ⚡
+                </div>
+                <span className="font-bold text-neon">MeuCorre</span>
               </div>
-              <span className="font-bold text-neon">MeuCorre</span>
+              <ul className="mt-4 space-y-2 text-xs">
+                <li><a href="/app" className="hover:text-neon">Abrir app</a></li>
+                <li><a href="#planos" className="hover:text-neon">Planos</a></li>
+                <li><a href="/servicos" className="hover:text-neon">Serviços</a></li>
+                <li><a href="/cases" className="hover:text-neon">Cases</a></li>
+              </ul>
             </div>
-            <nav className="flex flex-wrap items-center gap-5 text-xs">
-              <a href="/app" className="hover:text-neon">
-                Abrir app
-              </a>
-              <a href="#planos" className="hover:text-neon">
-                Planos
-              </a>
-              <a href="/termos" className="hover:text-neon">
-                Termos de Uso
-              </a>
-              <a href="/privacidade" className="hover:text-neon">
-                Privacidade
-              </a>
-              <a href="/admin/login" className="hover:text-neon">
-                Admin
-              </a>
-            </nav>
+
+            {/* Coluna 2 — Empresa */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                Empresa
+              </p>
+              <ul className="mt-4 space-y-2 text-xs">
+                <li><a href="/sobre" className="hover:text-neon">Sobre</a></li>
+                <li><a href="/institucional" className="hover:text-neon">Institucional</a></li>
+                <li><a href="/contato" className="hover:text-neon">Contato</a></li>
+                <li><a href="/admin/login" className="hover:text-neon">Admin</a></li>
+              </ul>
+            </div>
+
+            {/* Coluna 3 — Legal */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                Legal
+              </p>
+              <ul className="mt-4 space-y-2 text-xs">
+                <li><a href="/termos" className="hover:text-neon">Termos de Serviço</a></li>
+                <li><a href="/privacidade" className="hover:text-neon">Política de Privacidade</a></li>
+                <li><a href="/faq" className="hover:text-neon">FAQ</a></li>
+              </ul>
+            </div>
+
+            {/* Coluna 4 — Redes sociais */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                Siga-nos
+              </p>
+              <div className="mt-4 flex gap-3">
+                <a
+                  href="https://instagram.com/meucorre"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg transition-all hover:border-neon hover:text-neon"
+                  title="Instagram"
+                >
+                  📷
+                </a>
+                <a
+                  href="https://tiktok.com/@meucorre"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg transition-all hover:border-neon hover:text-neon"
+                  title="TikTok"
+                >
+                  🎵
+                </a>
+                <a
+                  href="https://youtube.com/@meucorre"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg transition-all hover:border-neon hover:text-neon"
+                  title="YouTube"
+                >
+                  ▶️
+                </a>
+                <a
+                  href="https://facebook.com/meucorre"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg transition-all hover:border-neon hover:text-neon"
+                  title="Facebook"
+                >
+                  👍
+                </a>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-6 border-t border-zinc-800 pt-6 text-center">
+          {/* Créditos */}
+          <div className="mt-8 border-t border-zinc-800 pt-6 text-center">
             <p className="text-sm font-semibold text-zinc-300">
               Criado e desenvolvido por{" "}
               <span className="font-bold text-neon">

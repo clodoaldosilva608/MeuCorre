@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
     price: number;
     originalPrice?: number | null;
     imageUrl: string;
+    videoUrl?: string | null;
     productUrl: string;
     category?: string;
     proOnly?: boolean;
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const description = sanitizeString(body.description, 500);
+  const description = sanitizeString(body.description, 1000);
   if (!description || description.length < 5) {
     return NextResponse.json(
       { error: "Descrição inválida (mínimo 5 caracteres)" },
@@ -64,9 +65,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (typeof body.price !== "number" || body.price <= 0 || body.price > 99999) {
+  // Validação de preço — rejeita NaN, negativo, e não-número
+  if (
+    typeof body.price !== "number" ||
+    isNaN(body.price) ||
+    body.price <= 0 ||
+    body.price > 99999
+  ) {
     return NextResponse.json(
-      { error: "Preço inválido (deve ser entre 0,01 e 99.999)" },
+      { error: "Preço inválido — digite apenas números (ex: 19.90)" },
       { status: 400 },
     );
   }
@@ -75,18 +82,19 @@ export async function POST(req: NextRequest) {
     body.originalPrice !== undefined &&
     body.originalPrice !== null &&
     (typeof body.originalPrice !== "number" ||
+      isNaN(body.originalPrice) ||
       body.originalPrice <= 0 ||
       body.originalPrice > 99999)
   ) {
     return NextResponse.json(
-      { error: "Preço original inválido" },
+      { error: "Preço original inválido — digite apenas números" },
       { status: 400 },
     );
   }
 
   if (!body.imageUrl || !validateImageUrl(body.imageUrl)) {
     return NextResponse.json(
-      { error: "URL da imagem inválida (use HTTPS e extensão .jpg/.png/.webp)" },
+      { error: "URL da imagem inválida (use HTTPS e extensão .jpg/.png/.webp/.gif/.svg)" },
       { status: 400 },
     );
   }
@@ -96,6 +104,19 @@ export async function POST(req: NextRequest) {
       { error: "URL do produto inválida (use HTTPS)" },
       { status: 400 },
     );
+  }
+
+  // VideoUrl é opcional — se fornecida, valida como URL externa
+  let videoUrl: string | null = null;
+  if (body.videoUrl && body.videoUrl.trim()) {
+    const validatedVideo = validateExternalUrl(body.videoUrl);
+    if (!validatedVideo) {
+      return NextResponse.json(
+        { error: "URL do vídeo inválida (use HTTPS — YouTube, Vimeo, etc)" },
+        { status: 400 },
+      );
+    }
+    videoUrl = validatedVideo;
   }
 
   const validCategories = [
@@ -117,6 +138,7 @@ export async function POST(req: NextRequest) {
       price: body.price,
       originalPrice: body.originalPrice ?? null,
       imageUrl: body.imageUrl,
+      videoUrl,
       productUrl: body.productUrl,
       category,
       proOnly: body.proOnly ?? false,

@@ -27,6 +27,7 @@ export async function PATCH(
     price: number;
     originalPrice?: number | null;
     imageUrl: string;
+    videoUrl?: string | null;
     productUrl: string;
     category: string;
     proOnly: boolean;
@@ -59,7 +60,7 @@ export async function PATCH(
   }
 
   if (body.description !== undefined) {
-    const description = sanitizeString(body.description, 500);
+    const description = sanitizeString(body.description, 1000);
     if (!description || description.length < 5) {
       return NextResponse.json(
         { error: "Descrição inválida (mínimo 5 caracteres)" },
@@ -70,9 +71,9 @@ export async function PATCH(
   }
 
   if (body.price !== undefined) {
-    if (typeof body.price !== "number" || body.price <= 0 || body.price > 99999) {
+    if (typeof body.price !== "number" || isNaN(body.price) || body.price <= 0 || body.price > 99999) {
       return NextResponse.json(
-        { error: "Preço inválido (deve ser entre 0,01 e 99.999)" },
+        { error: "Preço inválido — digite apenas números (ex: 19.90)" },
         { status: 400 },
       );
     }
@@ -83,11 +84,12 @@ export async function PATCH(
     if (
       body.originalPrice !== null &&
       (typeof body.originalPrice !== "number" ||
+        isNaN(body.originalPrice) ||
         body.originalPrice <= 0 ||
         body.originalPrice > 99999)
     ) {
       return NextResponse.json(
-        { error: "Preço original inválido" },
+        { error: "Preço original inválido — digite apenas números" },
         { status: 400 },
       );
     }
@@ -97,11 +99,26 @@ export async function PATCH(
   if (body.imageUrl !== undefined) {
     if (!validateImageUrl(body.imageUrl)) {
       return NextResponse.json(
-        { error: "URL da imagem inválida (use HTTPS)" },
+        { error: "URL da imagem inválida (use HTTPS e extensão .jpg/.png/.webp/.gif/.svg)" },
         { status: 400 },
       );
     }
     update.imageUrl = body.imageUrl;
+  }
+
+  if (body.videoUrl !== undefined) {
+    if (body.videoUrl && body.videoUrl.trim()) {
+      const validatedVideo = validateExternalUrl(body.videoUrl);
+      if (!validatedVideo) {
+        return NextResponse.json(
+          { error: "URL do vídeo inválida (use HTTPS — YouTube, Vimeo, etc)" },
+          { status: 400 },
+        );
+      }
+      update.videoUrl = validatedVideo;
+    } else {
+      update.videoUrl = null;
+    }
   }
 
   if (body.productUrl !== undefined) {

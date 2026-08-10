@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
       ...o,
       price: Number(o.price),
       originalPrice: o.originalPrice ? Number(o.originalPrice) : null,
+      videoUrl: o.videoUrl ?? null,
       discountPercent:
         o.originalPrice && Number(o.originalPrice) > Number(o.price)
           ? Math.round(

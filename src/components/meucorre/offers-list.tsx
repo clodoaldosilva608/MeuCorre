@@ -19,6 +19,7 @@ interface Offer {
   originalPrice: number | null;
   discountPercent: number | null;
   imageUrl: string;
+  videoUrl: string | null;
   productUrl: string;
   category: string;
   proOnly: boolean;
