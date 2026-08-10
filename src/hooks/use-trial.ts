@@ -6,7 +6,11 @@ import { db } from "@/lib/db";
 // ===== Trial & Free Plan Limits =====
 // 14 dias de trial grátis (acesso total)
 // Após trial: 5 lançamentos de corrida por dia
-// Implementado via IndexedDB (client-side enforcement — MVP).
+//
+// SERVER-SIDE: trialDaysLeft e isTrialExpired são calculados no servidor
+// (/api/auth/me) usando createdAt do usuário. O client usa estes valores
+// como fonte de verdade. localStorage (meucorre_first_use) é mantido apenas
+// como fallback offline para usuários não logados.
 
 const TRIAL_DAYS = 14;
 const FREE_DAILY_LIMIT = 5;
@@ -25,7 +29,7 @@ export interface TrialStatus {
   canLaunch: boolean;
 }
 
-// Calcula status de trial/limite baseado em localStorage + DB
+// Calcula status de trial/limite baseado em servidor (fonte de verdade) + DB local
 export function useTrialStatus(isPro: boolean): TrialStatus {
   const [status, setStatus] = useState<TrialStatus>({
     isPro,
@@ -55,40 +59,41 @@ export function useTrialStatus(isPro: boolean): TrialStatus {
         return;
       }
 
-      // Verifica first use
-      let firstUse = localStorage.getItem(STORAGE_KEY_FIRST_USE);
-      if (!firstUse) {
-        firstUse = new Date().toISOString();
-        localStorage.setItem(STORAGE_KEY_FIRST_USE, firstUse);
-      }
-      const firstUseDate = new Date(firstUse);
-      const now = new Date();
-      const daysSinceFirstUse = Math.floor(
-        (now.getTime() - firstUseDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      let trialDaysLeft = Math.max(0, TRIAL_DAYS - daysSinceFirstUse);
+      // ===== FONTE DE VERDADE: Servidor =====
+      // trialDaysLeft e isTrialExpired são calculados em /api/auth/me
+      // usando createdAt do usuário (não localStorage).
+      let trialDaysLeft = TRIAL_DAYS; // fallback se offline
+      let isTrialActive = true;
+      let isTrialExpired = false;
 
-      // Verifica se admin estendeu o trial (trialExtendedUntil do servidor)
       try {
         const res = await fetch("/api/auth/me");
         const data = await res.json();
-        if (data.user?.trialExtendedUntil) {
-          const extendedDate = new Date(data.user.trialExtendedUntil);
-          const daysUntilExtended = Math.ceil(
-            (extendedDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-          );
-          if (daysUntilExtended > trialDaysLeft) {
-            trialDaysLeft = daysUntilExtended;
-          }
+        if (data.user) {
+          // Usa valores do servidor como fonte de verdade
+          trialDaysLeft = data.user.trialDaysLeft ?? TRIAL_DAYS;
+          isTrialActive = data.user.isTrialActive ?? true;
+          isTrialExpired = data.user.isTrialExpired ?? false;
         }
       } catch {
-        // offline — usa trialDaysLeft do localStorage
+        // Offline — fallback para localStorage (apenas para usuários não logados)
+        let firstUse = localStorage.getItem(STORAGE_KEY_FIRST_USE);
+        if (!firstUse) {
+          firstUse = new Date().toISOString();
+          localStorage.setItem(STORAGE_KEY_FIRST_USE, firstUse);
+        }
+        const firstUseDate = new Date(firstUse);
+        const now = new Date();
+        const daysSinceFirstUse = Math.floor(
+          (now.getTime() - firstUseDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        trialDaysLeft = Math.max(0, TRIAL_DAYS - daysSinceFirstUse);
+        isTrialActive = trialDaysLeft > 0;
+        isTrialExpired = !isTrialActive;
       }
 
-      const isTrialActive = trialDaysLeft > 0;
-      const isTrialExpired = !isTrialActive;
-
-      // Conta lançamentos de hoje
+      // Conta lançamentos de hoje (do IndexedDB local)
+      const now = new Date();
       const today = todayISO(now);
       const todayDeliveries = await db.deliveries
         .where("date")

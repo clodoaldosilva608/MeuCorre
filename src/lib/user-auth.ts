@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { jwtVerify, SignJWT } from "jose";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
 // ===== Auth de usuários entregadores (não admin) =====
 //
@@ -66,7 +67,16 @@ export async function createUserToken(payload: {
     .sign(getSecret());
 }
 
-// Verifica se há sessão de usuário válida
+// Verifica se há sessão de usuário válida E ativa no banco.
+//
+// SEGURANÇA: Além de verificar o JWT, consulta o banco para confirmar
+// que o usuário existe E tem active = true. Isso garante que:
+// - Admin pode desativar um usuário instantaneamente (banimento)
+// - Token JWT válido mas de usuário desativado = rejeitado
+// - Todas as rotas que usam getUserSession() automaticamente verificam active
+//
+// Performance: 1 query por request (findUnique por id, índice primary key).
+// Aceitável pois a maioria das rotas já faria essa query ou similar.
 export async function getUserSession(): Promise<UserPayload | null> {
   try {
     const cookieStore = await cookies();
@@ -77,7 +87,21 @@ export async function getUserSession(): Promise<UserPayload | null> {
       algorithms: [ALG],
     });
 
-    return payload as unknown as UserPayload;
+    const userPayload = payload as unknown as UserPayload;
+
+    // Verifica no banco se o usuário ainda está ativo
+    // Se não estiver (banido/desativado), retorna null = não autorizado
+    const user = await prisma.user.findUnique({
+      where: { id: userPayload.sub },
+      select: { active: true },
+    });
+
+    if (!user || !user.active) {
+      // Usuário não existe ou foi desativado — sessão inválida
+      return null;
+    }
+
+    return userPayload;
   } catch {
     return null;
   }
