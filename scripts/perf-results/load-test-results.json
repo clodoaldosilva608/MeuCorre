@@ -1,0 +1,93 @@
+[
+  {
+    "scenario": "Load Test — Limitação do Ambiente",
+    "description": "Vercel Security Checkpoint bloqueou testes de carga automatizados a partir deste ambiente de datacenter (403 challenge). Dados sintéticos baseados na auditoria de performance real (perf-audit.spec.ts), que passou pelo Vercel normalmente via Playwright com cookies de browser.",
+    "note": "Para um teste de carga real com 1000 usuários, recomenda-se usar k6 ou Artillery a partir de uma máquina com IP residencial brasileiro, ou contratar Vercel Enterprise Plan com DDoS protection desativada para endpoints específicos."
+  },
+  {
+    "scenario": "Estimativa baseada em latência observada",
+    "source": "perf-audit.spec.ts (Playwright, sem Vercel block)",
+    "dataPoints": [
+      { "page": "/", "ttfb": 7, "fcp": 328, "lcp": 1020, "js_kb": 689 },
+      { "page": "/login", "ttfb": 6, "fcp": 220, "lcp": 220, "js_kb": 838 },
+      { "page": "/register", "ttfb": 6, "fcp": 164, "lcp": 164, "js_kb": 821 },
+      { "page": "/app", "ttfb": 7, "fcp": 580, "lcp": 580, "js_kb": 1385 }
+    ]
+  },
+  {
+    "scenario": "Projeção de capacidade (Vercel Hobby Plan)",
+    "limits": {
+      "function_timeout_seconds": 10,
+      "max_concurrent_requests": 1000,
+      "bandwidth_monthly_gb": 100,
+      "function_invocations_monthly": 1000000
+    },
+    "projection": {
+      "users_100_concurrent": {
+        "expected_p50_ms": 100,
+        "expected_p95_ms": 500,
+        "expected_error_rate_pct": 0,
+        "status": "Verde — bem dentro dos limites"
+      },
+      "users_500_concurrent": {
+        "expected_p50_ms": 300,
+        "expected_p95_ms": 2000,
+        "expected_error_rate_pct": 0,
+        "status": "Amarelo — próximo do limite de function timeout para /api/sync com lotes grandes"
+      },
+      "users_1000_concurrent": {
+        "expected_p50_ms": 800,
+        "expected_p95_ms": 5000,
+        "expected_error_rate_pct": 5,
+        "status": "Vermelho — pode haver timeouts em /api/sync (10s) e degradação de TTFB"
+      }
+    },
+    "recommendation": "Para escalar além de 1000 usuários simultâneos, migrar para Vercel Pro Plan (60s function timeout, 1TB bandwidth) e configurar read replica do Supabase para distribuir leituras."
+  },
+  {
+    "scenario": "Endpoints públicos (cacheados)",
+    "endpoints": [
+      {
+        "path": "/",
+        "cache": "Vercel Edge (full page cache)",
+        "expected_p50_ms_under_load": 50,
+        "rationale": "Página estática pré-renderizada, servida do edge CDN."
+      },
+      {
+        "path": "/api/health",
+        "cache": "Nenhum (sempre consulta DB + Redis)",
+        "expected_p50_ms_under_load": 200,
+        "rationale": "Faz SELECT 1 no Postgres + ping no Redis. Latência dominante é roundtrip ao DB."
+      },
+      {
+        "path": "/api/ads",
+        "cache": "In-memory 5min (invalidado quando admin edita)",
+        "expected_p50_ms_under_load": 100,
+        "rationale": "Após primeira carga, responde de cache sem tocar DB."
+      }
+    ]
+  },
+  {
+    "scenario": "Endpoints autenticados (rate limited)",
+    "endpoints": [
+      {
+        "path": "/api/sync GET",
+        "rate_limit": "60 req/min por userId",
+        "expected_p50_ms_under_load": 500,
+        "rationale": "Query indexada por (userId, updatedAt) — usa índice composto. PAGE_SIZE 2000 limita resultado."
+      },
+      {
+        "path": "/api/sync POST",
+        "rate_limit": "60 req/min por userId",
+        "expected_p50_ms_under_load": 800,
+        "rationale": "Transação Prisma com Promise.all de até 500 upserts. Pode exceder 10s em lotes grandes — mitigado por chunking client-side (150 req/chunk, Achado #2 corrigido)."
+      },
+      {
+        "path": "/api/auth/me",
+        "rate_limit": "Nenhum",
+        "expected_p50_ms_under_load": 150,
+        "rationale": "1 query findUnique por PK + cálculo trial. Rate limit desnecessário."
+      }
+    ]
+  }
+]

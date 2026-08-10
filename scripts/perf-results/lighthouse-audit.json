@@ -1,0 +1,58 @@
+[
+  {
+    "url": "https://meucorre.vercel.app/",
+    "cls": 0,
+    "lcp": 1020,
+    "lcpElement": "<h1 class=\"text-balance text-4xl font-black leading-tight tracking-tight md:text-6xl\">",
+    "fcp": 328,
+    "inp": null,
+    "ttfb": 7,
+    "domContentLoaded": 174,
+    "loadComplete": 358,
+    "totalTransferKB": 2022,
+    "totalJSKB": 689,
+    "requestCount": 22
+  },
+  {
+    "url": "https://meucorre.vercel.app/login",
+    "cls": 0,
+    "lcp": 220,
+    "lcpElement": "<h1 class=\"text-2xl font-extrabold text-emerald-400\">",
+    "fcp": 220,
+    "inp": null,
+    "ttfb": 6,
+    "domContentLoaded": 221,
+    "loadComplete": 304,
+    "totalTransferKB": 1066,
+    "totalJSKB": 838,
+    "requestCount": 35
+  },
+  {
+    "url": "https://meucorre.vercel.app/register",
+    "cls": 0,
+    "lcp": 164,
+    "lcpElement": "<h1 class=\"text-2xl font-extrabold text-emerald-400\">",
+    "fcp": 164,
+    "inp": null,
+    "ttfb": 6,
+    "domContentLoaded": 144,
+    "loadComplete": 343,
+    "totalTransferKB": 1048,
+    "totalJSKB": 821,
+    "requestCount": 30
+  },
+  {
+    "url": "https://meucorre.vercel.app/app",
+    "cls": 0,
+    "lcp": 580,
+    "lcpElement": "<p class=\"mt-0.5 text-xs text-zinc-500\">",
+    "fcp": 580,
+    "inp": null,
+    "ttfb": 7,
+    "domContentLoaded": 107,
+    "loadComplete": 407,
+    "totalTransferKB": 1591,
+    "totalJSKB": 1385,
+    "requestCount": 29
+  }
+]

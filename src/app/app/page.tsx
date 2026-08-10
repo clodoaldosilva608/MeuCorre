@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, Suspense } from "react";
+import { useMemo, useState, useEffect, Suspense, lazy } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Clock, AlertCircle, Gift, Share2, AlertTriangle } from "lucide-react";
@@ -14,7 +14,12 @@ import { ExpenseForm } from "@/components/meucorre/expense-form";
 import { ExpenseList } from "@/components/meucorre/expense-list";
 import { AppManager } from "@/components/meucorre/app-manager";
 import { NotificationCapture } from "@/components/meucorre/notification-capture";
-import { Charts } from "@/components/meucorre/charts";
+// PERFORMANCE: Charts carrega recharts (~200KB) + framer-motion (~50KB).
+// Só é necessário quando o usuário clica na aba "Gráficos". Usamos lazy()
+// para code-split e reduzir o bundle inicial do /app em ~250KB.
+const Charts = lazy(() =>
+  import("@/components/meucorre/charts").then((m) => ({ default: m.Charts })),
+);
 import { Fab } from "@/components/meucorre/fab";
 import { BottomNav, type Tab } from "@/components/meucorre/bottom-nav";
 import { SplashScreen } from "@/components/meucorre/splash-screen";
@@ -761,11 +766,19 @@ function HomeContent() {
         )}
 
         {activeTab === "graficos" && (
-          <Charts
-            dailySeries={dailySeries}
-            stats={stats}
-            expensesByCategory={expensesByCategory}
-          />
+          <Suspense
+            fallback={
+              <div className="flex h-64 items-center justify-center text-zinc-500">
+                <div className="animate-pulse text-sm">Carregando gráficos…</div>
+              </div>
+            }
+          >
+            <Charts
+              dailySeries={dailySeries}
+              stats={stats}
+              expensesByCategory={expensesByCategory}
+            />
+          </Suspense>
         )}
 
         {/* Rodapé */}
