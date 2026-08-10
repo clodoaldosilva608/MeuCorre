@@ -37,7 +37,19 @@ export async function GET(req: NextRequest) {
   if (limited) return limited;
 
   const { searchParams } = new URL(req.url);
-  const since = BigInt(searchParams.get("since") ?? "0");
+
+  // ===== Validação do parâmetro `since` (Achado #3 da Fase 2 corrigido) =====
+  // Antes da correção, BigInt("invalid") lançava SyntaxError não capturado,
+  // resultando em 500. Agora validamos explicitamente e retornamos 400.
+  const sinceRaw = searchParams.get("since") ?? "0";
+  if (!/^\d+$/.test(sinceRaw)) {
+    return NextResponse.json(
+      { error: "Parâmetro 'since' inválido — deve ser um número inteiro não-negativo" },
+      { status: 400 },
+    );
+  }
+  const since = BigInt(sinceRaw);
+
   // lastId: ID do último registro retornado na página anterior (cursor tiebreaker)
   // Evita pular registros que têm o mesmo updatedAt do último registro da página
   const lastId = searchParams.get("lastId"); // string | null

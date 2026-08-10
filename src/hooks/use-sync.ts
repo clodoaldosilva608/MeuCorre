@@ -194,20 +194,59 @@ export function useSync() {
         deleted: false,
       }));
 
-      const res = await fetch("/api/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deliveries: deliveriesPayload,
-          expenses: expensesPayload,
-        }),
-      });
+      // ===== Chunking (Achado #2 da Fase 2 corrigido) =====
+      // O servidor aceita no máximo 500 registros por POST (MAX_PUSH_BATCH),
+      // mas a transação Prisma com 500+ upserts paralelos pode exceder o
+      // timeout de function do Vercel (10s no plano Hobby).
+      // Solução: enviar em chunks de 150 registros, sequencialmente.
+      // Em uso normal (1-10 registros por sync), só 1 chunk é enviado.
+      const CHUNK_SIZE = 150;
+      let allOk = true;
 
-      if (res.ok) {
-        setStatus("synced");
-      } else {
-        setStatus("error");
+      for (let i = 0; i < deliveriesPayload.length; i += CHUNK_SIZE) {
+        const deliveriesChunk = deliveriesPayload.slice(i, i + CHUNK_SIZE);
+        const expensesChunk =
+          i === 0 ? expensesPayload.slice(0, CHUNK_SIZE) : [];
+
+        const res = await fetch("/api/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deliveries: deliveriesChunk,
+            expenses: expensesChunk,
+          }),
+        });
+
+        if (!res.ok) {
+          allOk = false;
+          break;
+        }
       }
+
+      // Se ainda há expenses não enviados (raro: > 150 expenses em 1 sync)
+      if (allOk && expensesPayload.length > CHUNK_SIZE) {
+        for (
+          let i = CHUNK_SIZE;
+          i < expensesPayload.length;
+          i += CHUNK_SIZE
+        ) {
+          const expensesChunk = expensesPayload.slice(i, i + CHUNK_SIZE);
+          const res = await fetch("/api/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              deliveries: [],
+              expenses: expensesChunk,
+            }),
+          });
+          if (!res.ok) {
+            allOk = false;
+            break;
+          }
+        }
+      }
+
+      setStatus(allOk ? "synced" : "error");
     } catch {
       setStatus("offline");
     } finally {
