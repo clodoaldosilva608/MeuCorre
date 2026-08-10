@@ -10,7 +10,7 @@
 // - _next/data/*: NUNCA intercepta (rotas dinâmicas do Next.js que
 //   podem conter dados sensíveis).
 
-const CACHE_NAME = "meucorre-v2"; // bumped: v1 → v2 força update do SW
+const CACHE_NAME = "meucorre-v3"; // bumped: v2 → v3 força update do SW
 const APP_SHELL = [
   "/",
   "/manifest.json",

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AdSense } from "@/components/adsense";
 import { SOCIAL_LINKS } from "@/components/social-icons";
+import { PhoneShowcase } from "@/components/meucorre/phone-showcase";
 import {
   Dialog,
   DialogContent,
@@ -500,8 +501,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== 4. VEJA COMO FUNCIONA (galeria de screenshots) ===== */}
-      <section className="border-y border-zinc-200 bg-zinc-50 py-16 text-zinc-900 md:py-24">
+      {/* ===== 4. VEJA COMO FUNCIONA (iPhone showcase animado) ===== */}
+      <section className="relative overflow-hidden border-y border-zinc-200 bg-zinc-50 py-16 text-zinc-900 md:py-24">
         {/* AdSense — banner horizontal discreto entre seções (só aparece se configurado) */}
         <div className="mx-auto mb-12 max-w-3xl px-4">
           <AdSense
@@ -526,64 +527,48 @@ export default function LandingPage() {
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-zinc-600 md:text-lg">
               Olha como o MeuCorre trabalha por você — do lançamento ao lucro
-              líquido.
+              líquido. Veja o app rodando no celular:
             </p>
           </motion.div>
 
-          <div className="mt-12 space-y-10 md:space-y-16">
-            {SCREENSHOTS.map((s, i) => {
-              const isLeft = i % 2 === 0;
-              return (
-                <motion.div
-                  key={i}
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, margin: "-60px" }}
-                  className={[
-                    "max-w-md",
-                    isLeft ? "sm:ml-0 sm:mr-auto" : "sm:ml-auto sm:mr-0",
-                  ].join(" ")}
-                >
-                  <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-xl shadow-zinc-900/5">
-                    <div
-                      className={[
-                        "border-b border-zinc-100 p-5",
-                        isLeft ? "text-left" : "text-right",
-                      ].join(" ")}
-                    >
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-neon">
-                        {String(i + 1).padStart(2, "0")} / {String(SCREENSHOTS.length).padStart(2, "0")}
-                      </p>
-                      <h3 className="mt-1 text-lg font-extrabold text-zinc-900">
-                        {s.intro}
-                      </h3>
-                    </div>
+          {/* iPhone com carousel animado */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mt-12 flex justify-center"
+          >
+            <PhoneShowcase />
+          </motion.div>
 
-                    <div className="bg-ink p-2">
-                      <img
-                        src={s.src}
-                        alt={s.alt}
-                        loading="lazy"
-                        className="block w-full rounded-xl"
-                      />
-                    </div>
-
-                    <div
-                      className={[
-                        "border-t border-zinc-100 p-5",
-                        isLeft ? "text-left" : "text-right",
-                      ].join(" ")}
-                    >
-                      <p className="text-sm leading-relaxed text-zinc-600">
-                        {s.desc}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+          {/* Features grid abaixo do phone */}
+          <motion.div
+            variants={containerStagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-40px" }}
+            className="mx-auto mt-12 grid max-w-3xl gap-4 sm:grid-cols-2"
+          >
+            {[
+              { emoji: "⚡", title: "Lançamento em 3 toques", desc: "Registre a corrida mais rápido do que o cliente abre a porta" },
+              { emoji: "💸", title: "Controle de despesas", desc: "Gasolina, comida, manutenção — você sabe o lucro real" },
+              { emoji: "📊", title: "Gráficos que mostram a verdade", desc: "Por app, por dia, por categoria. Onde entra e onde sai cada real" },
+              { emoji: "🛒", title: "Ofertas exclusivas", desc: "Descontos em produtos selecionados para entregadores" },
+            ].map((f, i) => (
+              <motion.div
+                key={i}
+                variants={itemUp}
+                className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-white p-4"
+              >
+                <span className="text-2xl">{f.emoji}</span>
+                <div>
+                  <p className="text-sm font-bold text-zinc-900">{f.title}</p>
+                  <p className="mt-0.5 text-xs text-zinc-600">{f.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
