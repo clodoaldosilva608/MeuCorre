@@ -131,7 +131,9 @@ test.describe("Simulação 2a — Usuário Vitalício (pagamento confirmado)", (
     expect(meData.user.licenseKey).toBeTruthy();
 
     // 5. Badge PRO visível no header
-    await expect(page.getByText("PRO", { exact: true })).toBeVisible({ timeout: 10000 });
+    // Aumenta timeout porque getUserSession agora faz query no banco (active check)
+    // e pode demorar mais em cold start
+    await expect(page.getByText("PRO", { exact: true })).toBeVisible({ timeout: 20000 });
 
     // 6. Botão "Ativar licença PRO" NÃO deve estar visível (usuário já é PRO)
     await expect(
