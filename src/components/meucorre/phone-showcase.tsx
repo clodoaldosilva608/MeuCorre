@@ -4,18 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ===== iPhone 3D Showcase com Demo Interativa =====
-//
-// Mostra um mockup de iPhone 3D realista com 2 modos:
-//
-// 1. MODO DEMO (automático): navega pelas abas do app automaticamente
-//    a cada 6 segundos, simulando uso real.
-//
-// 2. MODO INTERATIVO: usuário clica em "Toque para experimentar" e o
-//    iPhone carrega o /app real via iframe. O usuário pode interagir
-//    com o app de verdade — adicionar corridas, ver gráficos, etc.
-//
-// O iframe carrega /app?demo=1 que suprime popups e já vem com dados
-// de exemplo pré-carregados.
 
 const DEMO_STEPS = [
   { tab: "corridas", title: "Corridas", desc: "5 corridas de iFood, 99Food, Lalamove e Rappi — total, lucro líquido e km rodado" },
@@ -26,11 +14,13 @@ const DEMO_STEPS = [
 
 const AUTOPLAY_MS = 6000;
 
-// Dimensões fixas do iPhone (não usa aspect-ratio que pode gerar 0 altura)
-const PHONE_WIDTH = 280; // px (mobile)
-const PHONE_WIDTH_DESKTOP = 320; // px (desktop)
-const PHONE_HEIGHT = 580; // px — altura suficiente para mostrar o app
-const SCREEN_HEIGHT = PHONE_HEIGHT - 24; // desconta bordas
+// Dimensões FIXAS em pixels — não usar % ou aspect-ratio
+// 3D transforms quebram width:100%, então tudo deve ser fixo
+const PHONE_W = 280;
+const PHONE_H = 560;
+const BORDER = 10;
+const SCREEN_W = PHONE_W - BORDER * 2; // 260
+const SCREEN_H = PHONE_H - BORDER * 2; // 540
 
 export function PhoneShowcase() {
   const [mode, setMode] = useState<"demo" | "interactive">("demo");
@@ -43,40 +33,27 @@ export function PhoneShowcase() {
     setCurrentStep((s) => (s + 1) % DEMO_STEPS.length);
   }, []);
 
-  // Autoplay apenas no modo demo
   useEffect(() => {
     if (mode !== "demo" || isPaused) return;
     const timer = setInterval(nextStep, AUTOPLAY_MS);
     return () => clearInterval(timer);
   }, [nextStep, mode, isPaused]);
 
-  // No modo demo, envia mensagem para o iframe trocar de aba
   useEffect(() => {
     if (mode !== "demo" || !iframeLoaded) return;
     const iframe = iframeRef.current;
-    if (!iframe || !iframe.contentWindow) return;
-
+    if (!iframe?.contentWindow) return;
     try {
       iframe.contentWindow.postMessage(
         { type: "meucorre-demo-tab", tab: DEMO_STEPS[currentStep].tab },
         window.location.origin,
       );
-    } catch {
-      // iframe pode não estar pronto ainda
-    }
+    } catch {}
   }, [currentStep, mode, iframeLoaded]);
-
-  const handleMouseEnter = () => {
-    if (mode === "demo") setIsPaused(true);
-  };
-
-  const handleMouseLeave = () => {
-    if (mode === "demo") setIsPaused(false);
-  };
 
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* Badge de modo */}
+      {/* Botões de modo */}
       <div className="flex gap-2">
         <button
           onClick={() => setMode("demo")}
@@ -100,57 +77,58 @@ export function PhoneShowcase() {
         </button>
       </div>
 
-      {/* iPhone 3D Mockup */}
+      {/* Container externo — sem 3D aqui, apenas perspective */}
       <div
-        className="relative"
-        style={{ perspective: "1200px" }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        style={{ perspective: "1000px" }}
+        onMouseEnter={() => mode === "demo" && setIsPaused(true)}
+        onMouseLeave={() => mode === "demo" && setIsPaused(false)}
       >
-        {/* Glowing aura behind phone */}
-        <div className="pointer-events-none absolute inset-0 -z-10 scale-125 rounded-[3rem] bg-neon/15 blur-3xl" />
+        {/* Aura neon */}
+        <div
+          className="pointer-events-none absolute -z-10 rounded-[3rem] bg-neon/15 blur-3xl"
+          style={{ width: PHONE_W + 40, height: PHONE_H + 40, left: -20, top: -20 }}
+        />
 
-        {/* Phone container com rotação 3D sutil */}
+        {/* Phone com rotação 3D — largura FIXA para não colapsar */}
         <motion.div
-          className="relative mx-auto"
           style={{
+            width: PHONE_W,
+            height: PHONE_H,
             transformStyle: "preserve-3d",
-            transform: "rotateY(-6deg) rotateX(2deg)",
-            width: "100%",
-            maxWidth: PHONE_WIDTH_DESKTOP,
+            transform: "rotateY(-5deg) rotateX(2deg)",
           }}
           whileHover={{
             rotateY: 0,
             rotateX: 0,
-            transition: { duration: 0.5, ease: "easeOut" },
+            transition: { duration: 0.4 },
           }}
         >
-          {/* Phone frame — titânio escuro com bordas arredondadas */}
+          {/* Frame do telefone — largura e altura FIXAS */}
           <div
-            className="relative mx-auto rounded-[2.5rem] border-[10px] border-zinc-700 bg-zinc-950"
+            className="relative rounded-[2.5rem] border-zinc-700 bg-zinc-950"
             style={{
-              width: "100%",
-              maxWidth: PHONE_WIDTH,
-              height: PHONE_HEIGHT,
+              width: PHONE_W,
+              height: PHONE_H,
+              borderWidth: BORDER,
+              borderStyle: "solid",
               boxShadow:
-                "0 25px 60px -15px rgba(0,0,0,0.8), 0 0 30px rgba(57,255,20,0.1), inset 0 0 2px rgba(255,255,255,0.1)",
+                "0 25px 60px -15px rgba(0,0,0,0.8), 0 0 30px rgba(57,255,20,0.1)",
             }}
           >
-            {/* Reflexo metálico na borda */}
+            {/* Reflexo metálico */}
             <div className="pointer-events-none absolute inset-0 rounded-[2.5rem] ring-1 ring-inset ring-white/5" />
 
-            {/* Dynamic Island (notch moderno) */}
+            {/* Dynamic Island */}
             <div className="absolute left-1/2 top-2 z-30 h-6 w-24 -translate-x-1/2 rounded-full bg-zinc-900 ring-1 ring-zinc-800">
-              {/* Camera dot */}
-              <div className="absolute right-2.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-zinc-700 ring-1 ring-zinc-600" />
+              <div className="absolute right-2.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-zinc-700" />
             </div>
 
-            {/* Screen — altura fixa para garantir renderização do iframe */}
+            {/* Tela — dimensões FIXAS em px */}
             <div
               className="relative overflow-hidden rounded-[1.8rem] bg-zinc-950"
-              style={{ height: SCREEN_HEIGHT, width: "100%" }}
+              style={{ width: SCREEN_W, height: SCREEN_H, margin: "0 auto", marginTop: 0 }}
             >
-              {/* Loading placeholder enquanto iframe não carrega */}
+              {/* Loading */}
               {!iframeLoaded && (
                 <div className="absolute inset-0 z-10 grid place-items-center bg-zinc-950">
                   <div className="flex flex-col items-center gap-2">
@@ -160,28 +138,25 @@ export function PhoneShowcase() {
                 </div>
               )}
 
-              {/* Iframe com o /app real — altura fixa em px */}
+              {/* Iframe — largura e altura FIXAS em px (não 100%) */}
               <iframe
                 ref={iframeRef}
                 src="/app?demo=1"
-                className="absolute inset-0"
                 style={{
                   border: "none",
-                  width: "100%",
-                  height: "100%",
-                  // Scale para ajustar o app desktop ao tamanho do celular
-                  transformOrigin: "top left",
+                  width: SCREEN_W,
+                  height: SCREEN_H,
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
                 }}
                 title="MeuCorre Demo"
-                onLoad={() => {
-                  setIframeLoaded(true);
-                  console.log("[PhoneShowcase] Iframe carregado");
-                }}
+                onLoad={() => setIframeLoaded(true)}
                 sandbox="allow-scripts allow-same-origin allow-popups"
               />
 
-              {/* Overlay sutil no topo para simular status bar */}
-              <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex h-7 items-center justify-between px-4 text-[8px] font-semibold text-white/70">
+              {/* Status bar overlay */}
+              <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex h-7 items-center justify-between px-4 text-[8px] font-semibold text-white/60">
                 <span>
                   {new Date().toLocaleTimeString("pt-BR", {
                     hour: "2-digit",
@@ -191,7 +166,7 @@ export function PhoneShowcase() {
                 <span>100%</span>
               </div>
 
-              {/* Indicador de modo */}
+              {/* Badge de modo */}
               <div className="pointer-events-none absolute bottom-2 left-1/2 z-20 -translate-x-1/2 rounded-full bg-black/50 px-2 py-0.5 text-[7px] font-bold uppercase tracking-wider backdrop-blur-sm">
                 {mode === "demo" ? (
                   <span className="text-neon">● Demo</span>
@@ -201,15 +176,15 @@ export function PhoneShowcase() {
               </div>
             </div>
 
-            {/* Home indicator (barra inferior) */}
+            {/* Home indicator */}
             <div className="absolute bottom-1 left-1/2 z-30 h-0.5 w-20 -translate-x-1/2 rounded-full bg-zinc-600" />
           </div>
 
-          {/* Side buttons — volume + power (3D) */}
-          <div className="absolute -left-[10px] top-24 h-8 w-[3px] rounded-l bg-zinc-600 shadow-md" />
-          <div className="absolute -left-[10px] top-36 h-12 w-[3px] rounded-l bg-zinc-600 shadow-md" />
-          <div className="absolute -left-[10px] top-52 h-12 w-[3px] rounded-l bg-zinc-600 shadow-md" />
-          <div className="absolute -right-[10px] top-32 h-16 w-[3px] rounded-r bg-zinc-600 shadow-md" />
+          {/* Botões laterais 3D */}
+          <div className="absolute -left-[10px] top-24 h-8 w-[3px] rounded-l bg-zinc-600" />
+          <div className="absolute -left-[10px] top-36 h-12 w-[3px] rounded-l bg-zinc-600" />
+          <div className="absolute -left-[10px] top-52 h-12 w-[3px] rounded-l bg-zinc-600" />
+          <div className="absolute -right-[10px] top-32 h-16 w-[3px] rounded-r bg-zinc-600" />
         </motion.div>
       </div>
 
@@ -243,7 +218,6 @@ export function PhoneShowcase() {
           </div>
         )}
 
-        {/* Dots (apenas no modo demo) */}
         {mode === "demo" && (
           <div className="mt-3 flex justify-center gap-2">
             {DEMO_STEPS.map((_, i) => (
@@ -251,9 +225,7 @@ export function PhoneShowcase() {
                 key={i}
                 onClick={() => setCurrentStep(i)}
                 className={`h-2 rounded-full transition-all ${
-                  i === currentStep
-                    ? "w-5 bg-neon"
-                    : "w-2 bg-zinc-700 hover:bg-zinc-600"
+                  i === currentStep ? "w-5 bg-neon" : "w-2 bg-zinc-700 hover:bg-zinc-600"
                 }`}
                 aria-label={`Slide ${i + 1}`}
               />
