@@ -213,6 +213,18 @@ function HomeContent() {
   // para o iframe controlar qual aba está visível na demo automática.
   useEffect(() => {
     if (!isDemoMode) return;
+
+    // Injeta CSS para esconder scrollbars quando embedado em iframe
+    const style = document.createElement("style");
+    style.id = "demo-mode-css";
+    style.textContent = `
+      ::-webkit-scrollbar { display: none !important; }
+      html, body { overflow-x: hidden !important; scrollbar-width: none !important; -ms-overflow-style: none !important; }
+      /* Garante que o conteúdo começa abaixo do notch */
+      body { padding-top: 0 !important; }
+    `;
+    document.head.appendChild(style);
+
     const handler = (event: MessageEvent) => {
       if (event.data?.type === "meucorre-demo-tab" && event.data.tab) {
         const validTabs: Tab[] = ["corridas", "despesas", "graficos", "ofertas"];
@@ -222,7 +234,10 @@ function HomeContent() {
       }
     };
     window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+      document.getElementById("demo-mode-css")?.remove();
+    };
   }, [isDemoMode]);
 
   // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)

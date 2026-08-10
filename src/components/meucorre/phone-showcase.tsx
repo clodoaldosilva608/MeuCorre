@@ -32,8 +32,10 @@ const SCREEN_H = PHONE_H - BORDER * 2; // 560
 
 // O /app é desenhado para 375px (mobile). Escala para caber na tela.
 const APP_VIRTUAL_WIDTH = 375;
-const APP_VIRTUAL_HEIGHT = 720; // altura suficiente para mostrar tudo
+const APP_VIRTUAL_HEIGHT = 740; // altura suficiente para mostrar tudo
 const SCALE = SCREEN_W / APP_VIRTUAL_WIDTH; // 270/375 ≈ 0.72
+// Offset no topo para o conteúdo não ficar embaixo do notch/status bar
+const TOP_OFFSET = 28; // px — espaço para o Dynamic Island
 
 export function PhoneShowcase() {
   const [mode, setMode] = useState<"demo" | "interactive">("demo");
@@ -156,19 +158,41 @@ export function PhoneShowcase() {
                 src="/app?demo=1"
                 style={{
                   border: "none",
-                  // Largura virtual do app (375px = iPhone padrão)
                   width: APP_VIRTUAL_WIDTH,
-                  // Altura virtual (suficiente para mostrar todo o conteúdo)
                   height: APP_VIRTUAL_HEIGHT,
                   position: "absolute",
-                  top: 0,
+                  top: TOP_OFFSET,
                   left: 0,
-                  // Escala proporcional para caber na tela do mockup
                   transform: `scale(${SCALE})`,
                   transformOrigin: "top left",
+                  // Esconde qualquer scrollbar residual
+                  overflow: "hidden",
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
                 }}
                 title="MeuCorre Demo"
-                onLoad={() => setIframeLoaded(true)}
+                loading="lazy"
+                scrolling="no"
+                onLoad={() => {
+                  setIframeLoaded(true);
+                  // Injeta CSS no iframe para esconder scrollbars e adicionar padding-top
+                  try {
+                    const iframe = iframeRef.current;
+                    if (iframe?.contentDocument) {
+                      const style = iframe.contentDocument.createElement("style");
+                      style.textContent = `
+                        /* Esconde scrollbar no modo demo */
+                        ::-webkit-scrollbar { display: none !important; }
+                        html, body { overflow-x: hidden !important; scrollbar-width: none !important; }
+                        /* Padding-top para não cobrir header com o notch */
+                        body { padding-top: 0 !important; }
+                      `;
+                      iframe.contentDocument.head.appendChild(style);
+                    }
+                  } catch {
+                    // Cross-origin — não pode injetar CSS, mas o scrolling=no + overflow hidden resolve
+                  }
+                }}
                 sandbox="allow-scripts allow-same-origin allow-popups"
               />
 
