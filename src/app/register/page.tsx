@@ -52,13 +52,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-ink px-4 py-8">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-2xl shadow-lg shadow-emerald-500/25">
+          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-neon text-2xl shadow-neon">
             ⚡
           </div>
-          <h1 className="text-2xl font-extrabold text-emerald-400">MeuCorre</h1>
+          <h1 className="text-2xl font-extrabold text-neon text-glow-neon">MeuCorre</h1>
           <p className="mt-1 text-sm text-zinc-500">Crie sua conta grátis</p>
           <p className="mt-1 text-[11px] text-zinc-600">
             14 dias de trial + 5 lançamentos/dia após
@@ -67,7 +67,7 @@ export default function RegisterPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-6"
+          className="space-y-3 rounded-2xl border border-neon/30 bg-graphite p-6"
         >
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-xs text-zinc-400">
@@ -81,7 +81,7 @@ export default function RegisterPage() {
               required
               autoFocus
               maxLength={100}
-              className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+              className="border-neon/20 bg-ink text-zinc-100 focus:border-neon"
             />
           </div>
           <div className="space-y-1.5">
@@ -95,7 +95,7 @@ export default function RegisterPage() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="seu@email.com"
               required
-              className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+              className="border-neon/20 bg-ink text-zinc-100 focus:border-neon"
             />
           </div>
           <div className="space-y-1.5">
@@ -110,7 +110,7 @@ export default function RegisterPage() {
               placeholder="••••••••"
               required
               minLength={6}
-              className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+              className="border-neon/20 bg-ink text-zinc-100 focus:border-neon"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -123,7 +123,7 @@ export default function RegisterPage() {
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="(11) 99999-9999"
-                className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+                className="border-neon/20 bg-ink text-zinc-100 focus:border-neon"
               />
             </div>
             <div className="space-y-1.5">
@@ -135,14 +135,14 @@ export default function RegisterPage() {
                 value={form.city}
                 onChange={(e) => setForm({ ...form, city: e.target.value })}
                 placeholder="São Paulo - SP"
-                className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+                className="border-neon/20 bg-ink text-zinc-100 focus:border-neon"
               />
             </div>
           </div>
           <Button
             type="submit"
             disabled={loading || !form.name || !form.email || !form.password}
-            className="w-full bg-emerald-500 font-bold text-zinc-950 hover:bg-emerald-400"
+            className="btn-neon w-full font-bold"
           >
             {loading ? "Cadastrando..." : "Criar conta grátis"}
             {!loading && <ArrowRight className="ml-1.5 h-4 w-4" />}
@@ -151,7 +151,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-xs text-zinc-500">
           Já tem conta?{" "}
-          <Link href="/login" className="font-semibold text-emerald-400 hover:underline">
+          <Link href="/login" className="font-semibold text-neon hover:underline">
             Faça login
           </Link>
         </p>

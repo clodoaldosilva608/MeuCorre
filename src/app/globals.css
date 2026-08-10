@@ -41,6 +41,14 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* ===== Cores de marca MeuCorre (paleta do banner) ===== */
+  --color-neon: #39ff14;
+  --color-neon-soft: #00ff66;
+  --color-gold: #ffd700;
+  --color-orange-hot: #ff6b00;
+  --color-ink: #0d0d0d;
+  --color-graphite: #1a1a1a;
+  --color-asphalt: #2d3748;
 }
 
 /* ===== Tema Claro (padrão MeuCorre light) ===== */
@@ -79,7 +87,7 @@
   --sidebar-ring: oklch(0.7 0.18 160);
 }
 
-/* ===== Tema Escuro (MeuCorre dark — zinc-950 + emerald) ===== */
+/* ===== Tema Escuro (MeuCorre dark — neon green on deep black) ===== */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -121,4 +129,77 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ===== Utilitários de marca MeuCorre (paleta do banner) ===== */
+/* Verde neon — accent principal para CTAs e destaques financeiros */
+.bg-neon { background-color: #39ff14; }
+.text-neon { color: #39ff14; }
+.border-neon { border-color: #39ff14; }
+.bg-neon-soft { background-color: #00ff66; }
+.text-neon-soft { color: #00ff66; }
+.from-neon { --tw-gradient-from: #39ff14 var(--tw-gradient-from-position); --tw-gradient-to: transparent var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.to-neon-soft { --tw-gradient-to: #00ff66 var(--tw-gradient-to-position); }
+.shadow-neon { box-shadow: 0 0 20px rgba(57, 255, 20, 0.4), 0 0 40px rgba(57, 255, 20, 0.15); }
+.shadow-neon-lg { box-shadow: 0 0 30px rgba(57, 255, 20, 0.5), 0 0 60px rgba(57, 255, 20, 0.25); }
+
+/* Dourado — valores monetários e moedas */
+.text-gold { color: #ffd700; }
+.bg-gold { background-color: #ffd700; }
+
+/* Laranja quente — alertas e despesas */
+.text-orange-hot { color: #ff6b00; }
+.bg-orange-hot { background-color: #ff6b00; }
+
+/* Preto profundo e grafite — backgrounds */
+.bg-ink { background-color: #0d0d0d; }
+.bg-graphite { background-color: #1a1a1a; }
+.bg-asphalt { background-color: #2d3748; }
+
+/* Glow para texto neon (hero) */
+.text-glow-neon { text-shadow: 0 0 12px rgba(57, 255, 20, 0.6), 0 0 24px rgba(57, 255, 20, 0.3); }
+.text-glow-gold { text-shadow: 0 0 12px rgba(255, 215, 0, 0.5), 0 0 24px rgba(255, 215, 0, 0.25); }
+
+/* Botão neon padrão MeuCorre (hero + CTAs) */
+.btn-neon {
+  background-color: #39ff14;
+  color: #0d0d0d;
+  font-weight: 800;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.4), 0 0 40px rgba(57, 255, 20, 0.15);
+}
+.btn-neon:hover {
+  background-color: #00ff66;
+  box-shadow: 0 0 30px rgba(57, 255, 20, 0.6), 0 0 60px rgba(57, 255, 20, 0.3);
+  transform: translateY(-1px);
+}
+.btn-neon:active {
+  transform: translateY(0);
+}
+
+/* Botão outline neon (CTA secundário) */
+.btn-neon-outline {
+  background-color: transparent;
+  color: #39ff14;
+  border: 2px solid #39ff14;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+.btn-neon-outline:hover {
+  background-color: rgba(57, 255, 20, 0.1);
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+}
+
+/* Card com borda neon */
+.card-neon {
+  background-color: rgba(13, 13, 13, 0.6);
+  border: 1px solid rgba(57, 255, 20, 0.3);
+  border-radius: 1rem;
+  backdrop-filter: blur(8px);
+}
+.card-neon:hover {
+  border-color: rgba(57, 255, 20, 0.6);
+  box-shadow: 0 0 24px rgba(57, 255, 20, 0.2);
 }

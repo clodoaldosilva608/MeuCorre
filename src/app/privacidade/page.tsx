@@ -129,7 +129,7 @@ export default function PrivacidadePage() {
       </div>
 
       <div className="mt-12 border-t border-zinc-200 pt-6">
-        <a href="/" className="text-sm font-bold text-emerald-600 hover:underline">
+        <a href="/" className="text-sm font-bold text-neon hover:underline">
           ← Voltar para o MeuCorre
         </a>
       </div>

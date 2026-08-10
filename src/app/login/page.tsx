@@ -46,19 +46,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-ink px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-2xl shadow-lg shadow-emerald-500/25">
+          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-neon text-2xl shadow-neon">
             ⚡
           </div>
-          <h1 className="text-2xl font-extrabold text-emerald-400">MeuCorre</h1>
+          <h1 className="text-2xl font-extrabold text-neon text-glow-neon">MeuCorre</h1>
           <p className="mt-1 text-sm text-zinc-500">Entrar na sua conta</p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-6"
+          className="space-y-4 rounded-2xl border border-neon/30 bg-graphite p-6"
         >
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-xs text-zinc-400">
@@ -72,7 +72,7 @@ export default function LoginPage() {
               placeholder="seu@email.com"
               required
               autoFocus
-              className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+              className="border-neon/20 bg-ink text-zinc-100 focus:border-neon"
             />
           </div>
           <div className="space-y-1.5">
@@ -86,13 +86,13 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="border-zinc-800 bg-zinc-950 text-zinc-100 focus:border-emerald-500"
+              className="border-neon/20 bg-ink text-zinc-100 focus:border-neon"
             />
           </div>
           <Button
             type="submit"
             disabled={loading || !email || !password}
-            className="w-full bg-emerald-500 font-bold text-zinc-950 hover:bg-emerald-400"
+            className="btn-neon w-full font-bold"
           >
             {loading ? "Entrando..." : "Entrar"}
             {!loading && <ArrowRight className="ml-1.5 h-4 w-4" />}
@@ -102,13 +102,13 @@ export default function LoginPage() {
         <div className="space-y-2 text-center">
           <Link
             href="/recuperar-senha"
-            className="block text-xs text-zinc-500 hover:text-zinc-300"
+            className="block text-xs text-zinc-500 hover:text-neon"
           >
             Esqueci minha senha
           </Link>
           <p className="text-xs text-zinc-500">
             Não tem conta?{" "}
-            <Link href="/register" className="font-semibold text-emerald-400 hover:underline">
+            <Link href="/register" className="font-semibold text-neon hover:underline">
               Cadastre-se grátis
             </Link>
           </p>
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
         <Link
           href="/"
-          className="flex items-center justify-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300"
+          className="flex items-center justify-center gap-1.5 text-xs text-zinc-500 hover:text-neon"
         >
           <ArrowLeft className="h-3 w-3" />
           Voltar para a página inicial

@@ -155,15 +155,27 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-zinc-900">
+    <div className="flex min-h-screen flex-col bg-ink text-white">
       <Header onCheckout={openCheckout} />
 
-      {/* ===== 1. HERO (dark com glow) ===== */}
-      <section className="relative overflow-hidden bg-zinc-950 text-zinc-100">
-        {/* Glow background */}
-        <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[600px] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-3xl" />
+      {/* ===== 1. HERO — banner em tela cheia com botões responsivos ===== */}
+      <section className="relative overflow-hidden bg-ink">
+        {/* Banner em tela cheia (background) */}
+        <div className="absolute inset-0">
+          <img
+            src="/banner-meucorre.png"
+            alt="MeuCorre — Pare de perder dinheiro sem saber"
+            className="h-full w-full object-cover object-center"
+            loading="eager"
+            fetchPriority="high"
+          />
+          {/* Overlay escurecido para legibilidade do texto sobreposto */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />
+        </div>
 
-        <div className="relative mx-auto max-w-5xl px-4 py-16 md:py-24">
+        {/* Conteúdo sobreposto ao banner */}
+        <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col items-center justify-center px-4 py-16 text-center md:py-24">
           {/* Logo / brand */}
           <motion.div
             variants={fadeIn}
@@ -171,23 +183,23 @@ export default function LandingPage() {
             animate="show"
             className="flex items-center justify-center gap-2"
           >
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-xl shadow-lg shadow-emerald-500/25">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-neon text-xl shadow-neon">
               ⚡
             </div>
-            <span className="text-xl font-extrabold tracking-tight text-emerald-400">
+            <span className="text-xl font-extrabold tracking-tight text-neon text-glow-neon">
               MeuCorre
             </span>
           </motion.div>
 
           {/* Headline */}
-          <div className="mt-10 text-center">
+          <div className="mt-8 max-w-3xl">
             <motion.div
               variants={fadeUp}
               initial="hidden"
               animate="show"
-              className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400"
+              className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon backdrop-blur-sm"
             >
-              <Star className="h-3 w-3 fill-emerald-400" />
+              <Star className="h-3 w-3 fill-neon" />
               Feito por entregador, para entregador
             </motion.div>
 
@@ -195,12 +207,17 @@ export default function LandingPage() {
               variants={fadeUp}
               initial="hidden"
               animate="show"
-              className="text-balance text-4xl font-black leading-tight tracking-tight md:text-6xl"
+              className="text-balance text-4xl font-black uppercase leading-none tracking-tight md:text-6xl lg:text-7xl"
+              style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
             >
-              Pare de perder dinheiro
-              <br />
-              <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
-                sem saber
+              <span className="block text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                Pare de perder
+              </span>
+              <span className="mt-1 block text-neon text-glow-neon">
+                dinheiro
+              </span>
+              <span className="mt-1 block text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                sem saber!
               </span>
             </motion.h1>
 
@@ -208,62 +225,89 @@ export default function LandingPage() {
               variants={fadeUp}
               initial="hidden"
               animate="show"
-              className="mx-auto mt-5 max-w-xl text-pretty text-base text-zinc-400 md:text-lg"
+              className="mx-auto mt-5 max-w-xl text-pretty text-sm font-medium text-zinc-200 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] md:text-base"
             >
-              Controle suas corridas, despesas e lucro líquido em um só lugar.
+              Controle corridas, despesas e lucro real em um só lugar.
               Funciona com iFood, 99Food, Lalamove e qualquer outro app.
-              100% offline.
             </motion.p>
 
-            {/* CTAs: Comprar (abre dialog), Usar grátis, Entrar */}
+            {/* CTAs: Baixar grátis (neon), Usar grátis, Entrar — totalmente responsivos */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
               animate="show"
-              className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
+              className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
             >
               <button
                 type="button"
                 onClick={openCheckout}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-400 sm:w-auto"
+                className="btn-neon inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
               >
                 <Zap className="h-4 w-4" />
-                Comprar plano vitalício
+                Baixar grátis
                 <ArrowRight className="h-4 w-4" />
               </button>
               <a
                 href="/app"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-bold text-zinc-100 transition-all hover:border-zinc-600 hover:bg-zinc-800 sm:w-auto"
+                className="btn-neon-outline inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
               >
                 Usar grátis primeiro
               </a>
               <a
                 href="/login"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-transparent px-6 py-3 text-sm font-bold text-zinc-300 transition-all hover:border-emerald-500/40 hover:text-emerald-400 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
               >
                 Entrar
               </a>
             </motion.div>
 
-            <p className="mt-4 text-xs text-zinc-500">
-              Sem cadastro. Sem cartão. Funciona offline.
-            </p>
-          </div>
+            {/* Trust badges — como no banner */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-300 md:text-xs"
+            >
+              <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
+                100% offline
+              </span>
+              <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
+                App grátis
+              </span>
+              <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
+                Sem mensalidade
+              </span>
+              <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
+                Sem cadastro
+              </span>
+            </motion.div>
 
-          {/* Mockup */}
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            className="mx-auto mt-12 max-w-xs"
-          >
-            <PhoneMockup />
-          </motion.div>
+            {/* Preço destaque — dourado como no banner */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="mt-8 inline-flex flex-col items-center gap-1 rounded-2xl border border-gold/40 bg-black/60 px-6 py-4 backdrop-blur-md"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">
+                Oferta vitalício
+              </p>
+              <div className="flex items-end gap-2">
+                <span className="mb-1 text-sm font-medium text-zinc-400 line-through">
+                  R$ 97,00
+                </span>
+                <span className="text-4xl font-black text-gold text-glow-gold md:text-5xl">
+                  R$ 18,90
+                </span>
+              </div>
+              <p className="text-[10px] text-zinc-400">via Pix • pagamento único</p>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ===== 2. A DOR REAL (dark) ===== */}
-      <section className="relative overflow-hidden bg-zinc-950 py-16 text-zinc-100 md:py-24">
+      {/* ===== 2. A DOR REAL (dark com paleta nova) ===== */}
+      <section className="relative overflow-hidden bg-ink py-16 text-white md:py-24">
         <div className="mx-auto max-w-3xl px-4">
           <motion.div
             variants={fadeUp}
@@ -272,7 +316,7 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-80px" }}
             className="text-center"
           >
-            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400">
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-orange-hot/40 bg-orange-hot/10 px-3 py-1 text-xs font-medium text-orange-hot">
               A realidade de quem corre
             </p>
             <h2 className="text-3xl font-extrabold tracking-tight md:text-4xl">
@@ -295,18 +339,18 @@ export default function LandingPage() {
               <strong className="text-white">150km</strong>, fez{" "}
               <strong className="text-white">25 corridas</strong>.
               <br />
-              <span className="font-semibold text-emerald-400">
+              <span className="font-semibold text-neon">
                 Mas quanto cê ganhou de verdade?
               </span>
             </p>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 md:p-6">
+            <div className="card-neon p-5 md:p-6">
               <p className="text-center text-base leading-relaxed text-zinc-300 md:text-lg">
                 Abre o iFood: <strong className="text-white">R$ 87</strong>. Abre
                 o 99Food: <strong className="text-white">R$ 54</strong>. Abre o
                 Lalamove: <strong className="text-white">R$ 32</strong>.
               </p>
-              <p className="mt-4 text-center text-base font-semibold text-red-400 md:text-lg">
+              <p className="mt-4 text-center text-base font-semibold text-orange-hot md:text-lg">
                 Mas e a gasolina? E o almoço? E a manutenção?
               </p>
             </div>
@@ -355,7 +399,7 @@ export default function LandingPage() {
             className="mt-10 text-center text-base text-zinc-400 md:text-lg"
           >
             No fim do mês, sobra menos do que cê achava.{" "}
-            <span className="font-semibold text-emerald-400">
+            <span className="font-semibold text-neon">
               Bora resolver isso.
             </span>
           </motion.p>
@@ -363,7 +407,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 3. A SOLUÇÃO (claro, fundo branco) ===== */}
-      <section className="bg-white py-16 md:py-24">
+      <section className="bg-white py-16 text-zinc-900 md:py-24">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
@@ -372,14 +416,14 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-80px" }}
             className="text-center"
           >
-            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600">
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
               <Check className="h-3 w-3" />
               A solução
             </p>
             <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
               MeuCorre junta tudo
               <br />
-              <span className="text-emerald-500">numa tela só</span>
+              <span className="text-neon">numa tela só</span>
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-zinc-600 md:text-lg">
               Sem planilha, sem caderninho, sem abrir 3 apps pra somar. O
@@ -398,9 +442,9 @@ export default function LandingPage() {
               <motion.div
                 key={i}
                 variants={itemUp}
-                className="rounded-2xl border border-zinc-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-500/5"
+                className="rounded-2xl border border-zinc-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-neon hover:shadow-neon"
               >
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-500/10 text-2xl">
+                <div className="grid h-11 w-11 place-items-center rounded-xl bg-neon/10 text-2xl">
                   {f.emoji}
                 </div>
                 <h3 className="mt-3 text-sm font-bold text-zinc-900">
@@ -416,7 +460,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 4. VEJA COMO FUNCIONA (galeria de screenshots) ===== */}
-      <section className="border-y border-zinc-100 bg-zinc-50 py-16 md:py-24">
+      <section className="border-y border-zinc-200 bg-zinc-50 py-16 text-zinc-900 md:py-24">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
@@ -425,7 +469,7 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-80px" }}
             className="text-center"
           >
-            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600">
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
               Veja como funciona
             </p>
             <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
@@ -439,7 +483,7 @@ export default function LandingPage() {
 
           <div className="mt-12 space-y-10 md:space-y-16">
             {SCREENSHOTS.map((s, i) => {
-              const isLeft = i % 2 === 0; // card alinhado à esquerda nos índices pares
+              const isLeft = i % 2 === 0;
               return (
                 <motion.div
                   key={i}
@@ -453,14 +497,13 @@ export default function LandingPage() {
                   ].join(" ")}
                 >
                   <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-xl shadow-zinc-900/5">
-                    {/* Texto acima */}
                     <div
                       className={[
                         "border-b border-zinc-100 p-5",
                         isLeft ? "text-left" : "text-right",
                       ].join(" ")}
                     >
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-neon">
                         {String(i + 1).padStart(2, "0")} / {String(SCREENSHOTS.length).padStart(2, "0")}
                       </p>
                       <h3 className="mt-1 text-lg font-extrabold text-zinc-900">
@@ -468,8 +511,7 @@ export default function LandingPage() {
                       </h3>
                     </div>
 
-                    {/* Screenshot */}
-                    <div className="bg-zinc-950 p-2">
+                    <div className="bg-ink p-2">
                       <img
                         src={s.src}
                         alt={s.alt}
@@ -478,7 +520,6 @@ export default function LandingPage() {
                       />
                     </div>
 
-                    {/* Texto abaixo */}
                     <div
                       className={[
                         "border-t border-zinc-100 p-5",
@@ -498,18 +539,18 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 5. DEPOIMENTO (dark) ===== */}
-      <section className="bg-zinc-950 py-16 text-zinc-100 md:py-20">
+      <section className="bg-ink py-16 text-white md:py-20">
         <div className="mx-auto max-w-3xl px-4">
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-80px" }}
-            className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-10"
+            className="card-neon p-6 md:p-10"
           >
-            <div className="flex gap-1 text-emerald-400">
+            <div className="flex gap-1 text-neon">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-emerald-400" />
+                <Star key={i} className="h-4 w-4 fill-neon" />
               ))}
             </div>
             <p className="mt-4 text-balance text-lg font-medium leading-relaxed md:text-xl">
@@ -518,7 +559,7 @@ export default function LandingPage() {
               comida, sobravam R$ 110. Mudou minha forma de trabalhar.&rdquo;
             </p>
             <div className="mt-5 flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500/20 text-base">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-neon/20 text-base">
                 🛵
               </div>
               <div>
@@ -533,7 +574,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 6. OFERTA DE LANÇAMENTO (claro, urgência) ===== */}
-      <section id="planos" className="bg-white py-16 md:py-24">
+      <section id="planos" className="bg-white py-16 text-zinc-900 md:py-24">
         <div className="mx-auto max-w-4xl px-4">
           <motion.div
             variants={fadeUp}
@@ -542,7 +583,7 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-80px" }}
             className="text-center"
           >
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-600">
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-orange-hot/40 bg-orange-hot/10 px-3 py-1 text-xs font-bold text-orange-hot">
               🔥 Oferta de lançamento — só enquanto durar
             </div>
             <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
@@ -561,19 +602,19 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-60px" }}
             className="mx-auto mt-10 max-w-md"
           >
-            <div className="overflow-hidden rounded-3xl border-2 border-emerald-500 bg-white shadow-xl shadow-emerald-500/10">
+            <div className="overflow-hidden rounded-3xl border-2 border-neon bg-white shadow-neon">
               {/* Header */}
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 text-center text-white">
+              <div className="bg-gradient-to-br from-neon to-neon-soft p-6 text-center text-zinc-950">
                 <p className="text-xs font-semibold uppercase tracking-wider opacity-90">
                   ⚡ MeuCorre PRO
                 </p>
                 <div className="mt-2 flex items-end justify-center gap-2">
-                  <span className="mb-2 text-lg font-medium text-white/70 line-through">
+                  <span className="mb-2 text-lg font-medium text-zinc-950/60 line-through">
                     R$ {ORIGINAL_PRICE},00
                   </span>
-                  <span className="text-5xl font-black">R$ 18,90</span>
+                  <span className="text-5xl font-black text-gold">R$ 18,90</span>
                 </div>
-                <p className="mt-2 inline-block rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
+                <p className="mt-2 inline-block rounded-full bg-zinc-950/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
                   🔥 Oferta de lançamento
                 </p>
                 <p className="mt-2 text-xs opacity-90">
@@ -586,7 +627,7 @@ export default function LandingPage() {
                 <ul className="space-y-2.5">
                   {PRO_FEATURES.map((f, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-neon" />
                       <span className="text-zinc-700">{f}</span>
                     </li>
                   ))}
@@ -595,7 +636,7 @@ export default function LandingPage() {
                 <button
                   type="button"
                   onClick={openCheckout}
-                  className="mt-6 w-full bg-emerald-500 py-6 text-base font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
+                  className="btn-neon mt-6 w-full py-6 text-base"
                 >
                   <Zap className="mr-2 inline h-4 w-4" />
                   Comprar plano vitalício
@@ -614,13 +655,13 @@ export default function LandingPage() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-40px" }}
-              className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-center"
+              className="mt-6 rounded-2xl border border-orange-hot/30 bg-orange-hot/5 p-4 text-center"
             >
-              <p className="text-sm font-semibold text-red-700">
+              <p className="text-sm font-semibold text-orange-hot">
                 <Fuel className="mr-1 inline h-4 w-4" />
                 O preço vai voltar pra R$ 97.
               </p>
-              <p className="mt-1 text-xs text-red-600">
+              <p className="mt-1 text-xs text-orange-hot/80">
                 Garanta seu acesso vitalício agora por menos de 1 tanque de
                 gasolina.
               </p>
@@ -637,17 +678,17 @@ export default function LandingPage() {
                   14 dias grátis + 5 corridas/dia após
                 </p>
               </div>
-              <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4">
-                <p className="text-xs font-semibold text-emerald-700">
+              <div className="rounded-xl border-2 border-neon bg-neon/5 p-4">
+                <p className="text-xs font-semibold text-neon">
                   Plano PRO vitalício
                 </p>
-                <p className="mt-1 text-2xl font-black text-emerald-600">
+                <p className="mt-1 text-2xl font-black text-neon">
                   R$ 18,90
                 </p>
                 <p className="mt-0.5 text-[10px] text-zinc-500 line-through">
                   de R$ {ORIGINAL_PRICE},00
                 </p>
-                <p className="mt-1 text-[10px] text-emerald-700">
+                <p className="mt-1 text-[10px] text-neon">
                   Sem anúncios + features avançadas
                 </p>
               </div>
@@ -657,7 +698,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 7. FAQ ===== */}
-      <section className="border-t border-zinc-100 bg-zinc-50 py-16 md:py-20">
+      <section className="border-t border-zinc-200 bg-zinc-50 py-16 text-zinc-900 md:py-20">
         <div className="mx-auto max-w-2xl px-4">
           <motion.h2
             variants={fadeUp}
@@ -706,9 +747,9 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 8. CTA FINAL grande ===== */}
-      <section className="relative overflow-hidden bg-zinc-950 py-20 text-center text-zinc-100 md:py-28">
+      <section className="relative overflow-hidden bg-ink py-20 text-center text-white md:py-28">
         {/* Glow */}
-        <div className="pointer-events-none absolute -bottom-32 left-1/2 h-72 w-[600px] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/2 h-72 w-[600px] -translate-x-1/2 rounded-full bg-neon/20 blur-3xl" />
 
         <motion.div
           variants={fadeUp}
@@ -717,21 +758,22 @@ export default function LandingPage() {
           viewport={{ once: true, margin: "-80px" }}
           className="relative mx-auto max-w-2xl px-4"
         >
-          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
             <InfinityIcon className="h-3 w-3" />
             Pagamento único — usa para sempre
           </div>
-          <h2 className="text-balance text-3xl font-black tracking-tight md:text-5xl">
-            Bora parar de perder dinheiro?
+          <h2 className="text-balance text-3xl font-black uppercase tracking-tight md:text-5xl">
+            Bora parar de perder{" "}
+            <span className="text-neon text-glow-neon">dinheiro?</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-pretty text-base text-zinc-400 md:text-lg">
+          <p className="mx-auto mt-4 max-w-md text-pretty text-base text-zinc-300 md:text-lg">
             Junte seus apps, suas despesas e seu lucro numa tela só. Hoje, por
             menos de 1 tanque de gasolina.
           </p>
           <button
             type="button"
             onClick={openCheckout}
-            className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-8 py-4 text-base font-bold text-zinc-950 shadow-lg shadow-emerald-500/30 transition-all hover:bg-emerald-400 sm:w-auto md:text-lg"
+            className="btn-neon mt-8 inline-flex w-full items-center justify-center gap-2 px-8 py-4 text-base sm:w-auto md:text-lg"
           >
             <Zap className="h-5 w-5" />
             Garanta seu acesso com desconto
@@ -744,29 +786,29 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 9. FOOTER (mantém créditos) ===== */}
-      <footer className="mt-auto bg-zinc-950 py-10 text-zinc-400">
+      <footer className="mt-auto bg-ink py-10 text-zinc-400">
         <div className="mx-auto max-w-5xl px-4">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-2">
-              <div className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-sm">
+              <div className="grid h-7 w-7 place-items-center rounded-lg bg-neon text-sm">
                 ⚡
               </div>
-              <span className="font-bold text-emerald-400">MeuCorre</span>
+              <span className="font-bold text-neon">MeuCorre</span>
             </div>
             <nav className="flex flex-wrap items-center gap-5 text-xs">
-              <a href="/app" className="hover:text-zinc-200">
+              <a href="/app" className="hover:text-neon">
                 Abrir app
               </a>
-              <a href="#planos" className="hover:text-zinc-200">
+              <a href="#planos" className="hover:text-neon">
                 Planos
               </a>
-              <a href="/termos" className="hover:text-zinc-200">
+              <a href="/termos" className="hover:text-neon">
                 Termos de Uso
               </a>
-              <a href="/privacidade" className="hover:text-zinc-200">
+              <a href="/privacidade" className="hover:text-neon">
                 Privacidade
               </a>
-              <a href="/admin/login" className="hover:text-zinc-200">
+              <a href="/admin/login" className="hover:text-neon">
                 Admin
               </a>
             </nav>
@@ -775,7 +817,7 @@ export default function LandingPage() {
           <div className="mt-6 border-t border-zinc-800 pt-6 text-center">
             <p className="text-sm font-semibold text-zinc-300">
               Criado e desenvolvido por{" "}
-              <span className="font-bold text-emerald-400">
+              <span className="font-bold text-neon">
                 Clodoaldo C Silva
               </span>
             </p>
@@ -798,13 +840,13 @@ export default function LandingPage() {
 
 function Header({ onCheckout }: { onCheckout: () => void }) {
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-neon/10 bg-ink/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <a href="#" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-base shadow-lg shadow-emerald-500/25">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-neon text-base shadow-neon">
             ⚡
           </div>
-          <span className="text-base font-extrabold tracking-tight text-emerald-400">
+          <span className="text-base font-extrabold tracking-tight text-neon text-glow-neon">
             MeuCorre
           </span>
         </a>
@@ -812,27 +854,27 @@ function Header({ onCheckout }: { onCheckout: () => void }) {
           <button
             type="button"
             onClick={onCheckout}
-            className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-emerald-400 sm:inline-block"
+            className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-neon sm:inline-block"
           >
             Planos
           </button>
           <a
             href="/app"
-            className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-emerald-400 sm:inline-block"
+            className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-neon sm:inline-block"
           >
             App grátis
           </a>
           <button
             type="button"
             onClick={onCheckout}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-zinc-950 transition-all hover:bg-emerald-400"
+            className="btn-neon inline-flex items-center gap-1.5 px-4 py-2 text-xs"
           >
             <Zap className="h-3 w-3" />
             Comprar
           </button>
           <a
             href="/login"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-100 transition-all hover:border-emerald-500/40 hover:text-emerald-400"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neon/30 bg-transparent px-4 py-2 text-xs font-bold text-neon transition-all hover:bg-neon/10"
           >
             Entrar
           </a>
@@ -859,15 +901,15 @@ function PainCard({
       className={[
         "rounded-2xl border p-4 text-left transition-all",
         isDark
-          ? "border-zinc-800 bg-zinc-900 hover:border-red-500/40"
-          : "border-zinc-200 bg-white hover:border-emerald-300",
+          ? "card-neon hover:border-orange-hot/50"
+          : "border-zinc-200 bg-white hover:border-neon",
       ].join(" ")}
     >
       <div className="text-2xl">{emoji}</div>
       <p
         className={[
           "mt-2 text-sm font-bold",
-          isDark ? "text-zinc-100" : "text-zinc-900",
+          isDark ? "text-white" : "text-zinc-900",
         ].join(" ")}
       >
         {title}
@@ -895,7 +937,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
       >
         <span className="text-sm font-semibold text-zinc-900">{q}</span>
         <span
-          className={`text-zinc-400 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`text-neon transition-transform ${open ? "rotate-180" : ""}`}
         >
           ▼
         </span>
@@ -911,35 +953,35 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 function PhoneMockup() {
   return (
-    <div className="mx-auto w-full max-w-[280px] rounded-[2.5rem] border-[6px] border-zinc-800 bg-zinc-950 p-3 shadow-2xl">
-      <div className="rounded-[2rem] bg-zinc-950 p-4">
+    <div className="mx-auto w-full max-w-[280px] rounded-[2.5rem] border-[6px] border-neon/30 bg-ink p-3 shadow-neon-lg">
+      <div className="rounded-[2rem] bg-ink p-4">
         {/* Notch */}
-        <div className="mx-auto mb-3 h-1 w-16 rounded-full bg-zinc-800" />
+        <div className="mx-auto mb-3 h-1 w-16 rounded-full bg-neon/30" />
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className="grid h-6 w-6 place-items-center rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 text-xs">
+            <div className="grid h-6 w-6 place-items-center rounded-lg bg-neon text-xs">
               ⚡
             </div>
-            <span className="text-xs font-bold text-emerald-400">MeuCorre</span>
+            <span className="text-xs font-bold text-neon">MeuCorre</span>
           </div>
-          <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[8px] text-zinc-400">
+          <span className="rounded-full border border-neon/30 px-2 py-0.5 text-[8px] text-zinc-400">
             Hoje
           </span>
         </div>
 
         {/* Total card */}
-        <div className="mt-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/60 to-zinc-900 p-3">
+        <div className="mt-3 rounded-2xl border border-neon/30 bg-gradient-to-br from-asphalt to-ink p-3">
           <p className="text-[9px] text-zinc-400">Total hoje</p>
-          <p className="text-2xl font-black text-emerald-400">R$ 184,50</p>
+          <p className="text-2xl font-black text-neon">R$ 184,50</p>
           <p className="text-[9px] text-zinc-500">12 corridas</p>
         </div>
 
         {/* Lucro líquido */}
-        <div className="mt-2 rounded-2xl border border-emerald-500/30 bg-emerald-950/30 p-3">
+        <div className="mt-2 rounded-2xl border border-gold/30 bg-gold/5 p-3">
           <p className="text-[9px] text-zinc-400">Lucro líquido</p>
-          <p className="text-lg font-black text-emerald-400">R$ 142,80</p>
+          <p className="text-lg font-black text-gold">R$ 142,80</p>
         </div>
 
         {/* Mock corridas */}
@@ -951,7 +993,7 @@ function PhoneMockup() {
           ].map((c, i) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-2"
+              className="flex items-center justify-between rounded-xl border border-neon/10 bg-graphite p-2"
             >
               <div className="flex items-center gap-1.5">
                 <span className="text-xs">{c.emoji}</span>
@@ -959,7 +1001,7 @@ function PhoneMockup() {
                   {c.app}
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-emerald-400">
+              <span className="text-[10px] font-bold text-neon">
                 {c.val}
               </span>
             </div>
@@ -1037,9 +1079,9 @@ function CheckoutDialog({
         onOpenChange(o);
       }}
     >
-      <DialogContent className="max-w-md gap-0 border-zinc-200 bg-white p-0 text-zinc-900">
-        <DialogHeader className="border-b border-zinc-100 px-5 py-4">
-          <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-600">
+      <DialogContent className="max-w-md gap-0 border-neon/30 bg-white p-0 text-zinc-900">
+        <DialogHeader className="border-b border-neon/10 px-5 py-4">
+          <DialogTitle className="flex items-center gap-2 text-base font-bold text-neon">
             <CreditCard className="h-4 w-4" />
             Quase lá! Seus dados
           </DialogTitle>
@@ -1056,7 +1098,7 @@ function CheckoutDialog({
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+              className="border-zinc-200 bg-white text-zinc-900 focus:border-neon"
             />
           </div>
           <div className="space-y-1.5">
@@ -1066,7 +1108,7 @@ function CheckoutDialog({
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
-              className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+              className="border-zinc-200 bg-white text-zinc-900 focus:border-neon"
             />
             <p className="text-[10px] text-zinc-500">
               Sua licença será enviada para este email
@@ -1078,11 +1120,11 @@ function CheckoutDialog({
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               placeholder="(11) 99999-9999"
-              className="border-zinc-200 bg-white text-zinc-900 focus:border-emerald-500"
+              className="border-zinc-200 bg-white text-zinc-900 focus:border-neon"
             />
           </div>
 
-          <div className="rounded-xl bg-emerald-50 p-3 text-center">
+          <div className="rounded-xl bg-neon/5 p-3 text-center">
             <p className="text-xs text-zinc-600">
               Total a pagar — oferta de lançamento
             </p>
@@ -1090,7 +1132,7 @@ function CheckoutDialog({
               <span className="text-sm font-medium text-zinc-400 line-through">
                 R$ {ORIGINAL_PRICE},00
               </span>
-              <span className="text-2xl font-black text-emerald-600">
+              <span className="text-2xl font-black text-gold">
                 R$ 18,90
               </span>
             </div>
@@ -1117,7 +1159,7 @@ function CheckoutDialog({
           <Button
             type="submit"
             disabled={!form.name || !form.email || redirecting}
-            className="w-full bg-emerald-500 py-4 font-bold text-zinc-950 hover:bg-emerald-400"
+            className="btn-neon w-full py-4"
           >
             {redirecting ? "Redirecionando..." : `Pagar R$ 18,90 na Kiwify`}
             {!redirecting && <ArrowRight className="ml-1.5 h-4 w-4" />}
