@@ -8,20 +8,39 @@
 
 ## 📸 Screenshots
 
-### Landing Page Pública
-| Hero | Planos |
+> Capturas reais do MeuCorre em produção (https://meucorre.vercel.app) com a nova identidade visual neon — verde neon (#39FF14), preto profundo (#0D0D0D), dourado (#FFD700) e laranja quente (#FF6B00).
+
+### 🎨 Landing Page (Hero com banner em tela cheia)
+
+| Desktop (1440×900) | Mobile (390×844) |
 |---|---|
-| ![Landing Hero](docs/screenshots/01-landing-hero.png) | ![Landing Planos](docs/screenshots/02-landing-planos.png) |
+| ![Landing Hero Desktop](public/screenshots/01-landing-hero.png) | ![Landing Hero Mobile](public/screenshots/10-landing-mobile-hero.png) |
 
-### App do Entregador (PWA)
-| Dashboard (Dark) | Dashboard (Light) | Nova Corrida |
+### 📄 Landing Page Completa (scroll)
+
+![Landing Page Completa](public/screenshots/02-landing-full.png)
+
+### 🔐 Autenticação
+
+| Login | Cadastro | Login Mobile |
 |---|---|---|
-| ![App Dark](docs/screenshots/03-app-dashboard-dark.png) | ![App Light](docs/screenshots/04-app-dashboard-light.png) | ![Nova Corrida](docs/screenshots/05-app-nova-corrida.png) |
+| ![Login](public/screenshots/03-login.png) | ![Cadastro](public/screenshots/04-register.png) | ![Login Mobile](public/screenshots/11-login-mobile.png) |
 
-### Painel Administrativo
-| Login | Dashboard | Anúncios | Assinaturas | Feedbacks |
-|---|---|---|---|---|
-| ![Login](docs/screenshots/06-admin-login.png) | ![Dashboard](docs/screenshots/07-admin-dashboard.png) | ![Anúncios](docs/screenshots/08-admin-ads.png) | ![Assinaturas](docs/screenshots/09-admin-subscriptions.png) | ![Feedbacks](docs/screenshots/10-admin-feedback.png) |
+### 📊 Dashboard do Entregador (PWA — guest mode)
+
+| Aba Corridas | Aba Despesas | Aba Gráficos |
+|---|---|---|
+| ![Corridas](public/screenshots/07-dashboard-corridas.png) | ![Despesas](public/screenshots/08-dashboard-despesas.png) | ![Gráficos](public/screenshots/09-dashboard-graficos.png) |
+
+### 📱 Dashboard Mobile
+
+![Dashboard Mobile](public/screenshots/12-dashboard-mobile.png)
+
+### ⚖️ Páginas Legais
+
+| Termos de Uso | Política de Privacidade |
+|---|---|
+| ![Termos](public/screenshots/05-termos.png) | ![Privacidade](public/screenshots/06-privacidade.png) |
 
 ---
 

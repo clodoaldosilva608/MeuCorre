@@ -15,7 +15,7 @@ import { test, expect } from "@playwright/test";
 //   7. Cadastro + login + logout funcionam end-to-end
 //   8. Service Worker atualizado para v2 (Achado #1 corrigido)
 
-const EXPECTED_VERSION = "71adf14"; // commit em produção
+const EXPECTED_VERSION = "d091f42"; // commit em produção (Fase 4 + nova identidade visual)
 
 test.describe("Fase 4 — Smoke Tests Pós-Deploy", () => {
   test("S1: /api/health retorna healthy com versão esperada", async ({ page }) => {
