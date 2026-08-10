@@ -15,6 +15,11 @@ import {
   CheckCircle,
   XCircle,
   ArrowRight,
+  ExternalLink,
+  Shield,
+  Mail,
+  Database,
+  Activity,
 } from "lucide-react";
 
 interface DashboardData {
@@ -225,6 +230,56 @@ export default function AdminDashboardPage() {
             <MessageSquare className="h-4 w-4" />
             Ler feedbacks
           </Link>
+        </div>
+      </section>
+
+      {/* ===== Serviços Externos ===== */}
+      <section>
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-zinc-100">
+          <Activity className="h-4 w-4 text-emerald-400" />
+          Serviços Externos
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <a
+            href="https://sentry.io/organizations/clodoaldo608-gmailcoms-projects/projects/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-center transition-all hover:border-emerald-500/40 hover:bg-zinc-900"
+          >
+            <Shield className="h-6 w-6 text-purple-400" />
+            <span className="text-xs font-medium text-zinc-300">Sentry</span>
+            <span className="text-[10px] text-zinc-600">Error Tracking</span>
+          </a>
+          <a
+            href="https://resend.com/emails"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-center transition-all hover:border-emerald-500/40 hover:bg-zinc-900"
+          >
+            <Mail className="h-6 w-6 text-blue-400" />
+            <span className="text-xs font-medium text-zinc-300">Resend</span>
+            <span className="text-[10px] text-zinc-600">Email Service</span>
+          </a>
+          <a
+            href="https://console.upstash.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-center transition-all hover:border-emerald-500/40 hover:bg-zinc-900"
+          >
+            <Database className="h-6 w-6 text-red-400" />
+            <span className="text-xs font-medium text-zinc-300">Upstash</span>
+            <span className="text-[10px] text-zinc-600">Redis Cache</span>
+          </a>
+          <a
+            href="https://supabase.com/dashboard/project"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-center transition-all hover:border-emerald-500/40 hover:bg-zinc-900"
+          >
+            <Database className="h-6 w-6 text-emerald-400" />
+            <span className="text-xs font-medium text-zinc-300">Supabase</span>
+            <span className="text-[10px] text-zinc-600">Database</span>
+          </a>
         </div>
       </section>
     </div>
