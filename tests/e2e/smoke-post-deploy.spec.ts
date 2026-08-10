@@ -15,7 +15,7 @@ import { test, expect } from "@playwright/test";
 //   7. Cadastro + login + logout funcionam end-to-end
 //   8. Service Worker atualizado para v2 (Achado #1 corrigido)
 
-const EXPECTED_VERSION = "9949072"; // commit em produção (contador vitalicio + AdSense + seed offers)
+const EXPECTED_VERSION = "eaafd69"; // commit em produção (upload imagem/video + páginas institucionais + footer completo)
 
 test.describe("Fase 4 — Smoke Tests Pós-Deploy", () => {
   test("S1: /api/health retorna healthy com versão esperada", async ({ page }) => {
