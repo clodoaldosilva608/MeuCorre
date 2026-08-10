@@ -75,6 +75,24 @@ export async function PATCH(
           licenseKey: data.licenseKey as string,
         },
       });
+
+      // ===== Referral: se foi indicado, credita recompensa =====
+      try {
+        const referral = await prisma.referral.findUnique({
+          where: { referredId: id },
+        });
+        if (referral && referral.status === "pending") {
+          await prisma.referral.update({
+            where: { id: referral.id },
+            data: {
+              status: "converted",
+              convertedAt: new Date(),
+            },
+          });
+        }
+      } catch {
+        // Referral falha não bloqueia grant
+      }
     } else if (!body.isPro && user.isPro) {
       data.isPro = false;
       data.licenseKey = null;

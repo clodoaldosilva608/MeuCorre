@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, type Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -133,6 +133,26 @@ export default function LandingPage() {
   // um segundo clique no botão da seção de planos para abrir o dialog.
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const openCheckout = () => setCheckoutOpen(true);
+
+  // ===== Referral: detecta ?ref=CODE na URL e salva no localStorage =====
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get("ref");
+    if (refCode) {
+      localStorage.setItem("meucorre_referral_code", refCode.toUpperCase());
+      // Registra clique no backend (fire-and-forget)
+      fetch("/api/referral/code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: refCode.toUpperCase() }),
+      }).catch(() => {});
+      // Limpa o ?ref= da URL sem recarregar
+      const url = new URL(window.location.href);
+      url.searchParams.delete("ref");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-zinc-900">

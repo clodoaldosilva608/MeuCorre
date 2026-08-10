@@ -223,6 +223,55 @@ export async function POST(req: NextRequest) {
         orderId: payload.order_id,
       });
 
+      // ===== Referral: se o novo PRO foi indicado, credita recompensa =====
+      try {
+        // Busca o usuário pelo email
+        const referredUser = await prisma.user.findUnique({
+          where: { email },
+          select: { id: true },
+        });
+
+        if (referredUser) {
+          // Verifica se tem referral pendente
+          const referral = await prisma.referral.findUnique({
+            where: { referredId: referredUser.id },
+          });
+
+          if (referral && referral.status === "pending") {
+            // Verifica se a campanha está ativa
+            const campaign = await prisma.referralCampaign.findFirst({
+              orderBy: { createdAt: "desc" },
+            });
+
+            const rewardAmount = campaign?.active
+              ? Number(campaign.rewardAmount)
+              : Number(referral.payoutAmount);
+
+            await prisma.referral.update({
+              where: { id: referral.id },
+              data: {
+                status: "converted",
+                convertedAt: new Date(),
+                payoutAmount: rewardAmount,
+              },
+            });
+
+            logger.info("Referral convertido", {
+              referralId: referral.id,
+              referrerId: referral.referrerId,
+              rewardAmount,
+              email,
+            });
+          }
+        }
+      } catch (referralError) {
+        // Referral falha não bloqueia o webhook
+        logger.warn("Erro ao processar referral", {
+          email,
+          error: referralError instanceof Error ? referralError.message : "unknown",
+        });
+      }
+
       recordSuccess(CIRCUIT_NAME);
       return NextResponse.json({
         ok: true,

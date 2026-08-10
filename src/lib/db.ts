@@ -68,7 +68,6 @@ class MeuCorreDB extends Dexie {
             isDefault: true,
             order: maxOrder + 1,
           });
-          // Atualiza existingApps para evitar duplicação
           existingApps.push({
             ...defaultApp,
             id: -1,
@@ -76,6 +75,48 @@ class MeuCorreDB extends Dexie {
             order: maxOrder + 1,
           } as DeliveryApp);
           existingNames.add(defaultApp.name);
+        }
+      }
+    });
+
+    // Version 4: Adiciona 5 novos apps (Zé Delivery, Amazon Flex, Shopee,
+    // Mercado Livre, Uber) para usuários existentes.
+    this.version(4).stores({
+      deliveries: "++id, app, value, km, date, timestamp",
+      expenses: "++id, category, value, date, timestamp",
+      apps: "++id, &name, order, isDefault",
+    }).upgrade(async (trans) => {
+      const appsTable = trans.table("apps");
+      const existingApps = await appsTable.toArray();
+      const existingNames = new Set(existingApps.map((a: { name: string }) => a.name));
+
+      for (const defaultApp of DEFAULT_APPS) {
+        if (!existingNames.has(defaultApp.name)) {
+          const maxOrder = existingApps.reduce(
+            (max: number, a: { order?: number }) =>
+              Math.max(max, a.order ?? 0),
+            0,
+          );
+          await appsTable.add({
+            ...defaultApp,
+            isDefault: true,
+            order: maxOrder + 1,
+          });
+          existingApps.push({
+            ...defaultApp,
+            id: -1,
+            isDefault: true,
+            order: maxOrder + 1,
+          } as DeliveryApp);
+          existingNames.add(defaultApp.name);
+        } else {
+          // Atualiza imagem se mudou
+          const existing = existingApps.find(
+            (a: { name: string }) => a.name === defaultApp.name,
+          );
+          if (existing && existing.isDefault && existing.image !== defaultApp.image) {
+            await appsTable.update(existing.id, { image: defaultApp.image });
+          }
         }
       }
     });
@@ -144,6 +185,41 @@ export const DEFAULT_APPS: Omit<DeliveryApp, "id" | "isDefault" | "order">[] = [
     color: "#eab308",
     emoji: "🐝",
     image: "/apps/bee.png",
+  },
+  {
+    name: "Zé Delivery",
+    label: "Zé Delivery",
+    color: "#fde047",
+    emoji: "🍺",
+    image: "/apps/ze-delivery.png",
+  },
+  {
+    name: "Amazon Flex",
+    label: "Amazon Flex",
+    color: "#ff9900",
+    emoji: "📦",
+    image: "/apps/amazon.png",
+  },
+  {
+    name: "Shopee",
+    label: "Shopee",
+    color: "#ee4d2d",
+    emoji: "🛒",
+    image: "/apps/shopee.jpg",
+  },
+  {
+    name: "Mercado Livre",
+    label: "Mercado Livre",
+    color: "#fff159",
+    emoji: "🟡",
+    image: "/apps/mercadolivre.png",
+  },
+  {
+    name: "Uber",
+    label: "Uber",
+    color: "#000000",
+    emoji: "🚕",
+    image: "/apps/uber.png",
   },
   {
     name: "Independente/Outros",

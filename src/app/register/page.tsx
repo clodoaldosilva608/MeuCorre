@@ -28,7 +28,10 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          referralCode: localStorage.getItem("meucorre_referral_code") || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {

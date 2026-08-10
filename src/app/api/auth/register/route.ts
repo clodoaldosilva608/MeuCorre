@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   });
   if (limited) return limited;
 
-  let body: { name?: string; email?: string; password?: string; phone?: string; city?: string };
+  let body: { name?: string; email?: string; password?: string; phone?: string; city?: string; referralCode?: string };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -53,6 +53,25 @@ export async function POST(req: NextRequest) {
       city: body.city?.trim().slice(0, 100) || null,
     },
   });
+
+  // ===== Referral: se veio com código de indicação, registra =====
+  const referralCode = body.referralCode?.trim();
+  if (referralCode) {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "https://meucorre.vercel.app"}/api/referral/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          email: user.email,
+          name: user.name,
+          code: referralCode,
+        }),
+      });
+    } catch {
+      // Referral falha silenciosamente — não bloqueia registro
+    }
+  }
 
   // Gera token de sessão
   const token = await createUserToken({

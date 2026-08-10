@@ -220,3 +220,59 @@ model AdminAction {
   @@index([adminId, createdAt])
   @@index([resource, createdAt])
 }
+
+// ===== Programa de Indicação (Referral Program) =====
+//
+// Sistema customizado de indicação onde usuários PRO ganham R$5 (PIX)
+// por cada amigo que se torna PRO. Admin ativa/desativa a campanha e
+// processa os pagamentos.
+
+// Cada usuário PRO recebe um código de indicação único
+model ReferralCode {
+  id        String   @id @default(cuid())
+  userId    String   @unique // dono do código ( usuário PRO)
+  code      String   @unique // ex: "MEUCORRE-ABC123"
+  clicks    Int      @default(0) // quantas vezes o link foi clicado
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([code])
+}
+
+// Registro de quem indicou quem (1 usuário só pode ser indicado por 1 pessoa)
+model Referral {
+  id            String    @id @default(cuid())
+  referrerId    String    // quem indicou
+  referrerCode  String    // código usado
+  referredId    String    @unique // quem foi indicado
+  referredEmail String
+  referredName  String
+  status        String    @default("pending") // pending | converted | paid | rejected
+  convertedAt   DateTime? // quando o indicado virou PRO
+  paidAt        DateTime? // quando admin pagou o PIX
+  payoutAmount  Decimal   @default(5) @db.Decimal(10, 2)
+  payoutPixKey  String?   // chave PIX do referrer (para pagamento)
+  adminNotes    String?   // notas do admin
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([referrerId, status])
+  @@index([referredId])
+  @@index([status, createdAt])
+}
+
+// Configuração da campanha de indicação (ativa/desativa, valor, limites)
+model ReferralCampaign {
+  id           String    @id @default(cuid())
+  name         String    @default("Indique e Ganhe")
+  active       Boolean   @default(false) // admin liga/desliga
+  rewardAmount Decimal   @default(5) @db.Decimal(10, 2)
+  maxReferrals Int       @default(0) // 0 = ilimitado
+  startsAt     DateTime?
+  endsAt       DateTime?
+  termsUrl     String?   // URL dos termos e condições
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}

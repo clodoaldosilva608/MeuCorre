@@ -848,3 +848,76 @@ Feito com 💚 pra quem corre atrás 🏍️📦
 - **Repositório**: https://github.com/clodoaldosilva608/MeuCorre
 
 Encontrou um bug? Tem uma sugestão? Abra uma issue no GitHub ou mande feedback pelo app (pop-up de feedback aparece automaticamente após 3 corridas lançadas).
+
+---
+
+## 🎁 Programa de Indicação "Indique e Ganhe"
+
+### Visão Geral
+
+O MeuCorre possui um sistema customizado de indicação onde usuários PRO ganham **R$5,00 (PIX)** por cada amigo que se tornar um usuário PRO. O programa pode ser ativado e desativado pelo administrador a qualquer momento.
+
+### Regras Oficiais
+
+1. **Quem pode indicar**: Apenas usuários PRO (assinatura vitalícia ativa) podem gerar links de indicação.
+
+2. **Como funciona**:
+   - O usuário PRO compartilha seu link único: `meucorre.vercel.app?ref=MEUCORRE-XXXXXX`
+   - O amigo abre o link, se cadastra e usa o app normalmente
+   - Quando o amigo se torna PRO (via Kiwify ou concessão admin), o indicador ganha R$5,00
+
+3. **Recompensa**: R$5,00 por cada amigo que se tornar PRO, creditados via PIX.
+
+4. **Pagamento**:
+   - Os repasses são processados em **até 4 dias úteis** após a confirmação do pagamento do amigo indicado.
+   - O pagamento é feito via PIX para a chave cadastrada pelo indicador.
+   - O admin processa os pagamentos manualmente pelo painel administrativo.
+
+5. **Limitações**:
+   - Um usuário não pode se auto-indicar (o sistema bloqueia).
+   - Cada usuário só pode ser indicado por uma pessoa (primeiro código válido).
+   - Não há limite máximo de indicações (a menos que configurado pelo admin).
+
+6. **Fraude**: Tentativas de fraude (múltiplas contas, auto-indicação, indicações falsas) resultam em cancelamento da participação no programa e bloqueio da conta.
+
+7. **Ativação/Desativação**: O administrador pode ativar ou desativar a campanha a qualquer momento pelo painel admin. Indicações já feitas continuam válidas, mas novas indicações não geram recompensa quando a campanha está inativa.
+
+### Fluxo Técnico
+
+```
+1. Usuário PRO → compartilha link ?ref=MEUCORRE-XXXXXX
+2. Amigo → abre link → código salvo no localStorage → registra-se
+3. Sistema → cria Referral (status: pending)
+4. Amigo → compra PRO (Kiwify webhook OU admin grant)
+5. Sistema → Referral.status = "converted" + R$5 creditado
+6. Admin → audita → faz PIX → marca "paid"
+```
+
+### Segurança Anti-Fraude
+
+| Risco | Prevenção |
+|-------|-----------|
+| Auto-indicação | `referredId @unique` + verificação `referrerId !== referredId` |
+| Indicação falsa | Só credita após Kiwify webhook confirmar `order_status: "paid"` |
+| Múltiplas contas | Rate limit de cadastro (3/IP/hora) + validação de telefone |
+| Código forjado | Código é `@unique` no banco, validado no registro |
+| Admin não paga | Auditoria: admin vê todas as conversões e marca como pago |
+
+### APIs do Sistema
+
+| Endpoint | Método | Descrição |
+|----------|--------|-----------|
+| `/api/referral/code` | GET | Retorna código de referral do usuário logado |
+| `/api/referral/code` | POST | Registra clique no link de referral |
+| `/api/referral/stats` | GET | Estatísticas das indicações do usuário |
+| `/api/referral/register` | POST | Vincula código de referral ao novo usuário (chamado no registro) |
+| `/api/admin/referrals` | GET | Lista todas as indicações (admin) |
+| `/api/admin/referrals` | PATCH | Marca indicação como paga/rejeitada (admin) |
+| `/api/admin/referrals/campaign` | GET | Retorna configuração da campanha (admin) |
+| `/api/admin/referrals/campaign` | PATCH | Ativa/desativa campanha, altera recompensa (admin) |
+
+### Tabelas do Banco
+
+- **ReferralCode**: Código único por usuário PRO (`userId @unique`, `code @unique`)
+- **Referral**: Registro de quem indicou quem (`referredId @unique`, status: pending → converted → paid)
+- **ReferralCampaign**: Configuração da campanha (active, rewardAmount, maxReferrals, datas)
