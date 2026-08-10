@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AdSense } from "@/components/adsense";
+import { SOCIAL_LINKS } from "@/components/social-icons";
 import {
   Dialog,
   DialogContent,
@@ -621,7 +622,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== 6. PLANOS (3 tiers: mensal / anual / vitalício) ===== */}
+      {/* ===== 6. PLANOS (gratuito + 3 tiers: mensal / anual / vitalício) ===== */}
       <section id="planos" className="bg-white py-16 text-zinc-900 md:py-24">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
@@ -643,13 +644,55 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          {/* Grid de 3 planos */}
+          {/* Plano Gratuito — destaque para trial */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-60px" }}
+            className="mx-auto mt-8 max-w-3xl rounded-2xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-white p-5"
+          >
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+              <div className="text-center sm:text-left">
+                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                  Plano gratuito
+                </p>
+                <p className="mt-1 text-3xl font-black text-zinc-900">
+                  R$ 0
+                  <span className="text-sm font-normal text-zinc-500">
+                    {" "}para sempre
+                  </span>
+                </p>
+                <p className="mt-1 text-xs text-zinc-600">
+                  <strong className="text-emerald-600">14 dias de trial grátis</strong> com
+                  acesso total ao app. Depois: 5 lançamentos/dia grátis para sempre.
+                </p>
+              </div>
+              <a
+                href="/app"
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl border-2 border-emerald-500 bg-white px-6 py-3 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-50"
+              >
+                Começar grátis
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Separador */}
+          <div className="mx-auto mt-6 flex max-w-3xl items-center gap-3">
+            <div className="h-px flex-1 bg-zinc-200" />
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+              Quer mais? Faça upgrade para PRO
+            </p>
+            <div className="h-px flex-1 bg-zinc-200" />
+          </div>
+
+          {/* Grid de 3 planos pagos */}
           <motion.div
             variants={containerStagger}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-60px" }}
-            className="mx-auto mt-10 grid max-w-4xl gap-4 md:grid-cols-3"
+            className="mx-auto mt-6 grid max-w-4xl gap-4 md:grid-cols-3"
           >
             {/* MENSAL */}
             <motion.div
@@ -996,49 +1039,29 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* Coluna 4 — Redes sociais */}
+            {/* Coluna 4 — Redes sociais (ícones SVG temáticos) */}
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
                 Siga-nos
               </p>
               <div className="mt-4 flex gap-3">
-                <a
-                  href="https://instagram.com/meucorre"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg transition-all hover:border-neon hover:text-neon"
-                  title="Instagram"
-                >
-                  📷
-                </a>
-                <a
-                  href="https://tiktok.com/@meucorre"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg transition-all hover:border-neon hover:text-neon"
-                  title="TikTok"
-                >
-                  🎵
-                </a>
-                <a
-                  href="https://youtube.com/@meucorre"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg transition-all hover:border-neon hover:text-neon"
-                  title="YouTube"
-                >
-                  ▶️
-                </a>
-                <a
-                  href="https://facebook.com/meucorre"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg transition-all hover:border-neon hover:text-neon"
-                  title="Facebook"
-                >
-                  👍
-                </a>
+                {SOCIAL_LINKS.map(({ name, href, Icon, label }) => (
+                  <a
+                    key={name}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-400 transition-all hover:border-neon hover:text-neon"
+                    title={label}
+                    aria-label={name}
+                  >
+                    <Icon size={18} />
+                  </a>
+                ))}
               </div>
+              <p className="mt-2 text-[9px] text-zinc-600">
+                Capacete • Bicicleta • Moto • Carro
+              </p>
             </div>
           </div>
 
