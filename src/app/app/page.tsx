@@ -120,55 +120,52 @@ function HomeContent() {
   const { status: syncStatus, syncNow } = useSync();
 
   // Verifica status PRO ao montar:
-  // 1. Tenta licença no localStorage (PRO ativado manualmente)
-  // 2. Se não tem, busca sessão de usuário logado (login via /login)
+  // 1. Busca sessão de usuário logado (login via /login)
   //    Se user.isPro, salva licenseKey no localStorage e marca como PRO
+  // 2. Se não logado, tenta licença no localStorage (PRO ativado manualmente
+  //    sem login — dispositivo shared)
   // Aproveitamos o mesmo fetch para guardar o nome do usuário (saudação).
   // CRÍTICO: se a sessão não bater com o meucorre_user_id do localStorage,
   // chamamos switchDb imediatamente para evitar exibir dados do usuário
   // anterior (race condition pós-login).
   useEffect(() => {
     (async () => {
-      // 1. Licença no localStorage (PRO ativado manualmente)
-      const localPro = await checkProStatus();
-      if (localPro) {
-        setIsPro(true);
-        try {
-          const res = await fetch("/api/auth/me");
-          const data = await res.json();
-          if (data.user?.name) setUserName(data.user.name);
-          // Mesmo com licença local, sincroniza o DB se a sessão divergir
-          if (data.user?.id) {
-            const storedUid = localStorage.getItem("meucorre_user_id");
-            if (storedUid !== data.user.id) {
-              switchDb(data.user.id);
-            }
-          }
-        } catch {
-          // offline ou não logado
-        }
-        return;
-      }
-      // 2. Sessão de usuário (login via email/senha)
+      // 1. PRIMEIRO verifica sessão de usuário (login via email/senha)
+      //    Isso garante que a licença do localStorage não seja de outro usuário.
       try {
         const res = await fetch("/api/auth/me");
         const data = await res.json();
         if (data.user?.name) setUserName(data.user.name);
-        if (data.user?.isPro && data.user.licenseKey) {
-          localStorage.setItem("meucorre_license", data.user.licenseKey);
-          setIsPro(true);
-        }
-        // CRÍTICO: sincroniza DB com a sessão ativa.
-        // Se o usuário logado não bate com o meucorre_user_id do localStorage,
-        // trocamos o DB imediatamente para evitar exibir dados de outro usuário.
+
+        // Sincroniza DB com a sessão ativa
         if (data.user?.id) {
           const storedUid = localStorage.getItem("meucorre_user_id");
           if (storedUid !== data.user.id) {
             switchDb(data.user.id);
           }
         }
+
+        if (data.user?.isPro && data.user.licenseKey) {
+          // Usuário logado É PRO no servidor — salva licença e marca como PRO
+          localStorage.setItem("meucorre_license", data.user.licenseKey);
+          setIsPro(true);
+          return;
+        } else {
+          // Usuário logado NÃO é PRO — remove licença do localStorage
+          // (pode ser de um usuário anterior que esqueceu de fazer logout)
+          localStorage.removeItem("meucorre_license");
+          setIsPro(false);
+          return;
+        }
       } catch {
-        // offline ou não logado — continua free
+        // offline ou não logado — continua para passo 2
+      }
+
+      // 2. Se não está logado, tenta licença no localStorage (modo offline)
+      //    Só confia na licença local se não há sessão de usuário (guest mode)
+      const localPro = await checkProStatus();
+      if (localPro) {
+        setIsPro(true);
       }
     })();
   }, []);
