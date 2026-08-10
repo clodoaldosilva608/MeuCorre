@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
 
 // PATCH /api/referral/pix — cadastra/atualiza chave PIX do usuário
-// Body: { pixKey: "email@exemplo.com" | "(11) 99999-9999" | "123.456.789-00" | "chave-aleatoria" }
+// Salva no ReferralCode (sempre existe) e propaga para Referrals converted
+// Body: { pixKey: "email@exemplo.com" | "(11) 99999-9999" | "chave-aleatoria" }
 export async function PATCH(req: NextRequest) {
   const session = await getUserSession();
   if (!session) {
@@ -25,11 +26,22 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Chave PIX muito longa (máximo 140 caracteres)" }, { status: 400 });
   }
 
-  // Atualiza a chave PIX em todas as referrals convertidas ainda não pagas
+  // 1. Salva no ReferralCode (persiste mesmo sem referrals convertidas)
+  await prisma.referralCode.upsert({
+    where: { userId: session.sub },
+    create: {
+      userId: session.sub,
+      code: `MEUCORRE-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+      pixKey,
+    },
+    update: { pixKey },
+  });
+
+  // 2. Propaga para Referrals converted (para admin ver a PIX ao pagar)
   const result = await prisma.referral.updateMany({
     where: {
       referrerId: session.sub,
-      status: "converted", // só atualiza as que estão aguardando pagamento
+      status: "converted",
     },
     data: { payoutPixKey: pixKey },
   });
@@ -48,17 +60,13 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  // Busca a última chave PIX usada (de referrals converted)
-  const referral = await prisma.referral.findFirst({
-    where: {
-      referrerId: session.sub,
-      payoutPixKey: { not: null },
-    },
-    orderBy: { updatedAt: "desc" },
-    select: { payoutPixKey: true },
+  // Busca do ReferralCode (onde persiste)
+  const referralCode = await prisma.referralCode.findUnique({
+    where: { userId: session.sub },
+    select: { pixKey: true },
   });
 
   return NextResponse.json({
-    pixKey: referral?.payoutPixKey || null,
+    pixKey: referralCode?.pixKey || null,
   });
 }

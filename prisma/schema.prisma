@@ -230,10 +230,11 @@ model AdminAction {
 // Cada usuário PRO recebe um código de indicação único
 model ReferralCode {
   id        String   @id @default(cuid())
-  userId    String   @unique // dono do código ( usuário PRO)
+  userId    String   @unique // dono do código
   code      String   @unique // ex: "MEUCORRE-ABC123"
   clicks    Int      @default(0) // quantas vezes o link foi clicado
   active    Boolean  @default(true)
+  pixKey    String?  // chave PIX do referrer para receber recompensas
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
