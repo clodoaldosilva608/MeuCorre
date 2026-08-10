@@ -584,11 +584,13 @@ function HomeContent() {
   };
 
   const openNewDelivery = () => {
+    if (isDemoMode) return; // bloqueado em demo
     setEditingDelivery(null);
     setDeliveryFormOpen(true);
   };
 
   const openNewExpense = () => {
+    if (isDemoMode) return; // bloqueado em demo
     setEditingExpense(null);
     setExpenseFormOpen(true);
   };
@@ -602,15 +604,15 @@ function HomeContent() {
 
       <Header
         isPro={isPro}
-        onExportJSON={handleExportJSON}
-        onExportCSV={handleExportCSV}
-        onClearAll={() => setConfirmClear(true)}
-        onOpenApps={() => setAppManagerOpen(true)}
-        onOpenCapture={() => setCaptureOpen(true)}
-        onOpenLicense={() => setLicenseOpen(true)}
-        onOpenShare={() => setShareOpen(true)}
+        onExportJSON={isDemoMode ? (() => {}) : handleExportJSON}
+        onExportCSV={isDemoMode ? (() => {}) : handleExportCSV}
+        onClearAll={isDemoMode ? (() => {}) : () => setConfirmClear(true)}
+        onOpenApps={isDemoMode ? (() => {}) : () => setAppManagerOpen(true)}
+        onOpenCapture={isDemoMode ? (() => {}) : () => setCaptureOpen(true)}
+        onOpenLicense={isDemoMode ? (() => {}) : () => setLicenseOpen(true)}
+        onOpenShare={isDemoMode ? (() => {}) : () => setShareOpen(true)}
         syncStatus={syncStatus}
-        onLogout={handleLogout}
+        onLogout={isDemoMode ? (() => {}) : handleLogout}
       />
 
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">
@@ -783,10 +785,14 @@ function HomeContent() {
             <DeliveryList
               deliveries={filteredDeliveries}
               onEdit={(d) => {
+                if (isDemoMode) return; // bloqueado em demo
                 setEditingDelivery(d);
                 setDeliveryFormOpen(true);
               }}
-              onDelete={(d) => setConfirmDeleteDelivery(d)}
+              onDelete={(d) => {
+                if (isDemoMode) return; // bloqueado em demo
+                setConfirmDeleteDelivery(d);
+              }}
               apps={apps}
             />
           </>
@@ -847,10 +853,14 @@ function HomeContent() {
             <ExpenseList
               expenses={filteredExpenses}
               onEdit={(e) => {
+                if (isDemoMode) return; // bloqueado em demo
                 setEditingExpense(e);
                 setExpenseFormOpen(true);
               }}
-              onDelete={(e) => setConfirmDeleteExpense(e)}
+              onDelete={(e) => {
+                if (isDemoMode) return; // bloqueado em demo
+                setConfirmDeleteExpense(e);
+              }}
             />
           </>
         )}
@@ -883,12 +893,35 @@ function HomeContent() {
         </footer>
       </main>
 
-      {/* FAB muda de cor baseado na tab */}
-      <Fab
-        onClick={activeTab === "despesas" ? openNewExpense : openNewDelivery}
-        variant={activeTab === "despesas" ? "danger" : "primary"}
-        label={activeTab === "despesas" ? "Nova despesa" : "Nova corrida"}
-      />
+      {/* FAB — oculto em modo demo (não pode adicionar corridas) */}
+      {!isDemoMode && (
+        <Fab
+          onClick={activeTab === "despesas" ? openNewExpense : openNewDelivery}
+          variant={activeTab === "despesas" ? "danger" : "primary"}
+          label={activeTab === "despesas" ? "Nova despesa" : "Nova corrida"}
+        />
+      )}
+
+      {/* Overlay de bloqueio no modo demo — APENAS para o header.
+          Cobre o header (topo) com pointer-events auto para impedir
+          cliques no menu, botões de exportar, etc.
+          O conteúdo (main) fica clicável para scroll mas os botões
+          internos já estão desabilitados via isDemoMode nos callbacks.
+          O bottom-nav fica livre para trocar de aba. */}
+      {isDemoMode && (
+        <div
+          className="fixed left-0 right-0 top-0 z-40"
+          style={{
+            height: "52px", // altura do header
+            background: "transparent",
+            pointerEvents: "auto",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        />
+      )}
 
       <BottomNav
         active={activeTab}
