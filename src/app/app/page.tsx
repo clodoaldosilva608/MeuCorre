@@ -211,6 +211,7 @@ function HomeContent() {
   // ===== Modo demo: listener para trocar abas via postMessage =====
   // A landing page envia { type: "meucorre-demo-tab", tab: "corridas"|"despesas"|... }
   // para o iframe controlar qual aba está visível na demo automática.
+  // Também pré-popula o IndexedDB com dados de demonstração se vazio.
   useEffect(() => {
     if (!isDemoMode) return;
 
@@ -220,10 +221,36 @@ function HomeContent() {
     style.textContent = `
       ::-webkit-scrollbar { display: none !important; }
       html, body { overflow-x: hidden !important; scrollbar-width: none !important; -ms-overflow-style: none !important; }
-      /* Garante que o conteúdo começa abaixo do notch */
       body { padding-top: 0 !important; }
     `;
     document.head.appendChild(style);
+
+    // Pré-popula dados de demonstração no IndexedDB se vazio
+    (async () => {
+      try {
+        await db.open();
+        const count = await db.deliveries.count();
+        if (count === 0) {
+          // Dados de demo: 5 corridas de apps diferentes
+          const today = new Date().toISOString().slice(0, 10);
+          const now = Date.now();
+          await db.deliveries.bulkAdd([
+            { id: 1, app: "iFood", value: 25, km: 8.5, date: today, timestamp: now - 50000, notes: "Centro → Vila Nova" },
+            { id: 2, app: "99Food", value: 10, km: 3.2, date: today, timestamp: now - 40000, notes: "Centro → Jardim Europa" },
+            { id: 3, app: "Lalamove", value: 20, km: 12.0, date: today, timestamp: now - 30000, notes: "Industrial → Centro" },
+            { id: 4, app: "Rappi", value: 15, km: 5.5, date: today, timestamp: now - 20000, notes: "Vila Mariana → Centro" },
+            { id: 5, app: "iFood", value: 30, km: 10.0, date: today, timestamp: now - 10000, notes: "Centro → Pinheiros" },
+          ]);
+          await db.expenses.bulkAdd([
+            { id: 1, category: "combustivel", value: 20, description: "Gasolina — 2L", date: today, timestamp: now - 45000 },
+            { id: 2, category: "alimentacao", value: 5, description: "Almoço express", date: today, timestamp: now - 35000 },
+          ]);
+          console.log("[demo] Dados de demonstração inseridos no IndexedDB");
+        }
+      } catch (err) {
+        console.warn("[demo] Erro ao inserir dados demo:", err);
+      }
+    })();
 
     const handler = (event: MessageEvent) => {
       if (event.data?.type === "meucorre-demo-tab" && event.data.tab) {
