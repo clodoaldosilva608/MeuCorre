@@ -179,20 +179,20 @@ function HomeContent() {
 
   // ===== Referral: busca dados da campanha quando usuário é PRO =====
   useEffect(() => {
-    if (!isPro) {
-      setReferralData(null);
-      return;
-    }
+    if (!isPro) return;
+    let cancelled = false;
     fetch("/api/referral/code")
       .then((r) => r.json())
       .then((data) => {
+        if (cancelled) return;
         if (data.active && data.code) {
           setReferralData(data);
-        } else {
-          setReferralData(null);
         }
       })
-      .catch(() => setReferralData(null));
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [isPro]);
 
   // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)

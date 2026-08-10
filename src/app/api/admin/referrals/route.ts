@@ -36,13 +36,14 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // Busca nomes dos referrers
+  // Busca nomes e emails dos referrers
   const referrerIds = [...new Set(referrals.map((r) => r.referrerId))];
   const referrers = await prisma.user.findMany({
     where: { id: { in: referrerIds } },
     select: { id: true, name: true, email: true },
   });
   const referrerMap = new Map(referrers.map((r) => [r.id, r]));
+
 
   // Stats
   const allReferrals = await prisma.referral.groupBy({
