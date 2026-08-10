@@ -4,7 +4,7 @@ import { getUserSession } from "@/lib/user-auth";
 import crypto from "crypto";
 
 // GET /api/referral/code — retorna o código de referral do usuário logado
-// (cria automaticamente se não existir, apenas para usuários PRO)
+// (cria automaticamente se não existir, para TODOS os usuários logados)
 export async function GET() {
   const session = await getUserSession();
   if (!session) {
@@ -23,7 +23,9 @@ export async function GET() {
     });
   }
 
-  // Busca ou cria código de referral (apenas PRO)
+  // Busca ou cria código de referral para QUALQUER usuário logado
+  // (não apenas PRO — free users também podem indicar, mas só ganham
+  // a recompensa se eles mesmos forem PRO quando o indicado converter)
   let referralCode = await prisma.referralCode.findUnique({
     where: { userId: session.sub },
   });

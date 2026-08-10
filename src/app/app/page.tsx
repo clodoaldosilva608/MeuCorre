@@ -25,6 +25,7 @@ import { LicenseDialog } from "@/components/meucorre/license-dialog";
 import { PromoPopup } from "@/components/meucorre/promo-popup";
 import { SharePopup } from "@/components/meucorre/share-popup";
 import { FeedbackPopup } from "@/components/meucorre/feedback-popup";
+import { ReferralBannerRotator } from "@/components/meucorre/referral-banner-rotator";
 import { useAds, activateLicense, checkProStatus } from "@/hooks/use-ads";
 import { db, switchDb } from "@/lib/db";
 import {
@@ -177,9 +178,8 @@ function HomeContent() {
     })();
   }, []);
 
-  // ===== Referral: busca dados da campanha quando usuário é PRO =====
+  // ===== Referral: busca dados da campanha para todos os usuários logados =====
   useEffect(() => {
-    if (!isPro) return;
     let cancelled = false;
     fetch("/api/referral/code")
       .then((r) => r.json())
@@ -193,7 +193,7 @@ function HomeContent() {
     return () => {
       cancelled = true;
     };
-  }, [isPro]);
+  }, []);
 
   // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
   useEffect(() => {
@@ -594,42 +594,60 @@ function HomeContent() {
         )}
 
         {/* ===== Banner de Referral "Indique e Ganhe" =====
-            Visível apenas para usuários PRO quando a campanha está ativa.
-            Mostra recompensa (R$5), total ganho e botão para compartilhar. */}
-        {isPro && referralData && (
-          <div className="overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <Gift className="h-4 w-4 shrink-0 text-emerald-400" />
-                  <span className="text-sm font-bold text-emerald-400">
-                    Indique e Ganhe R$ {referralData.rewardAmount.toFixed(2)}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-zinc-400">
-                  Cada amigo que virar PRO = R$ {referralData.rewardAmount.toFixed(2)} pra você via PIX
-                </p>
-                {referralData.stats.total > 0 && (
-                  <div className="mt-2 flex gap-3 text-[11px]">
-                    <span className="text-zinc-500">
-                      Indicados: <strong className="text-zinc-300">{referralData.stats.total}</strong>
-                    </span>
-                    <span className="text-zinc-500">
-                      Convertidos: <strong className="text-emerald-400">{referralData.stats.converted}</strong>
-                    </span>
-                    <span className="text-zinc-500">
-                      Ganho: <strong className="text-emerald-400">R$ {referralData.stats.totalEarned.toFixed(2)}</strong>
+            Visível para TODOS os usuários logados quando a campanha está ativa.
+            Inclui banner rotativo, recompensa, stats e aviso de banimento. */}
+        {referralData && (
+          <div className="overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5">
+            {/* Banner rotativo (muda a cada 5 segundos) */}
+            <ReferralBannerRotator onShare={() => setShareOpen(true)} />
+
+            {/* Info + Stats */}
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <Gift className="h-4 w-4 shrink-0 text-emerald-400" />
+                    <span className="text-sm font-bold text-emerald-400">
+                      Indique e Ganhe R$ {referralData.rewardAmount.toFixed(2)}
                     </span>
                   </div>
-                )}
+                  <p className="mt-1 text-xs text-zinc-400">
+                    Cada amigo que virar PRO = R$ {referralData.rewardAmount.toFixed(2)} pra você via PIX
+                  </p>
+                  {!isPro && (
+                    <p className="mt-0.5 text-[11px] text-amber-400">
+                      ⚠️ Você precisa ser PRO para receber a recompensa.{" "}
+                      <button onClick={() => setLicenseOpen(true)} className="underline hover:text-amber-300">
+                        Virar PRO →
+                      </button>
+                    </p>
+                  )}
+                  {referralData.stats.total > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-3 text-[11px]">
+                      <span className="text-zinc-500">
+                        Indicados: <strong className="text-zinc-300">{referralData.stats.total}</strong>
+                      </span>
+                      <span className="text-zinc-500">
+                        Convertidos: <strong className="text-emerald-400">{referralData.stats.converted}</strong>
+                      </span>
+                      <span className="text-zinc-500">
+                        Ganho: <strong className="text-emerald-400">R$ {referralData.stats.totalEarned.toFixed(2)}</strong>
+                      </span>
+                    </div>
+                  )}
+                  {/* Aviso de banimento */}
+                  <p className="mt-2 text-[10px] text-red-400/70">
+                    🚫 Fraude (auto-indicação, contas falsas) = banimento permanente e perda de recompensas.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShareOpen(true)}
+                  className="shrink-0 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-zinc-950 transition-colors hover:bg-emerald-400"
+                >
+                  <Share2 className="mr-1 inline h-3.5 w-3.5" />
+                  Indicar
+                </button>
               </div>
-              <button
-                onClick={() => setShareOpen(true)}
-                className="shrink-0 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-zinc-950 transition-colors hover:bg-emerald-400"
-              >
-                <Share2 className="mr-1 inline h-3.5 w-3.5" />
-                Indicar
-              </button>
             </div>
           </div>
         )}
