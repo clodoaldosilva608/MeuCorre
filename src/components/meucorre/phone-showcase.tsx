@@ -1,167 +1,260 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ===== iPhone Showcase com Carousel Animado =====
+// ===== iPhone 3D Showcase com Demo Interativa =====
 //
-// Mostra um mockup de iPhone com screenshots do dashboard do MeuCorre
-// rotacionando automaticamente a cada 3.5 segundos.
-// Usuário pode navegar manualmente via dots ou swipe.
+// Mostra um mockup de iPhone 3D realista com 2 modos:
+//
+// 1. MODO DEMO (automático): navega pelas abas do app automaticamente
+//    a cada 6 segundos, simulando uso real.
+//
+// 2. MODO INTERATIVO: usuário clica em "Toque para experimentar" e o
+//    iPhone carrega o /app real via iframe. O usuário pode interagir
+//    com o app de verdade — adicionar corridas, ver gráficos, etc.
+//
+// O iframe carrega /app?demo=1 que suprime popups e já vem com dados
+// de exemplo pré-carregados.
 
-interface Slide {
-  src: string;
-  title: string;
-  desc: string;
-}
-
-const SLIDES: Slide[] = [
-  {
-    src: "/screenshots/07-dashboard-corridas.png",
-    title: "Corridas",
-    desc: "5 corridas de iFood, 99Food, Lalamove e Rappi — total, lucro líquido e km",
-  },
-  {
-    src: "/screenshots/08-dashboard-despesas.png",
-    title: "Despesas",
-    desc: "Gasolina, alimentação, manutenção — cada real gasto registrado",
-  },
-  {
-    src: "/screenshots/09-dashboard-graficos.png",
-    title: "Gráficos",
-    desc: "Veja pra onde seu dinheiro vai: por app, por dia, por categoria",
-  },
-  {
-    src: "/screenshots/13-dashboard-ofertas.png",
-    title: "Ofertas",
-    desc: "Descontos exclusivos em produtos para entregadores",
-  },
+const DEMO_STEPS = [
+  { tab: "corridas", title: "Corridas", desc: "5 corridas de iFood, 99Food, Lalamove e Rappi — total, lucro líquido e km rodado" },
+  { tab: "despesas", title: "Despesas", desc: "Gasolina, alimentação, manutenção — cada real gasto registrado" },
+  { tab: "graficos", title: "Gráficos", desc: "Veja pra onde seu dinheiro vai: por app, por dia, por categoria" },
+  { tab: "ofertas", title: "Ofertas", desc: "Descontos exclusivos em produtos selecionados para entregadores" },
 ];
 
-const AUTOPLAY_MS = 3500;
+const AUTOPLAY_MS = 6000; // 6 segundos por slide (mais lento)
 
 export function PhoneShowcase() {
-  const [current, setCurrent] = useState(0);
+  const [mode, setMode] = useState<"demo" | "interactive">("demo");
+  const [currentStep, setCurrentStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const next = useCallback(() => {
-    setCurrent((c) => (c + 1) % SLIDES.length);
+  const nextStep = useCallback(() => {
+    setCurrentStep((s) => (s + 1) % DEMO_STEPS.length);
   }, []);
 
-  const prev = useCallback(() => {
-    setCurrent((c) => (c - 1 + SLIDES.length) % SLIDES.length);
-  }, []);
-
-  // Autoplay
+  // Autoplay apenas no modo demo
   useEffect(() => {
-    if (isPaused) return;
-    const timer = setInterval(next, AUTOPLAY_MS);
+    if (mode !== "demo" || isPaused) return;
+    const timer = setInterval(nextStep, AUTOPLAY_MS);
     return () => clearInterval(timer);
-  }, [next, isPaused]);
+  }, [nextStep, mode, isPaused]);
+
+  // No modo demo, envia mensagem para o iframe trocar de aba
+  useEffect(() => {
+    if (mode !== "demo") return;
+    const iframe = iframeRef.current;
+    if (!iframe || !iframe.contentWindow) return;
+
+    try {
+      iframe.contentWindow.postMessage(
+        { type: "meucorre-demo-tab", tab: DEMO_STEPS[currentStep].tab },
+        "*",
+      );
+    } catch {
+      // iframe pode não estar pronto ainda
+    }
+  }, [currentStep, mode]);
+
+  const handleMouseEnter = () => {
+    if (mode === "demo") setIsPaused(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (mode === "demo") setIsPaused(false);
+  };
 
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* iPhone Mockup */}
+      {/* Badge de modo */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setMode("demo")}
+          className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+            mode === "demo"
+              ? "bg-neon text-zinc-950"
+              : "border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          ▶ Demo automática
+        </button>
+        <button
+          onClick={() => setMode("interactive")}
+          className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+            mode === "interactive"
+              ? "bg-neon text-zinc-950"
+              : "border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          👆 Toque para experimentar
+        </button>
+      </div>
+
+      {/* iPhone 3D Mockup */}
       <div
         className="relative"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
+        style={{ perspective: "1200px" }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Glowing aura behind phone */}
-        <div className="pointer-events-none absolute inset-0 -z-10 scale-110 rounded-[3rem] bg-neon/10 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 -z-10 scale-125 rounded-[3rem] bg-neon/15 blur-3xl" />
 
-        {/* Phone frame */}
-        <div className="relative mx-auto w-[280px] rounded-[2.5rem] border-[10px] border-zinc-800 bg-zinc-950 shadow-2xl shadow-neon/10 sm:w-[320px]">
-          {/* Notch */}
-          <div className="absolute left-1/2 top-0 z-20 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-zinc-800" />
+        {/* Phone container com rotação 3D sutil */}
+        <motion.div
+          className="relative"
+          style={{
+            transformStyle: "preserve-3d",
+            transform: "rotateY(-8deg) rotateX(3deg)",
+          }}
+          whileHover={{
+            rotateY: 0,
+            rotateX: 0,
+            transition: { duration: 0.5, ease: "easeOut" },
+          }}
+        >
+          {/* Phone frame — titânio escuro com bordas arredondadas */}
+          <div className="relative mx-auto w-[300px] rounded-[3rem] border-[12px] border-zinc-700 bg-zinc-950 shadow-2xl sm:w-[340px]" style={{
+            boxShadow: "0 25px 60px -15px rgba(0,0,0,0.8), 0 0 30px rgba(57,255,20,0.1), inset 0 0 2px rgba(255,255,255,0.1)",
+          }}>
+            {/* Reflexo metálico na borda */}
+            <div className="pointer-events-none absolute inset-0 rounded-[3rem] ring-1 ring-inset ring-white/5" />
 
-          {/* Screen */}
-          <div className="relative aspect-[9/19.5] overflow-hidden rounded-[1.8rem] bg-zinc-950">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={current}
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="absolute inset-0"
-              >
-                { }
-                <img
-                  src={SLIDES[current].src}
-                  alt={SLIDES[current].title}
-                  className="h-full w-full object-cover object-top"
-                />
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Status bar overlay */}
-            <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 flex items-center justify-between px-4 pt-2 text-[8px] font-semibold text-white">
-              <span>{new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-              <span>100%</span>
+            {/* Dynamic Island (notch moderno) */}
+            <div className="absolute left-1/2 top-2 z-30 h-7 w-28 -translate-x-1/2 rounded-full bg-zinc-900 ring-1 ring-zinc-800">
+              {/* Camera dot */}
+              <div className="absolute right-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-zinc-700 ring-1 ring-zinc-600" />
             </div>
-          </div>
-        </div>
 
-        {/* Side buttons (decorative) */}
-        <div className="absolute -left-[10px] top-24 h-12 w-[3px] rounded-l bg-zinc-700" />
-        <div className="absolute -left-[10px] top-40 h-16 w-[3px] rounded-l bg-zinc-700" />
-        <div className="absolute -right-[10px] top-32 h-20 w-[3px] rounded-r bg-zinc-700" />
+            {/* Screen */}
+            <div className="relative aspect-[9/19.5] overflow-hidden rounded-[2.2rem] bg-zinc-950">
+              {/* Iframe com o /app real */}
+              <iframe
+                ref={iframeRef}
+                src="/app?demo=1"
+                className="absolute inset-0 h-full w-full"
+                style={{
+                  border: "none",
+                  // Scale para simular tela de celular
+                  transformOrigin: "top left",
+                }}
+                title="MeuCorre Demo"
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+              />
+
+              {/* Overlay sutil no topo para simular status bar */}
+              <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex h-8 items-center justify-between px-5 text-[9px] font-semibold text-white/80">
+                <span>
+                  {new Date().toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="text-[8px]">▮▮▮</span>
+                  <span>100%</span>
+                </span>
+              </div>
+
+              {/* Indicador de modo demo */}
+              {mode === "demo" && (
+                <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[8px] font-bold uppercase tracking-wider text-neon backdrop-blur-sm">
+                  ● Demo
+                </div>
+              )}
+
+              {/* Overlay "toque para experimentar" quando interativo */}
+              {mode === "interactive" && (
+                <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full bg-neon/20 px-3 py-1 text-[8px] font-bold uppercase tracking-wider text-neon backdrop-blur-sm">
+                  ✋ Interativo
+                </div>
+              )}
+            </div>
+
+            {/* Home indicator (barra inferior) */}
+            <div className="absolute bottom-1.5 left-1/2 z-30 h-1 w-24 -translate-x-1/2 rounded-full bg-zinc-600" />
+          </div>
+
+          {/* Side buttons — volume + power (3D) */}
+          <div className="absolute -left-[12px] top-28 h-10 w-[3px] rounded-l bg-zinc-600 shadow-md" />
+          <div className="absolute -left-[12px] top-40 h-14 w-[3px] rounded-l bg-zinc-600 shadow-md" />
+          <div className="absolute -left-[12px] top-56 h-14 w-[3px] rounded-l bg-zinc-600 shadow-md" />
+          <div className="absolute -right-[12px] top-36 h-20 w-[3px] rounded-r bg-zinc-600 shadow-md" />
+        </motion.div>
       </div>
 
-      {/* Caption + dots */}
-      <div className="text-center">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-          >
+      {/* Caption */}
+      <div className="min-h-[60px] text-center">
+        {mode === "demo" ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <p className="text-sm font-bold text-neon">
+                {DEMO_STEPS[currentStep].title}
+              </p>
+              <p className="mx-auto mt-1 max-w-xs text-xs text-zinc-400">
+                {DEMO_STEPS[currentStep].desc}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <div>
             <p className="text-sm font-bold text-neon">
-              {SLIDES[current].title}
+              👆 App real, interativo
             </p>
             <p className="mx-auto mt-1 max-w-xs text-xs text-zinc-400">
-              {SLIDES[current].desc}
+              Toque nas abas, adicione corridas, explore o app de verdade
             </p>
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        )}
 
-        {/* Dots */}
-        <div className="mt-4 flex justify-center gap-2">
-          {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={`h-2 rounded-full transition-all ${
-                i === current
-                  ? "w-6 bg-neon"
-                  : "w-2 bg-zinc-700 hover:bg-zinc-600"
-              }`}
-              aria-label={`Slide ${i + 1}`}
-            />
-          ))}
+        {/* Dots (apenas no modo demo) */}
+        {mode === "demo" && (
+          <div className="mt-4 flex justify-center gap-2">
+            {DEMO_STEPS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentStep(i)}
+                className={`h-2 rounded-full transition-all ${
+                  i === currentStep
+                    ? "w-6 bg-neon"
+                    : "w-2 bg-zinc-700 hover:bg-zinc-600"
+                }`}
+                aria-label={`Slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Nav arrows (apenas no modo demo, desktop) */}
+      {mode === "demo" && (
+        <div className="hidden gap-3 sm:flex">
+          <button
+            onClick={() => setCurrentStep((s) => (s - 1 + DEMO_STEPS.length) % DEMO_STEPS.length)}
+            className="grid h-9 w-9 place-items-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-400 transition-all hover:border-neon hover:text-neon"
+            aria-label="Anterior"
+          >
+            ←
+          </button>
+          <button
+            onClick={nextStep}
+            className="grid h-9 w-9 place-items-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-400 transition-all hover:border-neon hover:text-neon"
+            aria-label="Próximo"
+          >
+            →
+          </button>
         </div>
-      </div>
-
-      {/* Nav arrows (desktop only) */}
-      <div className="hidden gap-3 sm:flex">
-        <button
-          onClick={prev}
-          className="grid h-9 w-9 place-items-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-400 transition-all hover:border-neon hover:text-neon"
-          aria-label="Anterior"
-        >
-          ←
-        </button>
-        <button
-          onClick={next}
-          className="grid h-9 w-9 place-items-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-400 transition-all hover:border-neon hover:text-neon"
-          aria-label="Próximo"
-        >
-          →
-        </button>
-      </div>
+      )}
     </div>
   );
 }

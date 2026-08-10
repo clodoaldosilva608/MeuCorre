@@ -89,12 +89,18 @@ function HomeContent() {
   // Auto-ativação via ?license=xxx (vindo da página /obrigado)
   const searchParams = useSearchParams();
 
-  // Splash some por ~1.4s no primeiro carregamento
-  const [showSplash, setShowSplash] = useState(true);
+  // ===== Modo demo (iframe da landing page) =====
+  // Quando ?demo=1, suprime splash, popups e permite controle via postMessage.
+  // A landing page usa isso para mostrar o app rodando dentro do iPhone mockup.
+  const isDemoMode = searchParams?.get("demo") === "1";
+
+  // Splash some por ~1.4s no primeiro carregamento (0ms em demo mode)
+  const [showSplash, setShowSplash] = useState(!isDemoMode);
   useEffect(() => {
+    if (isDemoMode) return;
     const t = setTimeout(() => setShowSplash(false), 1400);
     return () => clearTimeout(t);
-  }, []);
+  }, [isDemoMode]);
 
   const [period, setPeriod] = useState<Period>("hoje");
   const [activeTab, setActiveTab] = useState<Tab>("corridas");
@@ -202,24 +208,45 @@ function HomeContent() {
     };
   }, []);
 
-  // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
+  // ===== Modo demo: listener para trocar abas via postMessage =====
+  // A landing page envia { type: "meucorre-demo-tab", tab: "corridas"|"despesas"|... }
+  // para o iframe controlar qual aba está visível na demo automática.
   useEffect(() => {
+    if (!isDemoMode) return;
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "meucorre-demo-tab" && event.data.tab) {
+        const validTabs: Tab[] = ["corridas", "despesas", "graficos", "ofertas"];
+        if (validTabs.includes(event.data.tab)) {
+          setActiveTab(event.data.tab);
+        }
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [isDemoMode]);
+
+  // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
+  // Suprimido em modo demo para não interferir na apresentação.
+  useEffect(() => {
+    if (isDemoMode) return; // sem popups em demo
     if (!showSplash && shouldShowPromoPopup(isPro)) {
       const t = setTimeout(() => setPromoOpen(true), 800);
       return () => clearTimeout(t);
     }
-  }, [showSplash, isPro]);
+  }, [showSplash, isPro, isDemoMode]);
 
   // Pop-up "Compartilhe com amigos" — 1x por dia, 6s após promo
   useEffect(() => {
+    if (isDemoMode) return; // sem popups em demo
     if (!showSplash && shouldShowSharePopup(isPro) && !promoOpen) {
       const t = setTimeout(() => setShareOpen(true), 6000);
       return () => clearTimeout(t);
     }
-  }, [showSplash, isPro, promoOpen]);
+  }, [showSplash, isPro, promoOpen, isDemoMode]);
 
   // Pop-up de feedback — após 3+ corridas, 1x por mês
   useEffect(() => {
+    if (isDemoMode) return; // sem popups em demo
     if (!showSplash) {
       shouldShowFeedbackPopup().then((show) => {
         if (show) {
@@ -507,8 +534,8 @@ function HomeContent() {
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
       <SplashScreen visible={showSplash}>
-        {/* Splash patrocinado (apenas se não for PRO e houver anúncio do tipo splash) */}
-        {!isPro && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
+        {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
+        {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
       </SplashScreen>
 
       <Header
