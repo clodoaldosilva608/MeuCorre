@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Clock, AlertCircle, Gift, Share2 } from "lucide-react";
+import { Clock, AlertCircle, Gift, Share2, AlertTriangle } from "lucide-react";
 import { Header } from "@/components/meucorre/header";
 import { SummaryCards } from "@/components/meucorre/summary-cards";
 import { PeriodFilter, periodLabel } from "@/components/meucorre/period-filter";
@@ -26,6 +26,7 @@ import { PromoPopup } from "@/components/meucorre/promo-popup";
 import { SharePopup } from "@/components/meucorre/share-popup";
 import { FeedbackPopup } from "@/components/meucorre/feedback-popup";
 import { ReferralBannerRotator } from "@/components/meucorre/referral-banner-rotator";
+import { PixKeyRegister } from "@/components/meucorre/pix-key-register";
 import { useAds, activateLicense, checkProStatus } from "@/hooks/use-ads";
 import { db, switchDb } from "@/lib/db";
 import {
@@ -595,14 +596,14 @@ function HomeContent() {
 
         {/* ===== Banner de Referral "Indique e Ganhe" =====
             Visível para TODOS os usuários logados quando a campanha está ativa.
-            Inclui banner rotativo, recompensa, stats e aviso de banimento. */}
+            Inclui banner rotativo, recompensa, stats, cadastro de PIX e aviso antifraude. */}
         {referralData && (
           <div className="overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5">
             {/* Banner rotativo (muda a cada 5 segundos) */}
             <ReferralBannerRotator onShare={() => setShareOpen(true)} />
 
-            {/* Info + Stats */}
-            <div className="p-4">
+            {/* Info + Stats + PIX + Antifraude */}
+            <div className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
@@ -635,10 +636,6 @@ function HomeContent() {
                       </span>
                     </div>
                   )}
-                  {/* Aviso de banimento */}
-                  <p className="mt-2 text-[10px] text-red-400/70">
-                    🚫 Fraude (auto-indicação, contas falsas) = banimento permanente e perda de recompensas.
-                  </p>
                 </div>
                 <button
                   onClick={() => setShareOpen(true)}
@@ -647,6 +644,19 @@ function HomeContent() {
                   <Share2 className="mr-1 inline h-3.5 w-3.5" />
                   Indicar
                 </button>
+              </div>
+
+              {/* Cadastro de PIX */}
+              <PixKeyRegister />
+
+              {/* Aviso antifraude detalhado */}
+              <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/5 p-2">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" />
+                <p className="text-[10px] leading-relaxed text-red-300/80">
+                  <strong>Atenção:</strong> Fraude (auto-indicação, contas falsas, indicações forjadas)
+                  resulta em <strong>banimento permanente</strong> da plataforma e perda de todas as
+                  recompensas. Cadastre sua chave PIX para receber — sem PIX cadastrada, o repasse não será feito.
+                </p>
               </div>
             </div>
           </div>

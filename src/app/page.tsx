@@ -753,12 +753,18 @@ export default function LandingPage() {
               </div>
               <span className="font-bold text-emerald-400">MeuCorre</span>
             </div>
-            <nav className="flex items-center gap-5 text-xs">
+            <nav className="flex flex-wrap items-center gap-5 text-xs">
               <a href="/app" className="hover:text-zinc-200">
                 Abrir app
               </a>
               <a href="#planos" className="hover:text-zinc-200">
                 Planos
+              </a>
+              <a href="/termos" className="hover:text-zinc-200">
+                Termos de Uso
+              </a>
+              <a href="/privacidade" className="hover:text-zinc-200">
+                Privacidade
               </a>
               <a href="/admin/login" className="hover:text-zinc-200">
                 Admin
