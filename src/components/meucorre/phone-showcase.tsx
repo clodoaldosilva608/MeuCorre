@@ -160,7 +160,7 @@ export function PhoneShowcase() {
                 </div>
               )}
 
-              {/* Iframe escalado */}
+              {/* Iframe escalado — scrolling=yes para permitir scroll vertical */}
               <iframe
                 ref={iframeRef}
                 src="/app?demo=1"
@@ -176,12 +176,11 @@ export function PhoneShowcase() {
                   overflow: "hidden",
                   scrollbarWidth: "none",
                   msOverflowStyle: "none",
-                  // Garante que cliques funcionem mesmo com transform
                   pointerEvents: "auto",
                 }}
                 title="MeuCorre Demo"
                 loading="lazy"
-                scrolling="no"
+                scrolling="yes"
                 onLoad={() => setIframeLoaded(true)}
                 sandbox="allow-scripts allow-same-origin allow-popups"
               />

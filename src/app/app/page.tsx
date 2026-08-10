@@ -138,6 +138,8 @@ function HomeContent() {
 
   // Status de trial/limite (14 dias grátis + 5 lançamentos/dia após)
   const trialStatus = useTrialStatus(isPro);
+  // No modo demo, useSync não deve tentar sincronizar com o servidor
+  // (poderia puxar dados do usuário real logado). Passamos um flag.
   const { status: syncStatus, syncNow } = useSync();
 
   // Verifica status PRO ao montar:
@@ -149,7 +151,23 @@ function HomeContent() {
   // CRÍTICO: se a sessão não bater com o meucorre_user_id do localStorage,
   // chamamos switchDb imediatamente para evitar exibir dados do usuário
   // anterior (race condition pós-login).
+  //
+  // MODO DEMO: NÃO verifica sessão real. Usa DB isolado 'MeuCorreDB_demo'
+  // e nome fictício 'Carlos Entregador'. Isso garante que a conta real
+  // do usuário NUNCA apareça no iframe da landing page.
   useEffect(() => {
+    if (isDemoMode) {
+      // Modo demo — usa DB isolado e nome fictício
+      // NÃO faz fetch de /api/auth/me (não quer saber se há sessão real)
+      switchDb("demo");
+      // Usa setTimeout para evitar setState síncrono no effect
+      const t = setTimeout(() => {
+        setUserName("Carlos Entregador");
+        setIsPro(false);
+      }, 0);
+      return () => clearTimeout(t);
+    }
+
     (async () => {
       // 1. PRIMEIRO verifica sessão de usuário (login via email/senha)
       //    Isso garante que a licença do localStorage não seja de outro usuário.
@@ -215,13 +233,15 @@ function HomeContent() {
   useEffect(() => {
     if (!isDemoMode) return;
 
-    // Injeta CSS para esconder scrollbars quando embedado em iframe
+    // Injeta CSS para esconder scrollbars mas permitir scroll (touch/wheel)
     const style = document.createElement("style");
     style.id = "demo-mode-css";
     style.textContent = `
-      ::-webkit-scrollbar { display: none !important; }
-      html, body { overflow-x: hidden !important; scrollbar-width: none !important; -ms-overflow-style: none !important; }
-      body { padding-top: 0 !important; }
+      ::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+      html { overflow-x: hidden !important; scrollbar-width: none !important; -ms-overflow-style: none !important; }
+      body { overflow-x: hidden !important; scrollbar-width: none !important; -ms-overflow-style: none !important; padding-top: 0 !important; }
+      /* Permite scroll vertical mas esconde a barra */
+      html, body { overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
     `;
     document.head.appendChild(style);
 
