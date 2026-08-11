@@ -129,26 +129,26 @@ export function RodaCarroIcon({ className = "", size = 20 }: IconProps) {
 export const SOCIAL_LINKS = [
   {
     name: "YouTube",
-    href: "https://youtube.com/@meucorre",
+    href: "https://youtube.com/@meucorre-z4j",
     Icon: CapaceteIcon,
     label: "Capacete — YouTube",
   },
   {
-    name: "Facebook",
-    href: "https://facebook.com/meucorre",
-    Icon: RodaBicicletaIcon,
-    label: "Roda de bicicleta — Facebook",
-  },
-  {
     name: "Instagram",
-    href: "https://instagram.com/meucorre",
+    href: "https://www.instagram.com/meucorr",
     Icon: RodaMotoIcon,
     label: "Roda de moto — Instagram",
   },
   {
     name: "TikTok",
-    href: "https://tiktok.com/@meucorre",
+    href: "https://www.tiktok.com/@meucorr",
     Icon: RodaCarroIcon,
     label: "Roda de carro — TikTok",
+  },
+  {
+    name: "Facebook",
+    href: "https://www.facebook.com/share/1QqGSn22NC/",
+    Icon: RodaBicicletaIcon,
+    label: "Roda de bicicleta — Facebook",
   },
 ];

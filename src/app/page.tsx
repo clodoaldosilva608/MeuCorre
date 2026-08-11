@@ -1014,10 +1014,10 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { src: "/social-post-1.png", label: "Instagram", href: "https://instagram.com/meucorre" },
-              { src: "/social-post-2.png", label: "TikTok", href: "https://tiktok.com/@meucorre" },
-              { src: "/social-post-3.png", label: "TikTok", href: "https://tiktok.com/@meucorre" },
-              { src: "/blog-comparison.png", label: "YouTube", href: "https://youtube.com/@meucorre" },
+              { src: "/social-post-1.png", label: "Instagram", href: "https://www.instagram.com/meucorr" },
+              { src: "/social-post-2.png", label: "TikTok", href: "https://www.tiktok.com/@meucorr" },
+              { src: "/social-post-3.png", label: "TikTok", href: "https://www.tiktok.com/@meucorr" },
+              { src: "/blog-comparison.png", label: "YouTube", href: "https://youtube.com/@meucorre-z4j" },
             ].map((item, i) => (
               <motion.a
                 key={i}
