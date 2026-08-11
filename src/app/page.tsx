@@ -572,6 +572,17 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* AdSense — banner entre depoimento e oferta */}
+      <div className="bg-ink py-4">
+        <div className="mx-auto max-w-3xl px-4">
+          <AdSense
+            slot="2222222222"
+            format="horizontal"
+            className="min-h-[90px] rounded-lg"
+          />
+        </div>
+      </div>
+
       {/* ===== 5. DEPOIMENTO (dark) ===== */}
       <section className="bg-ink py-16 text-white md:py-20">
         <div className="mx-auto max-w-3xl px-4">
@@ -977,6 +988,17 @@ export default function LandingPage() {
           </p>
         </motion.div>
       </section>
+
+      {/* AdSense — banner antes do footer */}
+      <div className="bg-white py-4">
+        <div className="mx-auto max-w-3xl px-4">
+          <AdSense
+            slot="3333333333"
+            format="horizontal"
+            className="min-h-[90px] rounded-lg"
+          />
+        </div>
+      </div>
 
       {/* ===== 9. FOOTER (completo com links e redes sociais) ===== */}
       <footer className="mt-auto bg-ink py-10 text-zinc-400">

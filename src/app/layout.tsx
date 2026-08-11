@@ -16,12 +16,10 @@ const geistMono = Geist_Mono({
 });
 
 // ===== Google AdSense =====
-// Carregado apenas se NEXT_PUBLIC_ADSENSE_CLIENT estiver configurado.
+// Publisher ID: pub-1217313384915824
 // O script é carregado de forma assíncrona para não bloquear o render.
-// Para ativar: configure NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-XXXXXXXXXXXXXXXX
-// no Vercel e adicione o arquivo /public/ads.txt com o conteúdo:
-//   google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
-const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+// Para desativar: remova o ADSENSE_CLIENT ou sete como string vazia.
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-1217313384915824";
 
 // Metadata do PWA MeuCorre — instalável na tela inicial do entregador.
 export const metadata: Metadata = {
