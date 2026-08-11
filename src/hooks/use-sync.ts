@@ -259,6 +259,15 @@ export function useSync() {
     if (typeof window === "undefined") return;
     let cancelled = false;
 
+    // MODO DEMO: não sincroniza com o servidor. Usa apenas dados locais
+    // do IndexedDB. Isso impede que dados do usuário real sejam carregados
+    // no iframe da landing page.
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("demo") === "1") {
+      setStatus("synced"); // finge que já sincronizou
+      return;
+    }
+
     const init = async () => {
       try {
         const res = await fetch("/api/auth/me");

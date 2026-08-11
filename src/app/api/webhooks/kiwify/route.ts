@@ -42,6 +42,7 @@ interface KiwifyWebhookPayload {
   TrackingParameters?: {
     src?: string | null;
     sck?: string | null;
+    plan?: string | null; // "monthly" | "annual" | "lifetime" (enviado pelo MeuCorre)
     [k: string]: unknown;
   };
   Subscription?: unknown;
@@ -49,6 +50,49 @@ interface KiwifyWebhookPayload {
 
 function isValidStatus(s?: string): s is "paid" | "waiting_payment" | "refunded" | "rejected" | "chargedback" {
   return !!s && ["paid", "waiting_payment", "refunded", "rejected", "chargedback"].includes(s);
+}
+
+// Extrai e valida o plano do payload (enviado via TrackingParameters.plan)
+function extractPlan(payload: KiwifyWebhookPayload): "monthly" | "annual" | "lifetime" | null {
+  const plan = payload.TrackingParameters?.plan;
+  if (plan === "monthly" || plan === "annual" || plan === "lifetime") {
+    return plan;
+  }
+  // Se não veio plano, assume lifetime (compatibilidade com compras antigas)
+  // que eram todas vitalícias por padrão.
+  return "lifetime";
+}
+
+// Verifica se o plano vitalício ainda está disponível (limite de 500 OU 90 dias)
+async function isLifetimeAvailable(): Promise<boolean> {
+  const now = new Date();
+
+  // Busca configurações
+  const settings = await prisma.setting.findMany({
+    where: { key: { in: ["lifetime_max_sales", "lifetime_cutoff_date"] } },
+    select: { key: true, value: true },
+  });
+  const settingsMap: Record<string, string> = {};
+  for (const s of settings) settingsMap[s.key] = s.value;
+
+  const maxSales = settingsMap.lifetime_max_sales
+    ? parseInt(settingsMap.lifetime_max_sales, 10)
+    : 500;
+
+  let cutoffDate: Date;
+  if (settingsMap.lifetime_cutoff_date) {
+    cutoffDate = new Date(settingsMap.lifetime_cutoff_date);
+  } else {
+    cutoffDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+  }
+
+  if (now > cutoffDate) return false;
+
+  const totalSold = await prisma.subscription.count({
+    where: { status: "approved", plan: "lifetime" },
+  });
+
+  return totalSold < maxSales;
 }
 
 // Extrai o token APENAS do header X-Kiwify-Signature (nunca da query string).
@@ -171,6 +215,26 @@ export async function POST(req: NextRequest) {
 
     if (payload.order_status === "paid") {
       // ===== APROVAR =====
+      // Extrai o plano selecionado pelo usuário (enviado via TrackingParameters)
+      const plan = extractPlan(payload);
+
+      // ===== Validação do limite vitalício =====
+      // Se o plano for lifetime, verifica se ainda há vagas disponíveis.
+      // Se não houver, converte para anual automaticamente (não bloqueia o pagamento).
+      let finalPlan = plan;
+      if (plan === "lifetime") {
+        const lifetimeAvailable = await isLifetimeAvailable();
+        if (!lifetimeAvailable) {
+          // Oferta vitalício encerrada — converte para anual (mesmo preço R$ 97)
+          // e notifica via log para o admin entrar em contato se necessário.
+          finalPlan = "annual";
+          logger.warn("Vitalício esgotado — convertendo para anual", {
+            orderId: payload.order_id,
+            email: customer.email,
+          });
+        }
+      }
+
       // Verifica se já existe assinatura aprovada pra este email
       const alreadyPro = await prisma.subscription.findFirst({
         where: { buyerEmail: email, status: "approved" },
@@ -182,6 +246,7 @@ export async function POST(req: NextRequest) {
           data: {
             kiwifyOrderId: payload.order_id,
             paymentMethod: "kiwify",
+            plan: finalPlan,
           },
         });
         recordSuccess(CIRCUIT_NAME);
@@ -189,6 +254,7 @@ export async function POST(req: NextRequest) {
           ok: true,
           message: "Cliente já PRO — order_id vinculado",
           licenseKey: alreadyPro.licenseKey,
+          plan: finalPlan,
         });
       }
 
@@ -213,6 +279,7 @@ export async function POST(req: NextRequest) {
           reviewedBy: "kiwify-webhook",
           reviewNotes: `Auto-aprovado via webhook Kiwify — order ${payload.order_id}`,
           licenseKey,
+          plan: finalPlan,
         },
       });
 

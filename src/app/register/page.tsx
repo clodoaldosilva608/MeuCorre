@@ -55,9 +55,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-ink px-4 py-8">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-neon text-2xl shadow-neon">
-            ⚡
-          </div>
+          <img src="/logo-meucorre.png" alt="MeuCorre" className="mx-auto mb-3 h-14 w-14 rounded-2xl shadow-neon" />
           <h1 className="text-2xl font-extrabold text-neon text-glow-neon">MeuCorre</h1>
           <p className="mt-1 text-sm text-zinc-500">Crie sua conta grátis</p>
           <p className="mt-1 text-[11px] text-zinc-600">

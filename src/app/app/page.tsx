@@ -20,6 +20,7 @@ import { NotificationCapture } from "@/components/meucorre/notification-capture"
 const Charts = lazy(() =>
   import("@/components/meucorre/charts").then((m) => ({ default: m.Charts })),
 );
+import { OffersList } from "@/components/meucorre/offers-list";
 import { Fab } from "@/components/meucorre/fab";
 import { BottomNav, type Tab } from "@/components/meucorre/bottom-nav";
 import { SplashScreen } from "@/components/meucorre/splash-screen";
@@ -93,12 +94,18 @@ function HomeContent() {
   // Auto-ativação via ?license=xxx (vindo da página /obrigado)
   const searchParams = useSearchParams();
 
-  // Splash some por ~1.4s no primeiro carregamento
-  const [showSplash, setShowSplash] = useState(true);
+  // ===== Modo demo (iframe da landing page) =====
+  // Quando ?demo=1, suprime splash, popups e permite controle via postMessage.
+  // A landing page usa isso para mostrar o app rodando dentro do iPhone mockup.
+  const isDemoMode = searchParams?.get("demo") === "1";
+
+  // Splash some por ~1.4s no primeiro carregamento (0ms em demo mode)
+  const [showSplash, setShowSplash] = useState(!isDemoMode);
   useEffect(() => {
+    if (isDemoMode) return;
     const t = setTimeout(() => setShowSplash(false), 1400);
     return () => clearTimeout(t);
-  }, []);
+  }, [isDemoMode]);
 
   const [period, setPeriod] = useState<Period>("hoje");
   const [activeTab, setActiveTab] = useState<Tab>("corridas");
@@ -137,6 +144,8 @@ function HomeContent() {
 
   // Status de trial/limite (14 dias grátis + 5 lançamentos/dia após)
   const trialStatus = useTrialStatus(isPro);
+  // No modo demo, useSync não deve tentar sincronizar com o servidor
+  // (poderia puxar dados do usuário real logado). Passamos um flag.
   const { status: syncStatus, syncNow } = useSync();
 
   // Verifica status PRO ao montar:
@@ -148,7 +157,23 @@ function HomeContent() {
   // CRÍTICO: se a sessão não bater com o meucorre_user_id do localStorage,
   // chamamos switchDb imediatamente para evitar exibir dados do usuário
   // anterior (race condition pós-login).
+  //
+  // MODO DEMO: NÃO verifica sessão real. Usa DB isolado 'MeuCorreDB_demo'
+  // e nome fictício 'Carlos Entregador'. Isso garante que a conta real
+  // do usuário NUNCA apareça no iframe da landing page.
   useEffect(() => {
+    if (isDemoMode) {
+      // Modo demo — usa DB isolado e nome fictício
+      // NÃO faz fetch de /api/auth/me (não quer saber se há sessão real)
+      switchDb("demo");
+      // Usa setTimeout para evitar setState síncrono no effect
+      const t = setTimeout(() => {
+        setUserName("Carlos Entregador");
+        setIsPro(false);
+      }, 0);
+      return () => clearTimeout(t);
+    }
+
     (async () => {
       // 1. PRIMEIRO verifica sessão de usuário (login via email/senha)
       //    Isso garante que a licença do localStorage não seja de outro usuário.
@@ -207,24 +232,89 @@ function HomeContent() {
     };
   }, []);
 
-  // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
+  // ===== Modo demo: listener para trocar abas via postMessage =====
+  // A landing page envia { type: "meucorre-demo-tab", tab: "corridas"|"despesas"|... }
+  // para o iframe controlar qual aba está visível na demo automática.
+  // Também pré-popula o IndexedDB com dados de demonstração se vazio.
   useEffect(() => {
+    if (!isDemoMode) return;
+
+    // Injeta CSS para esconder scrollbars mas permitir scroll (touch/wheel)
+    const style = document.createElement("style");
+    style.id = "demo-mode-css";
+    style.textContent = `
+      ::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+      html { overflow-x: hidden !important; scrollbar-width: none !important; -ms-overflow-style: none !important; }
+      body { overflow-x: hidden !important; scrollbar-width: none !important; -ms-overflow-style: none !important; padding-top: 0 !important; }
+      /* Permite scroll vertical mas esconde a barra */
+      html, body { overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
+    `;
+    document.head.appendChild(style);
+
+    // Pré-popula dados de demonstração no IndexedDB se vazio
+    (async () => {
+      try {
+        await db.open();
+        const count = await db.deliveries.count();
+        if (count === 0) {
+          // Dados de demo: 5 corridas de apps diferentes
+          const today = new Date().toISOString().slice(0, 10);
+          const now = Date.now();
+          await db.deliveries.bulkAdd([
+            { id: 1, app: "iFood", value: 25, km: 8.5, date: today, timestamp: now - 50000, notes: "Centro → Vila Nova" },
+            { id: 2, app: "99Food", value: 10, km: 3.2, date: today, timestamp: now - 40000, notes: "Centro → Jardim Europa" },
+            { id: 3, app: "Lalamove", value: 20, km: 12.0, date: today, timestamp: now - 30000, notes: "Industrial → Centro" },
+            { id: 4, app: "Rappi", value: 15, km: 5.5, date: today, timestamp: now - 20000, notes: "Vila Mariana → Centro" },
+            { id: 5, app: "iFood", value: 30, km: 10.0, date: today, timestamp: now - 10000, notes: "Centro → Pinheiros" },
+          ]);
+          await db.expenses.bulkAdd([
+            { id: 1, category: "combustivel", value: 20, description: "Gasolina — 2L", date: today, timestamp: now - 45000 },
+            { id: 2, category: "alimentacao", value: 5, description: "Almoço express", date: today, timestamp: now - 35000 },
+          ]);
+          console.log("[demo] Dados de demonstração inseridos no IndexedDB");
+        }
+      } catch (err) {
+        console.warn("[demo] Erro ao inserir dados demo:", err);
+      }
+    })();
+
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "meucorre-demo-tab" && event.data.tab) {
+        const validTabs: Tab[] = ["corridas", "despesas", "graficos", "ofertas"];
+        if (validTabs.includes(event.data.tab)) {
+          setActiveTab(event.data.tab);
+        }
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+      document.getElementById("demo-mode-css")?.remove();
+    };
+  }, [isDemoMode]);
+
+  // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
+  // Suprimido em modo demo para não interferir na apresentação.
+  useEffect(() => {
+    if (isDemoMode) return; // sem popups em demo
     if (!showSplash && shouldShowPromoPopup(isPro)) {
       const t = setTimeout(() => setPromoOpen(true), 800);
       return () => clearTimeout(t);
     }
-  }, [showSplash, isPro]);
+  }, [showSplash, isPro, isDemoMode]);
 
   // Pop-up "Compartilhe com amigos" — 1x por dia, 6s após promo
   useEffect(() => {
+    if (isDemoMode) return; // sem popups em demo
     if (!showSplash && shouldShowSharePopup(isPro) && !promoOpen) {
       const t = setTimeout(() => setShareOpen(true), 6000);
       return () => clearTimeout(t);
     }
-  }, [showSplash, isPro, promoOpen]);
+  }, [showSplash, isPro, promoOpen, isDemoMode]);
 
   // Pop-up de feedback — após 3+ corridas, 1x por mês
   useEffect(() => {
+    if (isDemoMode) return; // sem popups em demo
     if (!showSplash) {
       shouldShowFeedbackPopup().then((show) => {
         if (show) {
@@ -520,11 +610,13 @@ function HomeContent() {
   };
 
   const openNewDelivery = () => {
+    if (isDemoMode) return; // bloqueado em demo
     setEditingDelivery(null);
     setDeliveryFormOpen(true);
   };
 
   const openNewExpense = () => {
+    if (isDemoMode) return; // bloqueado em demo
     setEditingExpense(null);
     setExpenseFormOpen(true);
   };
@@ -532,22 +624,22 @@ function HomeContent() {
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
       <SplashScreen visible={showSplash}>
-        {/* Splash patrocinado (apenas se não for PRO e houver anúncio do tipo splash) */}
-        {!isPro && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
+        {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
+        {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
       </SplashScreen>
 
       <Header
         isPro={isPro}
-        onExportJSON={handleExportJSON}
-        onExportCSV={handleExportCSV}
-        onClearAll={() => setConfirmClear(true)}
-        onOpenApps={() => setAppManagerOpen(true)}
-        onOpenCapture={() => setCaptureOpen(true)}
-        onOpenLicense={() => setLicenseOpen(true)}
-        onOpenShare={() => setShareOpen(true)}
-        onOpenOnboarding={() => setOnboardingOpen(true)}
+        onExportJSON={isDemoMode ? (() => {}) : handleExportJSON}
+        onExportCSV={isDemoMode ? (() => {}) : handleExportCSV}
+        onClearAll={isDemoMode ? (() => {}) : () => setConfirmClear(true)}
+        onOpenApps={isDemoMode ? (() => {}) : () => setAppManagerOpen(true)}
+        onOpenCapture={isDemoMode ? (() => {}) : () => setCaptureOpen(true)}
+        onOpenLicense={isDemoMode ? (() => {}) : () => setLicenseOpen(true)}
+        onOpenShare={isDemoMode ? (() => {}) : () => setShareOpen(true)}
+        onOpenOnboarding={isDemoMode ? undefined : () => setOnboardingOpen(true)}
         syncStatus={syncStatus}
-        onLogout={handleLogout}
+        onLogout={isDemoMode ? (() => {}) : handleLogout}
       />
 
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">
@@ -741,10 +833,14 @@ function HomeContent() {
             <DeliveryList
               deliveries={filteredDeliveries}
               onEdit={(d) => {
+                if (isDemoMode) return; // bloqueado em demo
                 setEditingDelivery(d);
                 setDeliveryFormOpen(true);
               }}
-              onDelete={(d) => setConfirmDeleteDelivery(d)}
+              onDelete={(d) => {
+                if (isDemoMode) return; // bloqueado em demo
+                setConfirmDeleteDelivery(d);
+              }}
               apps={apps}
             />
           </>
@@ -805,10 +901,14 @@ function HomeContent() {
             <ExpenseList
               expenses={filteredExpenses}
               onEdit={(e) => {
+                if (isDemoMode) return; // bloqueado em demo
                 setEditingExpense(e);
                 setExpenseFormOpen(true);
               }}
-              onDelete={(e) => setConfirmDeleteExpense(e)}
+              onDelete={(e) => {
+                if (isDemoMode) return; // bloqueado em demo
+                setConfirmDeleteExpense(e);
+              }}
             />
           </>
         )}
@@ -829,6 +929,10 @@ function HomeContent() {
           </Suspense>
         )}
 
+        {activeTab === "ofertas" && (
+          <OffersList isPro={isPro} />
+        )}
+
         {/* Rodapé */}
         <footer className="pt-4 text-center">
           <p className="text-[10px] text-zinc-600">
@@ -837,12 +941,35 @@ function HomeContent() {
         </footer>
       </main>
 
-      {/* FAB muda de cor baseado na tab */}
-      <Fab
-        onClick={activeTab === "despesas" ? openNewExpense : openNewDelivery}
-        variant={activeTab === "despesas" ? "danger" : "primary"}
-        label={activeTab === "despesas" ? "Nova despesa" : "Nova corrida"}
-      />
+      {/* FAB — oculto em modo demo (não pode adicionar corridas) */}
+      {!isDemoMode && (
+        <Fab
+          onClick={activeTab === "despesas" ? openNewExpense : openNewDelivery}
+          variant={activeTab === "despesas" ? "danger" : "primary"}
+          label={activeTab === "despesas" ? "Nova despesa" : "Nova corrida"}
+        />
+      )}
+
+      {/* Overlay de bloqueio no modo demo — APENAS para o header.
+          Cobre o header (topo) com pointer-events auto para impedir
+          cliques no menu, botões de exportar, etc.
+          O conteúdo (main) fica clicável para scroll mas os botões
+          internos já estão desabilitados via isDemoMode nos callbacks.
+          O bottom-nav fica livre para trocar de aba. */}
+      {isDemoMode && (
+        <div
+          className="fixed left-0 right-0 top-0 z-40"
+          style={{
+            height: "52px", // altura do header
+            background: "transparent",
+            pointerEvents: "auto",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        />
+      )}
 
       <BottomNav
         active={activeTab}

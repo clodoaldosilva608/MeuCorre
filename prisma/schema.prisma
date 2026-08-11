@@ -58,6 +58,8 @@ model Subscription {
   reviewedAt   DateTime?
   reviewedBy   String?
   reviewNotes  String?
+  // Plano adquirido (Sub-fase 1): "monthly" | "annual" | "lifetime"
+  plan         String?  // null = compatibilidade com registros antigos
   // Licença gerada quando aprovada
   licenseKey   String?  @unique // chave que libera o PRO no app
   deviceId     String?
@@ -68,6 +70,7 @@ model Subscription {
   @@index([status])
   @@index([buyerEmail])
   @@index([kiwifyOrderId])
+  @@index([plan, status])
 }
 
 // ===== Cliques/visualizações de anúncios (analytics) =====
@@ -108,6 +111,12 @@ model User {
   city         String?
   active       Boolean  @default(true) // admin pode desativar
   trialExtendedUntil DateTime? // admin pode estender trial
+  // ===== Sub-fase 1: plano de assinatura =====
+  // Plano atual do usuário: monthly (R$14,90/mês), annual (R$97/ano), lifetime (R$18,90 vitalício)
+  // null = ainda no trial/free. isPro=true indica acesso PRO ativo (vitalício ou assinatura não expirada).
+  subscriptionPlan    String?  // "monthly" | "annual" | "lifetime"
+  subscriptionStatus  String?  // "active" | "expired" | "cancelled" | "trialing"
+  subscriptionExpiresAt DateTime? // null para lifetime
   lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -115,6 +124,46 @@ model User {
   @@index([email])
   @@index([isPro])
   @@index([active])
+  @@index([subscriptionStatus])
+}
+
+// ===== Loja — Ofertas de produtos parceiros (Sub-fase 1) =====
+//
+// Produtos com desconto cadastrados pelo admin (modelagem afiliado).
+// O usuário vê os cards na aba "Ofertas" do dashboard e clica para
+// ser redirecionado ao link do parceiro (com UTM tracking).
+//
+// Curadoria do admin: apenas produtos relevantes para entregadores
+// (mochila térmica, capa de chuva, suporte, equipamentos, etc).
+
+model Offer {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  // Preço com desconto (ex: R$ 89,90)
+  price         Decimal  @db.Decimal(10, 2)
+  // Preço original (ex: R$ 149,90) — usado para calcular % desconto
+  originalPrice Decimal? @db.Decimal(10, 2)
+  // URL externa da imagem (hot-linked) OU data URL base64 (upload)
+  imageUrl      String
+  // URL de vídeo do produto (YouTube/Vimeo) — opcional
+  videoUrl      String?
+  // URL de afiliado do produto (Amazon, Mercado Livre, Shopee, etc)
+  productUrl    String
+  // Categoria para filtro: "equipamentos" | "combustivel" | "seguro" | "ferramentas" | "outros"
+  category      String   @default("equipamentos")
+  // Apenas usuários PRO veem essa oferta (upsell incentive)
+  proOnly       Boolean  @default(false)
+  active        Boolean  @default(true)
+  startsAt      DateTime @default(now())
+  endsAt        DateTime?
+  clicks        Int      @default(0) // contador de cliques para analytics
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([active, startsAt])
+  @@index([category])
+  @@index([proOnly])
 }
 
 // ===== Tokens de recuperação de senha =====
@@ -129,6 +178,44 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([token])
+}
+
+// ===== Metas financeiras do entregador (sync entre dispositivos) =====
+model SyncedGoal {
+  id          String   @id @default(cuid())
+  userId      String
+  localId     Int
+  type        String   // "daily" | "weekly" | "monthly"
+  targetValue Decimal  @db.Decimal(10, 2)
+  label       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   BigInt
+  deleted     Boolean  @default(false)
+
+  @@unique([userId, localId])
+  @@index([userId, updatedAt])
+  @@index([userId, type, active])
+}
+
+// ===== Sessões de trabalho "Corre do dia" (sync entre dispositivos) =====
+model SyncedWorkSession {
+  id          String   @id @default(cuid())
+  userId      String
+  localId     Int
+  startTime   BigInt
+  endTime     BigInt?
+  durationMs  BigInt   @default(0)
+  distanceKm  Decimal  @db.Decimal(10, 2) @default(0)
+  pointCount  Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   BigInt
+  deleted     Boolean  @default(false)
+
+  @@unique([userId, localId])
+  @@index([userId, updatedAt])
+  @@index([userId, startTime])
 }
 
 // ===== Sincronização entre dispositivos =====
@@ -171,6 +258,29 @@ model SyncedExpense {
 }
 
 // ===== Configurações globais (admin) =====
+
+// ===== Blog — Posts internos (com opção de publicar no Blogger) =====
+
+model BlogPost {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  description   String
+  content       String   // HTML completo
+  coverUrl      String?  // URL da imagem de capa
+  category      String   @default("dicas")
+  labels        String?  // tags separadas por vírgula
+  published     Boolean  @default(true)
+  bloggerPostId String?  // ID no Blogger se foi publicado externamente
+  bloggerUrl    String?  // URL no Blogger
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([published, createdAt])
+  @@index([slug])
+}
+
+// ===== Configurações do app (Settings estendido) =====
 
 model Setting {
   id    String @id @default(cuid())

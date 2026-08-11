@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self' https://pay.kiwify.com.br",
-              "frame-ancestors 'none'",
+              "frame-ancestors 'self'",
               "upgrade-insecure-requests",
             ].join("; "),
           },

@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { CookieConsent } from "@/components/cookie-consent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,6 +15,13 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// ===== Google AdSense =====
+// Publisher ID: pub-1217313384915824
+// O script DEVE estar no HTML inicial (beforeInteractive) para o Google
+// AdSense crawler conseguir verificá-lo. strategy="afterInteractive" injeta
+// via JS e o crawler não vê a tag <script> no HTML fonte.
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-1217313384915824";
 
 // Metadata do PWA MeuCorre — instalável na tela inicial do entregador.
 export const metadata: Metadata = {
@@ -43,7 +52,8 @@ export const metadata: Metadata = {
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icon-192.png", sizes: "192x192" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "192x192" }],
+    shortcut: [{ url: "/logo-meucorre.png", type: "image/png" }],
   },
   openGraph: {
     title: "MeuCorre - Gestão de Entregas",
@@ -72,6 +82,36 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        {/* Google Consent Mode v2 — padrão "denied" até o usuário consentir */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('consent', 'default', {
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                analytics_storage: 'denied',
+                wait_for_update: 500
+              });
+            `,
+          }}
+        />
+
+        {/* Google AdSense — tag <script> direto no HTML para o crawler do Google
+            verificar. NÃO usar next/script porque ele transforma em <link rel="preload">
+            e o Google não reconhece. Precisa ser <script> literal no HTML fonte. */}
+        {ADSENSE_CLIENT && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+            dangerouslySetInnerHTML={{ __html: "" }}
+          />
+        )}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
@@ -107,6 +147,8 @@ export default function RootLayout({
               `,
             }}
           />
+          {/* Banner de consentimento de cookies (CMP) para AdSense */}
+          <CookieConsent />
         </ThemeProvider>
       </body>
     </html>
