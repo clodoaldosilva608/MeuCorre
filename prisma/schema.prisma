@@ -221,6 +221,29 @@ model SyncedExpense {
 
 // ===== Configurações globais (admin) =====
 
+// ===== Blog — Posts internos (com opção de publicar no Blogger) =====
+
+model BlogPost {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  description   String
+  content       String   // HTML completo
+  coverUrl      String?  // URL da imagem de capa
+  category      String   @default("dicas")
+  labels        String?  // tags separadas por vírgula
+  published     Boolean  @default(true)
+  bloggerPostId String?  // ID no Blogger se foi publicado externamente
+  bloggerUrl    String?  // URL no Blogger
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([published, createdAt])
+  @@index([slug])
+}
+
+// ===== Configurações do app (Settings estendido) =====
+
 model Setting {
   id    String @id @default(cuid())
   key   String @unique

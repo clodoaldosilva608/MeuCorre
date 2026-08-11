@@ -84,3 +84,5 @@ tool-results/
 /test-results/
 /playwright-report/
 /playwright/.cache/
+scripts/blogger-token.json
+scripts/publish-blogger.js
