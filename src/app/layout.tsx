@@ -17,8 +17,9 @@ const geistMono = Geist_Mono({
 
 // ===== Google AdSense =====
 // Publisher ID: pub-1217313384915824
-// O script é carregado de forma assíncrona para não bloquear o render.
-// Para desativar: remova o ADSENSE_CLIENT ou sete como string vazia.
+// O script DEVE estar no HTML inicial (beforeInteractive) para o Google
+// AdSense crawler conseguir verificá-lo. strategy="afterInteractive" injeta
+// via JS e o crawler não vê a tag <script> no HTML fonte.
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "ca-pub-1217313384915824";
 
 // Metadata do PWA MeuCorre — instalável na tela inicial do entregador.
@@ -80,12 +81,12 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-        {/* Google AdSense — só carrega se configurado */}
+        {/* Google AdSense — script no HTML inicial para verificação do Google */}
         {ADSENSE_CLIENT && (
           <Script
             id="adsense-script"
             async
-            strategy="afterInteractive"
+            strategy="beforeInteractive"
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
             crossOrigin="anonymous"
           />
