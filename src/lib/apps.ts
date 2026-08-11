@@ -1,4 +1,4 @@
-import type { DeliveryApp, ExpenseCategory } from "./types";
+import type { DeliveryApp, ExpenseCategory, GoalType } from "./types";
 import { db, ensureDefaultApps } from "./db";
 
 // Apps de entrega suportados.
@@ -175,6 +175,72 @@ export async function resizeImage(file: File, maxSize = 256): Promise<string> {
 // ===== Parser de notificações =====
 // Detecta app + valor em um texto livre de notificação.
 // Suporta padrões comuns: "iFood: Você recebeu R$ 15,50", etc.
+
+// ===== Helpers para Metas =====
+export function goalPeriodBounds(
+  type: GoalType,
+  now: Date = new Date(),
+): { startISO: string; endISO: string; label: string } {
+  if (type === "daily") {
+    const iso = todayISO(now);
+    return {
+      startISO: iso,
+      endISO: iso,
+      label: now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "short" }),
+    };
+  }
+  if (type === "weekly") {
+    const start = new Date(now);
+    const day = start.getDay();
+    start.setDate(start.getDate() - day);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    return {
+      startISO: todayISO(start),
+      endISO: todayISO(end),
+      label: `Semana de ${start.toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}`,
+    };
+  }
+  const startISO = startOfMonthISO(now);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return {
+    startISO,
+    endISO: todayISO(end),
+    label: now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }),
+  };
+}
+
+export function goalTypeLabel(type: GoalType): string {
+  if (type === "daily") return "Diária";
+  if (type === "weekly") return "Semanal";
+  return "Mensal";
+}
+
+// ===== Haversine — distância entre 2 pontos GPS em km =====
+const EARTH_RADIUS_KM = 6371;
+function toRad(deg: number): number {
+  return (deg * Math.PI) / 180;
+}
+export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_RADIUS_KM * c;
+}
+
+export function formatDuration(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
+}
+
+// ===== Parser de notificações (original) =====
 
 export interface ParsedNotification {
   app?: string;

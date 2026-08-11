@@ -244,21 +244,22 @@ export default function LandingPage() {
               animate="show"
               className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
             >
-              <button
-                type="button"
-                onClick={openCheckout}
+              <a
+                href="/app"
                 className="btn-neon inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
               >
                 <Zap className="h-4 w-4" />
                 Baixar grátis
                 <ArrowRight className="h-4 w-4" />
-              </button>
-              <a
-                href="/app"
+              </a>
+              <button
+                type="button"
+                onClick={openCheckout}
                 className="btn-neon-outline inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
               >
-                Usar grátis primeiro
-              </a>
+                <CreditCard className="h-4 w-4" />
+                Quero PRO
+              </button>
               <a
                 href="/login"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"

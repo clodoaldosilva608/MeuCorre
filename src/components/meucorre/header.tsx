@@ -15,6 +15,7 @@ import {
   Cloud,
   Smartphone,
   User,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -35,6 +36,7 @@ interface HeaderProps {
   onOpenCapture: () => void;
   onOpenLicense: () => void;
   onOpenShare: () => void;
+  onOpenOnboarding?: () => void;
   onLogout: () => void;
   isPro: boolean;
   syncStatus?: "idle" | "syncing" | "synced" | "offline" | "not-logged-in" | "error";
@@ -55,6 +57,7 @@ export function Header({
   onOpenCapture,
   onOpenLicense,
   onOpenShare,
+  onOpenOnboarding,
   onLogout,
   isPro,
   syncStatus,
@@ -270,6 +273,18 @@ export function Header({
                   <User className="h-4 w-4 text-muted-foreground dark:text-zinc-400" />
                   Meu Perfil
                 </a>
+
+                {/* Tutorial / Onboarding (reabrir) */}
+                {onOpenOnboarding && (
+                  <button
+                    type="button"
+                    onClick={run(onOpenOnboarding)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-foreground/90 dark:text-zinc-200 hover:bg-muted dark:bg-zinc-800/50"
+                  >
+                    <HelpCircle className="h-4 w-4 text-muted-foreground dark:text-zinc-400" />
+                    Tutorial do app
+                  </button>
+                )}
 
                 {/* Baixar aplicativo (PWA install) */}
                 <button

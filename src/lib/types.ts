@@ -70,3 +70,26 @@ export interface PeriodStat {
   expenses: number;
   netProfit: number; // total - expenses
 }
+
+// ===== Metas financeiras =====
+export type GoalType = "daily" | "weekly" | "monthly";
+
+export interface Goal {
+  id?: number;
+  type: GoalType;
+  targetValue: number;
+  label?: string;
+  active: boolean;
+  createdAt: number;
+}
+
+// ===== Sessões de trabalho ("Corre do dia") =====
+export interface WorkSession {
+  id?: number;
+  startTime: number;
+  endTime: number | null;
+  durationMs: number;
+  distanceKm: number;
+  pointCount: number;
+  notes?: string;
+}

@@ -32,6 +32,11 @@ import { SharePopup } from "@/components/meucorre/share-popup";
 import { FeedbackPopup } from "@/components/meucorre/feedback-popup";
 import { ReferralBannerRotator } from "@/components/meucorre/referral-banner-rotator";
 import { PixKeyRegister } from "@/components/meucorre/pix-key-register";
+import { CorreDoDia } from "@/components/meucorre/corre-do-dia";
+import { GoalsProgress } from "@/components/meucorre/goals-progress";
+import { OnboardingPopup } from "@/components/meucorre/onboarding-popup";
+import { useGoals } from "@/hooks/use-goals";
+import { useWorkSessions } from "@/hooks/use-work-sessions";
 import { useAds, activateLicense, checkProStatus } from "@/hooks/use-ads";
 import { db, switchDb } from "@/lib/db";
 import {
@@ -109,6 +114,7 @@ function HomeContent() {
   const [promoOpen, setPromoOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [referralData, setReferralData] = useState<{
     active: boolean;
     code: string;
@@ -292,6 +298,26 @@ function HomeContent() {
     deleteApp,
     toggleHideApp,
   } = useApps();
+
+  // ===== Hooks das novas features: Metas + Corre do dia =====
+  const {
+    goalsWithProgress,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+  } = useGoals(allDeliveries);
+
+  const {
+    activeSession,
+    liveDurationMs,
+    liveDistanceKm,
+    gpsError,
+    sessions: workSessions,
+    startSession,
+    stopSession,
+    cancelSession,
+    deleteSession,
+  } = useWorkSessions();
 
   // Filtragem por período
   const filteredDeliveries = useMemo(
@@ -519,6 +545,7 @@ function HomeContent() {
         onOpenCapture={() => setCaptureOpen(true)}
         onOpenLicense={() => setLicenseOpen(true)}
         onOpenShare={() => setShareOpen(true)}
+        onOpenOnboarding={() => setOnboardingOpen(true)}
         syncStatus={syncStatus}
         onLogout={handleLogout}
       />
@@ -683,6 +710,31 @@ function HomeContent() {
         {/* Conteúdo da tab ativa */}
         {activeTab === "corridas" && (
           <>
+            {/* Corre do dia — cronômetro + GPS tracking */}
+            {!isDemoMode && (
+              <CorreDoDia
+                activeSession={activeSession}
+                liveDurationMs={liveDurationMs}
+                liveDistanceKm={liveDistanceKm}
+                gpsError={gpsError}
+                sessions={workSessions}
+                onStart={startSession}
+                onStop={stopSession}
+                onCancel={cancelSession}
+                onDelete={deleteSession}
+              />
+            )}
+
+            {/* Metas diárias/semanais — barra de progresso financeira */}
+            {!isDemoMode && (
+              <GoalsProgress
+                goals={goalsWithProgress}
+                onAdd={addGoal}
+                onUpdate={updateGoal}
+                onDelete={deleteGoal}
+              />
+            )}
+
             <AppSummary stats={stats} />
 
             {/* Anúncio card patrocinado entre listas (apenas se não for PRO) */}
@@ -879,6 +931,13 @@ function HomeContent() {
           setFeedbackOpen(false);
           markFeedbackAsked();
         }}
+      />
+
+      {/* Pop-up Tutorial / Onboarding — abre automaticamente na primeira
+          visita ao /app. Também pode ser aberto manualmente via menu lateral. */}
+      <OnboardingPopup
+        forceOpen={onboardingOpen || undefined}
+        onForceClose={() => setOnboardingOpen(false)}
       />
 
       {/* Nota: o pop-up "Baixar aplicativo" (InstallAppPopup) é renderizado

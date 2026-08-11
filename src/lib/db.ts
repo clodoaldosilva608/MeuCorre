@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Delivery, DeliveryApp, Expense } from "./types";
+import type { Delivery, DeliveryApp, Expense, Goal, WorkSession } from "./types";
 
 // ===== Banco de dados local do MeuCorre — ISOLADO POR USUÁRIO =====
 //
@@ -17,6 +17,8 @@ class MeuCorreDB extends Dexie {
   deliveries!: Table<Delivery, number>;
   expenses!: Table<Expense, number>;
   apps!: Table<DeliveryApp, number>;
+  goals!: Table<Goal, number>;
+  workSessions!: Table<WorkSession, number>;
 
   constructor(dbName: string) {
     super(dbName);
@@ -119,6 +121,16 @@ class MeuCorreDB extends Dexie {
           }
         }
       }
+    });
+
+    // Version 5: Adiciona tabelas de metas (goals) e sessões de trabalho
+    // (workSessions) — funcionalidades "Metas diárias/semanais" e "Corre do dia".
+    this.version(5).stores({
+      deliveries: "++id, app, value, km, date, timestamp",
+      expenses: "++id, category, value, date, timestamp",
+      apps: "++id, &name, order, isDefault",
+      goals: "++id, type, active, createdAt",
+      workSessions: "++id, startTime, endTime",
     });
 
     // Seed dos apps padrão ao abrir (se a tabela estiver vazia)
@@ -308,6 +320,12 @@ export const db = {
   },
   get apps() {
     return getActiveDb().apps;
+  },
+  get goals() {
+    return getActiveDb().goals;
+  },
+  get workSessions() {
+    return getActiveDb().workSessions;
   },
   // Métodos do Dexie que usamos
   get open() {
