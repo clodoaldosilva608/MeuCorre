@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { CookieConsent } from "@/components/cookie-consent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -81,6 +82,23 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        {/* Google Consent Mode v2 — padrão "denied" até o usuário consentir */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('consent', 'default', {
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                analytics_storage: 'denied',
+                wait_for_update: 500
+              });
+            `,
+          }}
+        />
+
         {/* Google AdSense — tag <script> direto no HTML para o crawler do Google
             verificar. NÃO usar next/script porque ele transforma em <link rel="preload">
             e o Google não reconhece. Precisa ser <script> literal no HTML fonte. */}
@@ -128,6 +146,8 @@ export default function RootLayout({
               `,
             }}
           />
+          {/* Banner de consentimento de cookies (CMP) para AdSense */}
+          <CookieConsent />
         </ThemeProvider>
       </body>
     </html>
