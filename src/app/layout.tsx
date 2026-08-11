@@ -81,14 +81,15 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-        {/* Google AdSense — script no HTML inicial para verificação do Google */}
+        {/* Google AdSense — tag <script> direto no HTML para o crawler do Google
+            verificar. NÃO usar next/script porque ele transforma em <link rel="preload">
+            e o Google não reconhece. Precisa ser <script> literal no HTML fonte. */}
         {ADSENSE_CLIENT && (
-          <Script
-            id="adsense-script"
+          <script
             async
-            strategy="beforeInteractive"
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
             crossOrigin="anonymous"
+            dangerouslySetInnerHTML={{ __html: "" }}
           />
         )}
       </head>
