@@ -428,3 +428,64 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* ========================================
+   BOTÕES DE CAPACETE F1 (REDES SOCIAIS)
+   ========================================
+   Capacetes 4D com fundo transparente (PNG alpha).
+   Efeitos: hover com glow colorido, active com scale down.
+*/
+
+.f1-helmet-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.f1-helmet-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Sombra sutil padrão para profundidade */
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+  transition: filter 0.3s ease;
+}
+
+/* Estado Hover — brilho colorido (bloom) da marca */
+.f1-helmet-btn:hover {
+  transform: scale(1.08);
+}
+
+.f1-helmet-btn:hover img {
+  filter: drop-shadow(0 0 12px var(--helmet-glow, rgba(74, 222, 128, 0.5)))
+          drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* Estado Active — efeito de "press" (empurrar para dentro) */
+.f1-helmet-btn:active {
+  transform: scale(0.95);
+}
+
+/* Estado Focus — acessibilidade */
+.f1-helmet-btn:focus-visible {
+  outline: 2px solid var(--helmet-glow, rgba(74, 222, 128, 0.6));
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+/* Container dos capacetes — alinhamento horizontal */
+.f1-helmets-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

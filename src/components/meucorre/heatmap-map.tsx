@@ -278,11 +278,6 @@ function MapContainer({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!hasData || points.length === 0) {
-      setLoading(false);
-      return;
-    }
-
     let cancelled = false;
 
     async function loadMap() {
@@ -308,13 +303,40 @@ function MapContainer({
           mapInstanceRef.current = null;
         }
 
-        // Calcula centro médio dos pontos
-        const avgLat = points.reduce((s, p) => s + p.lat, 0) / points.length;
-        const avgLng = points.reduce((s, p) => s + p.lng, 0) / points.length;
+        // ===== Determina o centro do mapa =====
+        // Se há pontos de calor, usa a média deles.
+        // Se não há pontos, tenta obter a localização atual do usuário.
+        // Se não conseguir, usa São Paulo como fallback.
+        let centerLat = -23.5505;
+        let centerLng = -46.6333;
+
+        if (hasData && points.length > 0) {
+          centerLat = points.reduce((s, p) => s + p.lat, 0) / points.length;
+          centerLng = points.reduce((s, p) => s + p.lng, 0) / points.length;
+        } else {
+          // Tenta obter localização atual do usuário (mesmo sem sessão ativa)
+          try {
+            const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+              if (!navigator.geolocation) {
+                reject(new Error("GPS não disponível"));
+                return;
+              }
+              navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: false,
+                maximumAge: 60000,
+                timeout: 5000,
+              });
+            });
+            centerLat = pos.coords.latitude;
+            centerLng = pos.coords.longitude;
+          } catch {
+            // Mantém fallback São Paulo se não conseguir obter localização
+          }
+        }
 
         // Cria o mapa
         const map = L.map(containerRef.current, {
-          center: [avgLat, avgLng],
+          center: [centerLat, centerLng],
           zoom: 13,
           scrollWheelZoom: false,
           attributionControl: true,
@@ -326,41 +348,71 @@ function MapContainer({
           maxZoom: 19,
         }).addTo(map);
 
-        // Adiciona camada de calor
-        // leaflet.heat estende L com L.heatLayer (via prototype pollution controlado)
-        const heatLayer = (L as unknown as {
-          heatLayer: (
-            latlngs: [number, number, number][],
-            options?: {
-              radius?: number;
-              blur?: number;
-              maxZoom?: number;
-              max?: number;
-              gradient?: Record<number, string>;
-            },
-          ) => { addTo: (m: unknown) => void };
-        }).heatLayer(
-          points.map((p) => [p.lat, p.lng, p.intensity] as [number, number, number]),
-          {
-            radius: 35,
-            blur: 25,
-            maxZoom: 17,
-            max: 1.0,
-            gradient: {
-              0.0: "blue",
-              0.3: "cyan",
-              0.5: "lime",
-              0.7: "yellow",
-              1.0: "red",
-            },
-          },
-        );
-        heatLayer.addTo(map);
+        // ===== Adiciona marcador da localização atual do usuário =====
+        // Sempre mostra um marcador azul pulsante na localização do usuário
+        try {
+          const userPos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            if (!navigator.geolocation) {
+              reject(new Error("GPS não disponível"));
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 5000,
+            });
+          });
 
-        // Ajusta bounds para mostrar todos os pontos
-        if (points.length > 1) {
-          const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
-          map.fitBounds(bounds, { padding: [30, 30] });
+          const userMarker = L.circleMarker([userPos.coords.latitude, userPos.coords.longitude], {
+            radius: 8,
+            fillColor: "#4ADE80",
+            color: "#22C55E",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8,
+          }).addTo(map);
+
+          userMarker.bindPopup("📍 Sua localização atual");
+        } catch {
+          // Se não conseguir obter localização, não mostra marcador
+        }
+
+        // ===== Adiciona camada de calor (se houver pontos) =====
+        if (hasData && points.length > 0) {
+          const heatLayer = (L as unknown as {
+            heatLayer: (
+              latlngs: [number, number, number][],
+              options?: {
+                radius?: number;
+                blur?: number;
+                maxZoom?: number;
+                max?: number;
+                gradient?: Record<number, string>;
+              },
+            ) => { addTo: (m: unknown) => void };
+          }).heatLayer(
+            points.map((p) => [p.lat, p.lng, p.intensity] as [number, number, number]),
+            {
+              radius: 35,
+              blur: 25,
+              maxZoom: 17,
+              max: 1.0,
+              gradient: {
+                0.0: "blue",
+                0.3: "cyan",
+                0.5: "lime",
+                0.7: "yellow",
+                1.0: "red",
+              },
+            },
+          );
+          heatLayer.addTo(map);
+
+          // Ajusta bounds para mostrar todos os pontos + localização do usuário
+          if (points.length > 1) {
+            const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
+            map.fitBounds(bounds, { padding: [30, 30] });
+          }
         }
 
         mapInstanceRef.current = map;
@@ -386,16 +438,6 @@ function MapContainer({
       }
     };
   }, [points, hasData]);
-
-  if (!hasData) {
-    return (
-      <div className="flex h-64 items-center justify-center bg-muted dark:bg-zinc-900">
-        <p className="text-xs text-muted-foreground dark:text-zinc-500">
-          Sem dados para exibir
-        </p>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

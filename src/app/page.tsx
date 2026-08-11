@@ -1137,28 +1137,34 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* Coluna 4 — Redes sociais (ícones SVG temáticos) */}
+            {/* Coluna 4 — Redes sociais (capacetes F1 4D) */}
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
                 Siga-nos
               </p>
-              <div className="mt-4 flex gap-3">
-                {SOCIAL_LINKS.map(({ name, href, Icon, label }) => (
+              <div className="f1-helmets-row mt-4">
+                {SOCIAL_LINKS.map(({ name, href, helmetImage, glowColor, label }) => (
                   <a
                     key={name}
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-400 transition-all hover:border-neon hover:text-neon"
+                    className="f1-helmet-btn"
+                    style={{ ["--helmet-glow" as string]: glowColor }}
                     title={label}
                     aria-label={name}
                   >
-                    <Icon size={18} />
+                    <img
+                      src={helmetImage}
+                      alt={label}
+                      loading="lazy"
+                      draggable={false}
+                    />
                   </a>
                 ))}
               </div>
-              <p className="mt-2 text-[9px] text-zinc-600">
-                Capacete • Bicicleta • Moto • Carro
+              <p className="mt-3 text-[9px] text-zinc-600">
+                Capacetes F1 4D • YouTube • Instagram • TikTok • Facebook
               </p>
             </div>
           </div>

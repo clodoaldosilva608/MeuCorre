@@ -125,30 +125,39 @@ export function RodaCarroIcon({ className = "", size = 20 }: IconProps) {
   );
 }
 
-// Mapa de redes sociais com ícone + label + URL
+// Mapa de redes sociais com imagem do capacete F1 + label + URL
+// As imagens são capacetes 4D com fundo transparente (PNG alpha)
 export const SOCIAL_LINKS = [
   {
     name: "YouTube",
     href: "https://youtube.com/@meucorre-z4j",
-    Icon: CapaceteIcon,
-    label: "Capacete — YouTube",
+    Icon: CapaceteIcon, // fallback SVG (não usado quando helmetImage existe)
+    helmetImage: "/social-helmet-youtube.png",
+    glowColor: "rgba(255, 0, 0, 0.5)", // vermelho YouTube
+    label: "Capacete F1 — YouTube",
   },
   {
     name: "Instagram",
     href: "https://www.instagram.com/meucorr",
     Icon: RodaMotoIcon,
-    label: "Roda de moto — Instagram",
+    helmetImage: "/social-helmet-instagram.png",
+    glowColor: "rgba(255, 20, 147, 0.5)", // magenta Instagram
+    label: "Capacete F1 — Instagram",
   },
   {
     name: "TikTok",
     href: "https://www.tiktok.com/@meucorr",
     Icon: RodaCarroIcon,
-    label: "Roda de carro — TikTok",
+    helmetImage: "/social-helmet-tiktok.png",
+    glowColor: "rgba(0, 255, 255, 0.5)", // ciano TikTok
+    label: "Capacete F1 — TikTok",
   },
   {
     name: "Facebook",
     href: "https://www.facebook.com/share/1QqGSn22NC/",
     Icon: RodaBicicletaIcon,
-    label: "Roda de bicicleta — Facebook",
+    helmetImage: "/social-helmet-facebook.png",
+    glowColor: "rgba(24, 119, 242, 0.5)", // azul Facebook
+    label: "Capacete F1 — Facebook",
   },
 ];
