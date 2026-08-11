@@ -3,131 +3,167 @@
 import { motion } from "framer-motion";
 import { formatBRL, formatKm } from "@/lib/apps";
 import type { PeriodStat } from "@/lib/types";
-import { TrendingUp, TrendingDown, Wallet, Bike, Route } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Bike, Route, DollarSign, Clock } from "lucide-react";
 
 interface SummaryCardsProps {
   stats: PeriodStat;
   periodLabel: string;
 }
 
-// Cards de resumo no topo do dashboard.
-// Total em R$ (esmeralda), lucro líquido, corridas e KM rodados.
+// ===== SummaryCards Premium Enterprise =====
+//
+// Design: Dark Glassmorphism Tech (fintech premium)
+//
+// Layout:
+// 1. Hero Card (lucro líquido em destaque — ocupa 100% largura)
+//    - Valor grande (32-36px) com tabular nums
+//    - Indicador de tendência (▲/▼)
+//    - Glow verde sutil na borda
+//
+// 2. Grid 2x2 (faturamento, gastos, corridas, distância)
+//    - Cards glass com blur
+//    - Ícones semânticos
+//    - Valores com cores financeiras (verde/vermelho)
 export function SummaryCards({ stats, periodLabel }: SummaryCardsProps) {
   const profit = stats.netProfit;
   const profitPositive = profit >= 0;
 
   return (
-    <section className="grid grid-cols-2 gap-3">
-      {/* Card principal: Total R$ ganho */}
+    <section className="space-y-3">
+      {/* ===== HERO CARD: Lucro líquido (destaque principal) ===== */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="col-span-2 overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-900 p-5 shadow-lg shadow-emerald-500/5"
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="hero-card p-5"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-400">
-            <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
-            Ganhos {periodLabel}
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/15">
+              <Wallet className="h-4 w-4 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                Lucro líquido
+              </p>
+              <p className="text-[10px] text-zinc-500">{periodLabel}</p>
+            </div>
           </div>
-          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-            bruto
-          </span>
-        </div>
-        <h2 className="mt-2 text-2xl font-black tracking-tight text-emerald-400 sm:text-3xl">
-          {formatBRL(stats.total)}
-        </h2>
-        <p className="mt-1 text-[11px] text-zinc-500">
-          {stats.count === 0
-            ? "Nenhuma corrida lançada ainda"
-            : `${stats.count} ${stats.count === 1 ? "corrida lançada" : "corridas lançadas"}`}
-        </p>
-      </motion.div>
-
-      {/* Card lucro líquido (ganhos - despesas) */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, delay: 0.05 }}
-        className={`col-span-2 overflow-hidden rounded-2xl border p-4 ${
-          profitPositive
-            ? "border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 to-zinc-900"
-            : "border-red-500/30 bg-gradient-to-br from-red-950/30 to-zinc-900"
-        }`}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-400">
-            <Wallet
-              className={`h-3.5 w-3.5 ${
-                profitPositive ? "text-emerald-400" : "text-red-400"
-              }`}
-            />
-            Lucro líquido
-          </div>
-          <span
-            className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-              profitPositive
-                ? "bg-emerald-500/10 text-emerald-400"
-                : "bg-red-500/10 text-red-400"
-            }`}
-          >
+          <span className={`pill-badge ${profitPositive ? "pill-profit" : "pill-loss"}`}>
             {profitPositive ? (
-              <TrendingUp className="h-2.5 w-2.5" />
+              <TrendingUp className="h-3 w-3" />
             ) : (
-              <TrendingDown className="h-2.5 w-2.5" />
+              <TrendingDown className="h-3 w-3" />
             )}
             {profitPositive ? "no azul" : "no vermelho"}
           </span>
         </div>
-        <h3
-          className={`mt-1.5 text-xl font-black tracking-tight sm:text-2xl ${
+
+        {/* Valor principal — grande, com tabular nums */}
+        <h2
+          className={`mt-3 text-4xl font-black tracking-tight text-money ${
             profitPositive ? "text-emerald-400" : "text-red-400"
           }`}
         >
           {formatBRL(profit)}
-        </h3>
-        <p className="mt-0.5 text-[10px] text-zinc-500">
-          {formatBRL(stats.total)} ganhos − {formatBRL(stats.expenses)} despesas
-        </p>
+        </h2>
+
+        {/* Breakdown: ganhos - despesas */}
+        <div className="mt-3 flex items-center gap-4 text-[11px]">
+          <span className="flex items-center gap-1 text-zinc-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            {formatBRL(stats.total)} ganhos
+          </span>
+          <span className="text-zinc-600">−</span>
+          <span className="flex items-center gap-1 text-zinc-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+            {formatBRL(stats.expenses)} despesas
+          </span>
+        </div>
       </motion.div>
 
-      {/* Card corridas */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, delay: 0.1 }}
-        className="rounded-2xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900 p-4 shadow-sm"
-      >
-        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-400">
-          <Bike className="h-3.5 w-3.5 text-foreground/80 dark:text-zinc-300" />
-          Corridas
-        </div>
-        <h3 className="mt-1 text-xl font-black text-foreground dark:text-zinc-100 sm:text-2xl">
-          {stats.count}
-        </h3>
-        <p className="text-[10px] text-zinc-500">entregas</p>
-      </motion.div>
+      {/* ===== GRID 2x2: Métricas secundárias ===== */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Faturamento bruto */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="stat-card"
+        >
+          <div className="flex items-center gap-1.5">
+            <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Faturamento
+            </p>
+          </div>
+          <p className="mt-1.5 text-xl font-bold text-money text-white">
+            {formatBRL(stats.total)}
+          </p>
+          <p className="text-[10px] text-zinc-500">bruto</p>
+        </motion.div>
 
-      {/* Card quilometragem */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, delay: 0.15 }}
-        className="rounded-2xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900 p-4 shadow-sm"
-      >
-        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-400">
-          <Route className="h-3.5 w-3.5 text-foreground/80 dark:text-zinc-300" />
-          Distância
-        </div>
-        <h3 className="mt-1 text-xl font-black text-foreground dark:text-zinc-100 sm:text-2xl">
-          {formatKm(stats.km)}
-        </h3>
-        <p className="text-[10px] text-zinc-500">
-          {stats.km > 0 && stats.count > 0
-            ? `${(stats.km / stats.count).toFixed(1).replace(".", ",")} km/corrida`
-            : "rodados"}
-        </p>
-      </motion.div>
+        {/* Gastos */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="stat-card"
+        >
+          <div className="flex items-center gap-1.5">
+            <TrendingDown className="h-3.5 w-3.5 text-red-400" />
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Gastos
+            </p>
+          </div>
+          <p className="mt-1.5 text-xl font-bold text-money text-red-400">
+            {formatBRL(stats.expenses)}
+          </p>
+          <p className="text-[10px] text-zinc-500">despesas</p>
+        </motion.div>
+
+        {/* Corridas */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+          className="stat-card"
+        >
+          <div className="flex items-center gap-1.5">
+            <Bike className="h-3.5 w-3.5 text-cyan-400" />
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Corridas
+            </p>
+          </div>
+          <p className="mt-1.5 text-xl font-bold text-money text-white">
+            {stats.count}
+          </p>
+          <p className="text-[10px] text-zinc-500">entregas</p>
+        </motion.div>
+
+        {/* Distância */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="stat-card"
+        >
+          <div className="flex items-center gap-1.5">
+            <Route className="h-3.5 w-3.5 text-amber-400" />
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+              Distância
+            </p>
+          </div>
+          <p className="mt-1.5 text-xl font-bold text-money text-white">
+            {formatKm(stats.km)}
+          </p>
+          <p className="text-[10px] text-zinc-500">
+            {stats.km > 0 && stats.count > 0
+              ? `${(stats.km / stats.count).toFixed(1).replace(".", ",")} km/corrida`
+              : "rodados"}
+          </p>
+        </motion.div>
+      </div>
     </section>
   );
 }

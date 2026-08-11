@@ -93,14 +93,14 @@ export function Header({
               : "";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border dark:border-zinc-800/80 bg-background dark:bg-zinc-950/85 backdrop-blur-xl">
+    <header className="header-premium sticky top-0 z-40">
       <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3.5">
         <div className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-base shadow-lg shadow-emerald-500/25">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-base shadow-lg shadow-emerald-500/30 glow-emerald-sm">
             ⚡
           </div>
           <div className="leading-none">
-            <h1 className="text-lg font-extrabold tracking-tight text-emerald-400">
+            <h1 className="text-lg font-extrabold tracking-tight text-gradient-premium">
               MeuCorre
             </h1>
             <p className="text-[10px] font-medium text-zinc-500">
@@ -113,7 +113,7 @@ export function Header({
           {/* Data — visível apenas em telas maiores */}
           <span
             suppressHydrationWarning
-            className="hidden min-w-[80px] rounded-full bg-muted dark:bg-zinc-800 px-2.5 py-1 text-center text-[11px] font-medium capitalize text-muted-foreground dark:text-zinc-400 sm:inline dark:bg-muted dark:bg-zinc-800 dark:text-muted-foreground dark:text-zinc-400"
+            className="hidden min-w-[80px] rounded-full bg-white/5 px-2.5 py-1 text-center text-[11px] font-medium capitalize text-zinc-400 sm:inline border border-white/5"
           >
             {dateStr || "\u00A0"}
           </span>

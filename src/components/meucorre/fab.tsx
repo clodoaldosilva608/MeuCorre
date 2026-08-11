@@ -9,14 +9,18 @@ interface FabProps {
   label?: string;
 }
 
-// Botão flutuante com + branco.
-// Posição fixa no canto inferior direito, sempre acessível.
-// Acima da bottom nav (z-50) e com offset para não cobrir.
+// ===== FAB Premium Enterprise =====
+//
+// Botão flutuante de ação (+) com gradiente verde e glow.
+// - Gradiente linear de #86EFAC para #22C55E
+// - Sombra colorida (glow verde)
+// - Ring sutil para destaque
+// - Animação spring na entrada
 export function Fab({ onClick, variant = "primary", label = "Adicionar" }: FabProps) {
-  const colorClass =
+  const fabClass =
     variant === "danger"
-      ? "bg-red-500 text-white shadow-red-500/40 hover:bg-red-600"
-      : "bg-emerald-500 text-zinc-950 shadow-emerald-500/40 hover:bg-emerald-400";
+      ? "bg-gradient-to-br from-red-400 to-red-600 text-white shadow-red-500/40"
+      : "fab-premium";
 
   return (
     <motion.button
@@ -26,7 +30,7 @@ export function Fab({ onClick, variant = "primary", label = "Adicionar" }: FabPr
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
       aria-label={label}
-      className={`fixed bottom-24 right-5 z-50 grid h-14 w-14 place-items-center rounded-full shadow-xl ring-4 ring-zinc-950/40 transition-colors ${colorClass}`}
+      className={`fixed bottom-24 right-5 z-50 grid h-14 w-14 place-items-center rounded-full ring-4 ring-zinc-950/40 ${fabClass}`}
     >
       <Plus className="h-7 w-7" strokeWidth={3} />
     </motion.button>

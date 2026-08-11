@@ -49,6 +49,18 @@
   --color-ink: #0d0d0d;
   --color-graphite: #1a1a1a;
   --color-asphalt: #2d3748;
+  /* ===== Paleta Premium Enterprise (Dark Glassmorphism Tech) ===== */
+  --color-emerald-glow: #4ADE80;
+  --color-emerald-deep: #10B981;
+  --color-profit: #4ADE80;
+  --color-loss: #EF4444;
+  --color-cyan-info: #38BDF8;
+  --color-amber-warn: #FB923C;
+  --color-lime-acc: #84CC16;
+  --color-steel: #64748B;
+  --color-ink-deep: #0A0F0D;
+  --color-ink-card: #111916;
+  --color-ink-elevated: #151D19;
 }
 
 /* ===== Tema Claro (padrão MeuCorre light) ===== */
@@ -87,39 +99,44 @@
   --sidebar-ring: oklch(0.7 0.18 160);
 }
 
-/* ===== Tema Escuro (MeuCorre dark — neon green on deep black) ===== */
+/* ===== Tema Escuro Premium (Dark Glassmorphism Tech — fintech enterprise) ===== */
 .dark {
-  --background: oklch(0.145 0 0);
+  /* Background quase preto com leve matiz esverdeada (#0A0F0D) */
+  --background: oklch(0.12 0.005 160);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  /* Cards com fundo #111916 (cinza-escuro com transparência) */
+  --card: oklch(0.16 0.006 160);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.16 0.006 160);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.18 160);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.269 0 0);
+  /* Verde neon/ácido #4ADE80 como primary */
+  --primary: oklch(0.78 0.19 145);
+  --primary-foreground: oklch(0.12 0.005 160);
+  --secondary: oklch(0.22 0.006 160);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --muted: oklch(0.22 0.006 160);
+  --muted-foreground: oklch(0.68 0.01 160);
+  --accent: oklch(0.22 0.01 160);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.7 0.18 160);
-  --chart-1: oklch(0.7 0.18 160);
-  --chart-2: oklch(0.65 0.2 50);
-  --chart-3: oklch(0.6 0.22 25);
-  --chart-4: oklch(0.65 0.18 260);
-  --chart-5: oklch(0.7 0.2 320);
-  --sidebar: oklch(0.205 0 0);
+  --destructive: oklch(0.65 0.22 25);
+  /* Bordas sutis com baixa opacidade (rgba(255,255,255,0.08)) */
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.78 0.19 145);
+  /* Cores de gráfico alinhadas com a paleta premium */
+  --chart-1: oklch(0.78 0.19 145); /* Verde lucro */
+  --chart-2: oklch(0.65 0.22 25);  /* Vermelho gastos */
+  --chart-3: oklch(0.72 0.15 220); /* Azul ciano */
+  --chart-4: oklch(0.75 0.16 65);  /* Laranja âmbar */
+  --chart-5: oklch(0.78 0.19 130); /* Verde lima */
+  --sidebar: oklch(0.16 0.006 160);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.7 0.18 160);
+  --sidebar-primary: oklch(0.78 0.19 145);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.22 0.006 160);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.7 0.18 160);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.78 0.19 145);
 }
 
 @layer base {
@@ -202,4 +219,212 @@
 .card-neon:hover {
   border-color: rgba(57, 255, 20, 0.6);
   box-shadow: 0 0 24px rgba(57, 255, 20, 0.2);
+}
+
+/* ========================================
+   DESIGN SYSTEM PREMIUM ENTERPRISE
+   Dark Glassmorphism Tech (fintech)
+   ======================================== */
+
+/* ===== Glass Card (padrão premium) ===== */
+/* Card com fundo semi-transparente + blur + borda sutil + sombra profunda */
+.glass-card {
+  background: rgba(17, 25, 22, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+.glass-card:hover {
+  border-color: rgba(74, 222, 128, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(74, 222, 128, 0.1);
+}
+
+/* ===== Hero Card (card de destaque com lucro líquido) ===== */
+.hero-card {
+  background: linear-gradient(135deg, rgba(17, 25, 22, 0.9) 0%, rgba(17, 25, 22, 0.7) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(74, 222, 128, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(74, 222, 128, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+.hero-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.5), transparent);
+}
+
+/* ===== Stat Card (card menor para métricas) ===== */
+.stat-card {
+  background: rgba(21, 29, 25, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.25s ease;
+}
+.stat-card:hover {
+  background: rgba(21, 29, 25, 0.95);
+  border-color: rgba(74, 222, 128, 0.15);
+  transform: translateY(-1px);
+}
+
+/* ===== Glow verde (borda luminosa) ===== */
+.glow-emerald {
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.3), 0 0 40px rgba(74, 222, 128, 0.1);
+}
+.glow-emerald-sm {
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.25), 0 0 24px rgba(74, 222, 128, 0.08);
+}
+
+/* ===== Texto com gradiente (logo premium) ===== */
+.text-gradient-premium {
+  background: linear-gradient(135deg, #FFFFFF 0%, #4ADE80 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ===== Valores monetários (tabular nums para alinhamento decimal) ===== */
+.text-money {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.02em;
+}
+
+/* ===== Cores semânticas financeiras ===== */
+.text-profit { color: #4ADE80; }
+.text-loss { color: #EF4444; }
+.text-info { color: #38BDF8; }
+.text-warn { color: #FB923C; }
+.bg-profit { background-color: rgba(74, 222, 128, 0.12); }
+.bg-loss { background-color: rgba(239, 68, 68, 0.12); }
+.border-profit { border-color: rgba(74, 222, 128, 0.3); }
+.border-loss { border-color: rgba(239, 68, 68, 0.3); }
+
+/* ===== Pill badge (status indicator) ===== */
+.pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
+}
+.pill-profit {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ADE80;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+.pill-loss {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+.pill-neutral {
+  background: rgba(100, 116, 139, 0.12);
+  color: #94A3B8;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+/* ===== FAB premium (botão flutuante +) ===== */
+.fab-premium {
+  background: linear-gradient(135deg, #86EFAC 0%, #22C55E 100%);
+  color: #0A0F0D;
+  box-shadow: 0 4px 20px rgba(74, 222, 128, 0.4), 0 0 0 1px rgba(74, 222, 128, 0.2);
+  transition: all 0.2s ease;
+}
+.fab-premium:hover {
+  box-shadow: 0 6px 28px rgba(74, 222, 128, 0.5), 0 0 0 1px rgba(74, 222, 128, 0.3);
+  transform: translateY(-2px) scale(1.02);
+}
+.fab-premium:active {
+  transform: translateY(0) scale(1);
+}
+
+/* ===== Bottom nav premium (barra inferior glassmorphism) ===== */
+.bottom-nav-premium {
+  background: rgba(10, 15, 13, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(74, 222, 128, 0.1);
+}
+
+/* ===== Header premium (topo com glassmorphism) ===== */
+.header-premium {
+  background: rgba(10, 15, 13, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ===== Sparkline container ===== */
+.sparkline-container {
+  position: relative;
+  height: 40px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+/* ===== Animações premium ===== */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(74, 222, 128, 0.3), 0 0 40px rgba(74, 222, 128, 0.1); }
+  50% { box-shadow: 0 0 30px rgba(74, 222, 128, 0.5), 0 0 60px rgba(74, 222, 128, 0.2); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ===== Scrollbar premium ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(74, 222, 128, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 222, 128, 0.4);
+}
+
+/* ===== Selection premium ===== */
+::selection {
+  background: rgba(74, 222, 128, 0.25);
+  color: #FFFFFF;
+}
+
+/* ===== Focus ring premium ===== */
+*:focus-visible {
+  outline: 2px solid rgba(74, 222, 128, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
