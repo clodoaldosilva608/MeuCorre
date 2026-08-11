@@ -442,12 +442,13 @@
   cursor: pointer;
   padding: 0;
   transition: transform 0.2s ease, filter 0.2s ease;
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .f1-helmet-btn img {
@@ -485,7 +486,8 @@
 .f1-helmets-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 6px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
