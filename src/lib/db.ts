@@ -133,6 +133,16 @@ class MeuCorreDB extends Dexie {
       workSessions: "++id, startTime, endTime",
     });
 
+    // Version 6: Adiciona index de lat/lng nas deliveries para mapa de calor
+    // e index de date para queries por período eficiente.
+    this.version(6).stores({
+      deliveries: "++id, app, value, km, date, timestamp, lat, lng",
+      expenses: "++id, category, value, date, timestamp",
+      apps: "++id, &name, order, isDefault",
+      goals: "++id, type, active, createdAt",
+      workSessions: "++id, startTime, endTime",
+    });
+
     // Seed dos apps padrão ao abrir (se a tabela estiver vazia)
     this.on("populate", async () => {
       const defaults = DEFAULT_APPS.map((a, i) => ({

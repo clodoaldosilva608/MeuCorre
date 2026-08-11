@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Play, Square, MapPin, Clock, Route, AlertTriangle, X, History } from "lucide-react";
+import { Play, Square, MapPin, Clock, Route, AlertTriangle, X, History, Flame } from "lucide-react";
 import { formatDuration, formatKm } from "@/lib/apps";
 import type { WorkSession } from "@/lib/types";
 
@@ -26,6 +26,7 @@ interface CorreDoDiaProps {
   onStop: (notes?: string) => Promise<void>;
   onCancel: () => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  onOpenHeatmap?: () => void;
 }
 
 export function CorreDoDia({
@@ -38,6 +39,7 @@ export function CorreDoDia({
   onStop,
   onCancel,
   onDelete,
+  onOpenHeatmap,
 }: CorreDoDiaProps) {
   const [confirmStop, setConfirmStop] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -65,15 +67,27 @@ export function CorreDoDia({
           <Route className="h-4 w-4 text-emerald-400" />
           Corre do dia
         </h3>
-        {finishedSessions.length > 0 && (
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10"
-          >
-            <History className="h-3 w-3" />
-            {showHistory ? "Ocultar" : "Histórico"}
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {onOpenHeatmap && (
+            <button
+              onClick={onOpenHeatmap}
+              className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-orange-400 hover:bg-orange-500/10"
+              title="Ver mapa de calor das áreas quentes"
+            >
+              <Flame className="h-3 w-3" />
+              Mapa de calor
+            </button>
+          )}
+          {finishedSessions.length > 0 && (
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/10"
+            >
+              <History className="h-3 w-3" />
+              {showHistory ? "Ocultar" : "Histórico"}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={`relative overflow-hidden rounded-2xl border p-4 transition-colors ${

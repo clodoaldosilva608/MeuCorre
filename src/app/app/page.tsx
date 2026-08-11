@@ -36,6 +36,7 @@ import { PixKeyRegister } from "@/components/meucorre/pix-key-register";
 import { CorreDoDia } from "@/components/meucorre/corre-do-dia";
 import { GoalsProgress } from "@/components/meucorre/goals-progress";
 import { OnboardingPopup } from "@/components/meucorre/onboarding-popup";
+import { HeatmapMap } from "@/components/meucorre/heatmap-map";
 import { useGoals } from "@/hooks/use-goals";
 import { useWorkSessions } from "@/hooks/use-work-sessions";
 import { useAds, activateLicense, checkProStatus } from "@/hooks/use-ads";
@@ -122,6 +123,7 @@ function HomeContent() {
   const [shareOpen, setShareOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [heatmapOpen, setHeatmapOpen] = useState(false);
   const [referralData, setReferralData] = useState<{
     active: boolean;
     code: string;
@@ -813,6 +815,7 @@ function HomeContent() {
               onStop={stopSession}
               onCancel={cancelSession}
               onDelete={deleteSession}
+              onOpenHeatmap={() => setHeatmapOpen(true)}
             />
 
             {/* Metas diárias/semanais — barra de progresso financeira */}
@@ -1061,6 +1064,15 @@ function HomeContent() {
       <OnboardingPopup
         forceOpen={onboardingOpen || undefined}
         onForceClose={() => setOnboardingOpen(false)}
+      />
+
+      {/* Mapa de calor — áreas quentes onde o entregador mais faz corridas.
+          Aberto via botão "Mapa de calor" no Corre do dia.
+          Filtra por período, dia da semana ou data personalizada. */}
+      <HeatmapMap
+        open={heatmapOpen}
+        onOpenChange={setHeatmapOpen}
+        deliveries={allDeliveries}
       />
 
       {/* Nota: o pop-up "Baixar aplicativo" (InstallAppPopup) é renderizado

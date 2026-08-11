@@ -30,6 +30,21 @@ export interface Delivery {
   date: string; // YYYY-MM-DD (ISO local)
   timestamp: number; // epoch ms
   notes?: string;
+  // Localização da corrida (opcional — usado para mapa de calor de áreas quentes)
+  lat?: number;
+  lng?: number;
+  // Endereço aproximado (reverse geocoded) — opcional
+  address?: string;
+}
+
+// Ponto de calor agregado para o mapa de calor de áreas quentes.
+// Representa uma região (grid cell) com contagem de corridas e faturamento.
+export interface HeatmapPoint {
+  lat: number;
+  lng: number;
+  count: number; // número de corridas na região
+  totalValue: number; // faturamento total na região
+  intensity: number; // 0-1 (normalizado para o mapa de calor)
 }
 
 export interface Expense {
