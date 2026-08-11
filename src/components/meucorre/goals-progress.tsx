@@ -195,7 +195,7 @@ function GoalDialog({
   const [targetValue, setTargetValue] = useState("");
   const [label, setLabel] = useState("");
   const [saving, setSaving] = useState(false);
-  const [lastEditingId, setLastEditingId] = useState<string | null>(null);
+  const [lastEditingId, setLastEditingId] = useState<number | null>(null);
 
   // Sincroniza form quando abre ou muda editing
   if (open && editing && editing.id !== lastEditingId) {

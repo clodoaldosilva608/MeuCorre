@@ -711,29 +711,25 @@ function HomeContent() {
         {activeTab === "corridas" && (
           <>
             {/* Corre do dia — cronômetro + GPS tracking */}
-            {!isDemoMode && (
-              <CorreDoDia
-                activeSession={activeSession}
-                liveDurationMs={liveDurationMs}
-                liveDistanceKm={liveDistanceKm}
-                gpsError={gpsError}
-                sessions={workSessions}
-                onStart={startSession}
-                onStop={stopSession}
-                onCancel={cancelSession}
-                onDelete={deleteSession}
-              />
-            )}
+            <CorreDoDia
+              activeSession={activeSession}
+              liveDurationMs={liveDurationMs}
+              liveDistanceKm={liveDistanceKm}
+              gpsError={gpsError}
+              sessions={workSessions}
+              onStart={startSession}
+              onStop={stopSession}
+              onCancel={cancelSession}
+              onDelete={deleteSession}
+            />
 
             {/* Metas diárias/semanais — barra de progresso financeira */}
-            {!isDemoMode && (
-              <GoalsProgress
-                goals={goalsWithProgress}
-                onAdd={addGoal}
-                onUpdate={updateGoal}
-                onDelete={deleteGoal}
-              />
-            )}
+            <GoalsProgress
+              goals={goalsWithProgress}
+              onAdd={addGoal}
+              onUpdate={updateGoal}
+              onDelete={deleteGoal}
+            />
 
             <AppSummary stats={stats} />
 
