@@ -387,3 +387,36 @@ model ReferralCampaign {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
+
+// ===== Leads capturados no quiz / exit-intent / landing =====
+//
+// Funil: Landing → Quiz → captura email/WhatsApp → resultado personalizado
+// → redireciona para /app → trial 14 dias → conversão vitalício
+//
+// Lead é diferente de User: Lead é anônimo (sem senha), só tem email/phone.
+// Quando o Lead cria conta no /app, marcamos convertedAt e linkamos com User.
+
+model Lead {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  phone        String?
+  name         String?
+  // Respostas do quiz (JSON): { q1: "5-10", q2: "iFood", q3: "nao_ideia", q4: "gasolina" }
+  quizAnswers  String?
+  // Score calculado: quanto o entregador está "perdendo" (R$/semana estimado)
+  resultScore  Int      @default(0)
+  // Origem da captura: quiz | exit_intent | referral | landing_cta
+  source       String   @default("quiz")
+  // Código de quem indicou (se veio de link ?ref=MEUCORRE-ABC123)
+  referrerCode String?
+  // Quando virou usuário (fez registro no /app)
+  convertedAt  DateTime?
+  convertedUserId String? // ID do User se converteu
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([email])
+  @@index([referrerCode])
+  @@index([convertedAt])
+  @@index([source, createdAt])
+}

@@ -79,6 +79,26 @@ CREATE TABLE IF NOT EXISTS "Feedback" (
     "page" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ===== Lead (captura de leads do quiz) =====
+CREATE TABLE IF NOT EXISTS "Lead" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "email" TEXT NOT NULL,
+    "phone" TEXT,
+    "name" TEXT,
+    "quizAnswers" TEXT,
+    "resultScore" INTEGER NOT NULL DEFAULT 0,
+    "source" TEXT NOT NULL DEFAULT 'quiz',
+    "referrerCode" TEXT,
+    "convertedAt" DATETIME,
+    "convertedUserId" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "Lead_email_key" ON "Lead"("email");
+CREATE INDEX IF NOT EXISTS "Lead_referrerCode_idx" ON "Lead"("referrerCode");
+CREATE INDEX IF NOT EXISTS "Lead_convertedAt_idx" ON "Lead"("convertedAt");
+CREATE INDEX IF NOT EXISTS "Lead_source_createdAt_idx" ON "Lead"("source", "createdAt");
 `;
 
 // Cria o arquivo SQLite vazio se não existir (Prisma precisa do arquivo)

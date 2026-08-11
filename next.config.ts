@@ -43,9 +43,10 @@ const nextConfig: NextConfig = {
           // Referrer policy — só manda origin pra cross-origin
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           // Permissions policy — restringe APIs do navegador
+          // geolocation=self — permite GPS (necessário para "Corre do dia")
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+            value: "camera=(), microphone=(), geolocation=(self), interest-cohort=()",
           },
         ],
       },

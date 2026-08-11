@@ -272,7 +272,7 @@ export default function LandingPage() {
               Funciona com iFood, 99Food, Lalamove e qualquer outro app.
             </motion.p>
 
-            {/* CTAs: Baixar grátis (neon), Usar grátis, Entrar — totalmente responsivos */}
+            {/* CTAs: Quiz (destaque), Baixar grátis, Quero PRO, Entrar */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
@@ -280,17 +280,23 @@ export default function LandingPage() {
               className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
             >
               <a
-                href="/app"
+                href="/quiz"
                 className="btn-neon inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
               >
                 <Zap className="h-4 w-4" />
-                Baixar grátis
+                Descubra quanto você está perdendo
                 <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="/app"
+                className="btn-neon-outline inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
+              >
+                Baixar grátis
               </a>
               <button
                 type="button"
                 onClick={openCheckout}
-                className="btn-neon-outline inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
               >
                 <CreditCard className="h-4 w-4" />
                 Quero PRO
