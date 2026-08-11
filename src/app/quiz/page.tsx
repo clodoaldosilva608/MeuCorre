@@ -16,16 +16,20 @@ import {
   ArrowLeft,
   Check,
   Zap,
+  Lock,
+  Sparkles,
+  PartyPopper,
 } from "lucide-react";
 
-// ===== Página /quiz — Quiz de captação de leads =====
+// ===== Página /quiz — Quiz de captação de leads com criação de conta =====
 //
-// Funil: Landing → Quiz (4 perguntas) → captura email/phone → resultado
-// personalizado → CTA para /app
+// Funil: Landing → Quiz (4 perguntas) → captura email/WhatsApp + senha
+// → resultado personalizado → cria conta automaticamente (trial 14 dias)
+// → login automático → redireciona para /app
 //
-// Inspirado no ValidaSaaS: quiz interativo que segmenta o usuário e mostra
-// um resultado personalizado antes de pedir o email. Isso aumenta a taxa
-// de conversão porque o usuário já vê valor antes de se cadastrar.
+// Diferente do fluxo original, o lead é OBRIGADO a criar conta para ver o
+// resultado completo. Isso converte lead em usuário ativo imediatamente,
+// ativando o trial de 14 dias desde o primeiro contato.
 
 interface Question {
   id: keyof Answers;
@@ -96,17 +100,14 @@ interface Answers {
 
 export default function QuizPage() {
   const router = useRouter();
-  const [step, setStep] = useState(0); // 0-3 = perguntas, 4 = captura, 5 = resultado
+  // Steps: 0-3 = perguntas, 4 = criação de conta, 5 = sucesso (conta criada)
+  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{
-    title: string;
-    message: string;
-    weeklyLoss: number;
-  } | null>(null);
   const [referrerCode, setReferrerCode] = useState<string | null>(null);
 
   // Detecta ?ref=CODE na URL (link de indicação)
@@ -122,44 +123,105 @@ export default function QuizPage() {
 
   const handleAnswer = (questionId: keyof Answers, value: string) => {
     setAnswers({ ...answers, [questionId]: value });
-    // Auto-avança para próxima pergunta após 300ms
     setTimeout(() => {
       if (step < QUESTIONS.length - 1) {
         setStep(step + 1);
       } else {
-        setStep(QUESTIONS.length); // vai para captura de email
+        setStep(QUESTIONS.length); // vai para criação de conta
       }
     }, 300);
   };
 
-  const handleSubmit = async () => {
-    if (!email) {
-      toast.error("Digite seu email");
+  // Validação de WhatsApp — aceita formatos (11) 99999-9999, 11999999999, etc.
+  const isValidPhone = (p: string) => {
+    const digits = p.replace(/\D/g, "");
+    return digits.length >= 10 && digits.length <= 13;
+  };
+
+  // Validação de senha — mínimo 6 caracteres
+  const isValidPassword = (p: string) => p.length >= 6;
+
+  // Submete o quiz + cria conta + faz login automaticamente
+  const handleCreateAccount = async () => {
+    // Validações
+    if (!name.trim() || name.trim().length < 2) {
+      toast.error("Digite seu nome completo");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      toast.error("Digite um email válido");
+      return;
+    }
+    if (!isValidPhone(phone)) {
+      toast.error("Digite um WhatsApp válido (ex: (11) 99999-9999)");
+      return;
+    }
+    if (!isValidPassword(password)) {
+      toast.error("Senha deve ter pelo menos 6 caracteres");
       return;
     }
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/quiz/submit", {
+      // 1. Salva o lead (quiz answers + score)
+      const quizRes = await fetch("/api/quiz/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email,
-          phone: phone || undefined,
-          name: name || undefined,
+          email: email.toLowerCase().trim(),
+          phone: phone.trim(),
+          name: name.trim(),
           answers,
           referrerCode: referrerCode || undefined,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || "Erro ao enviar");
+      if (!quizRes.ok) {
+        const data = await quizRes.json().catch(() => ({}));
+        // Continua mesmo se o lead falhar — o registro é mais importante
+        console.warn("[quiz] Lead save falhou:", data.error);
+      }
+
+      // 2. Cria a conta do usuário (ativa trial de 14 dias automaticamente)
+      const registerRes = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          password,
+          phone: phone.trim(),
+          referralCode: referrerCode || undefined,
+        }),
+      });
+      const registerData = await registerRes.json();
+
+      if (!registerRes.ok) {
+        // Se email já existe, tenta fazer login com a senha informada
+        if (registerData.error?.includes("já cadastrado")) {
+          toast.error("Email já cadastrado. Redirecionando para login...", {
+            duration: 2000,
+          });
+          setTimeout(() => router.push("/login"), 1500);
+          return;
+        }
+        toast.error(registerData.error || "Erro ao criar conta");
         return;
       }
-      setResult(data.result);
-      setStep(QUESTIONS.length + 1); // vai para resultado
+
+      // 3. Conta criada + login automático (cookie httpOnly setado pela API)
+      // Marca o lead como convertido (best-effort, não bloqueia)
+      fetch("/api/quiz/convert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      }).catch(() => {});
+
+      // 4. Vai para a tela de sucesso
+      setStep(QUESTIONS.length + 1);
+      toast.success("Conta criada! Seu trial de 14 dias está ativo 🎉");
     } catch {
-      toast.error("Erro de conexão");
+      toast.error("Erro de conexão. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
@@ -179,7 +241,6 @@ export default function QuizPage() {
 
     return (
       <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
-        {/* Progress bar */}
         <div className="h-1.5 w-full bg-zinc-800">
           <motion.div
             className="h-full bg-emerald-400"
@@ -198,7 +259,6 @@ export default function QuizPage() {
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Header */}
               <div className="mb-8 text-center">
                 <div className="mb-4 flex justify-center">
                   <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30">
@@ -216,7 +276,6 @@ export default function QuizPage() {
                 )}
               </div>
 
-              {/* Opções */}
               <div className="space-y-2.5">
                 {q.options.map((opt) => {
                   const isSelected = answers[q.id] === opt.value;
@@ -244,7 +303,6 @@ export default function QuizPage() {
                 })}
               </div>
 
-              {/* Voltar */}
               {step > 0 && (
                 <button
                   onClick={() => setStep(step - 1)}
@@ -261,9 +319,15 @@ export default function QuizPage() {
     );
   }
 
-  // Step 4: captura de email
+  // Step 4: criação de conta (email + WhatsApp + senha obrigatórios)
   if (step === QUESTIONS.length) {
     const progress = ((QUESTIONS.length + 1) / (QUESTIONS.length + 1)) * 100;
+    const canSubmit =
+      name.trim().length >= 2 &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+      isValidPhone(phone) &&
+      isValidPassword(password);
+
     return (
       <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
         <div className="h-1.5 w-full bg-zinc-800">
@@ -283,25 +347,26 @@ export default function QuizPage() {
             <div className="mb-6 text-center">
               <div className="mb-4 flex justify-center">
                 <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30">
-                  <Zap className="h-8 w-8 text-white" />
+                  <Sparkles className="h-8 w-8 text-white" />
                 </div>
               </div>
               <h1 className="text-2xl font-black leading-tight">
-                Quase lá! Onde mandamos seu resultado?
+                Crie sua conta grátis
               </h1>
               <p className="mt-2 text-sm text-zinc-400">
-                Vamos calcular quanto você está perdendo e te enviar a análise.
+                Veja seu resultado e ative seu <strong className="text-emerald-400">trial de 14 dias PRO</strong>
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">Nome (opcional)</Label>
+                <Label className="text-xs text-zinc-400">Nome completo *</Label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Seu nome"
+                  placeholder="João Silva"
                   className="border-zinc-700 bg-zinc-900 text-white"
+                  autoComplete="name"
                 />
               </div>
 
@@ -312,35 +377,67 @@ export default function QuizPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
-                  required
                   className="border-zinc-700 bg-zinc-900 text-white"
+                  autoComplete="email"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">
-                  WhatsApp (opcional — para dicas)
-                </Label>
+                <Label className="text-xs text-zinc-400">WhatsApp *</Label>
                 <Input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="(11) 99999-9999"
                   className="border-zinc-700 bg-zinc-900 text-white"
+                  autoComplete="tel"
+                  inputMode="tel"
                 />
+                <p className="text-[10px] text-zinc-500">
+                  Usamos para enviar dicas e lembretes. Não compartilhamos.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Senha *</Label>
+                <div className="relative">
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    className="border-zinc-700 bg-zinc-900 pl-9 text-white"
+                    autoComplete="new-password"
+                  />
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                </div>
               </div>
 
               <Button
-                onClick={handleSubmit}
-                disabled={!email || submitting}
-                className="w-full bg-emerald-500 py-4 text-base font-bold text-zinc-950 hover:bg-emerald-400"
+                onClick={handleCreateAccount}
+                disabled={!canSubmit || submitting}
+                className="w-full bg-emerald-500 py-4 text-base font-bold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
               >
-                {submitting ? "Calculando..." : "Ver meu resultado"}
+                {submitting ? (
+                  "Criando sua conta..."
+                ) : (
+                  <>
+                    <Check className="mr-1.5 h-4 w-4" />
+                    Ver resultado e ativar trial
+                  </>
+                )}
                 {!submitting && <ArrowRight className="ml-1.5 h-4 w-4" />}
               </Button>
 
-              <p className="text-center text-[10px] text-zinc-500">
-                Seus dados ficam seguros. Não compartilhamos com terceiros.
-              </p>
+              <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-500">
+                <span className="flex items-center gap-1">
+                  <Lock className="h-2.5 w-2.5" />
+                  Dados seguros
+                </span>
+                <span>•</span>
+                <span>Sem cartão de crédito</span>
+                <span>•</span>
+                <span>Cancele quando quiser</span>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -348,49 +445,59 @@ export default function QuizPage() {
     );
   }
 
-  // Step 5: resultado
-  if (step === QUESTIONS.length + 1 && result) {
+  // Step 5: sucesso — conta criada + trial ativo
+  if (step === QUESTIONS.length + 1) {
     return (
       <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-8">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5 }}
             className="text-center"
           >
-            {/* Ícone de alerta */}
+            {/* Ícone de sucesso */}
             <div className="mb-6 flex justify-center">
-              <div className="grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/30">
-                <TrendingDown className="h-10 w-10 text-white" />
+              <div className="grid h-24 w-24 place-items-center rounded-3xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-2xl shadow-emerald-500/40">
+                <PartyPopper className="h-12 w-12 text-white" />
               </div>
             </div>
 
             <h1 className="text-3xl font-black leading-tight text-white">
-              {result.title}
+              Conta criada! 🎉
             </h1>
-
-            {/* Card com valor de perda */}
-            {result.weeklyLoss > 0 && (
-              <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-red-400">
-                  Estimativa de perda
-                </p>
-                <p className="mt-1 text-4xl font-black text-red-400">
-                  R$ {result.weeklyLoss}
-                  <span className="text-base font-normal text-zinc-400">
-                    /semana
-                  </span>
-                </p>
-                <p className="mt-1 text-sm text-zinc-400">
-                  ≈ R$ {(result.weeklyLoss * 4).toFixed(0)}/mês
-                </p>
-              </div>
-            )}
-
-            <p className="mt-6 text-sm leading-relaxed text-zinc-300">
-              {result.message}
+            <p className="mt-2 text-sm text-zinc-400">
+              Seu trial de <strong className="text-emerald-400">14 dias PRO</strong> está ativo
             </p>
+
+            {/* Card com benefícios do trial */}
+            <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5 text-left">
+              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                O que você tem agora:
+              </p>
+              <ul className="mt-2 space-y-1.5 text-sm text-zinc-300">
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                  Acesso total ao app por 14 dias
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                  Corridas, despesas e gráficos ilimitados
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                  Corre do dia com GPS
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                  Mapa de calor de áreas quentes
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+                  Sem anúncios por 14 dias
+                </li>
+              </ul>
+            </div>
 
             {/* CTA para o app */}
             <div className="mt-8 space-y-3">
@@ -399,10 +506,10 @@ export default function QuizPage() {
                 className="w-full bg-emerald-500 py-4 text-base font-bold text-zinc-950 hover:bg-emerald-400"
               >
                 <Zap className="mr-1.5 h-4 w-4" />
-                Baixar grátis e resolver isso
+                Começar a usar agora
               </Button>
               <p className="text-[10px] text-zinc-500">
-                App grátis • 14 dias de trial PRO • sem cartão de crédito
+                Após 14 dias: 5 lançamentos/dia grátis para sempre ou PRO vitalício R$ 18,90
               </p>
             </div>
           </motion.div>
