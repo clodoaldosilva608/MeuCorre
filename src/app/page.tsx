@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { AdSense } from "@/components/adsense";
 import { SOCIAL_LINKS } from "@/components/social-icons";
 import { PhoneShowcase } from "@/components/meucorre/phone-showcase";
+import { BlogCarousel } from "@/components/meucorre/blog-carousel";
 import {
   Dialog,
   DialogContent,
@@ -225,9 +226,7 @@ export default function LandingPage() {
             animate="show"
             className="flex items-center justify-center gap-2"
           >
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-neon text-xl shadow-neon">
-              ⚡
-            </div>
+            <img src="/logo-meucorre.png" alt="MeuCorre" className="h-10 w-10 rounded-xl shadow-neon" />
             <span className="text-xl font-extrabold tracking-tight text-neon text-glow-neon">
               MeuCorre
             </span>
@@ -582,6 +581,44 @@ export default function LandingPage() {
           />
         </div>
       </div>
+
+      {/* ===== BLOG CARROSSEL (direita → esquerda) ===== */}
+      <section className="bg-white py-16 text-zinc-900 md:py-20">
+        <div className="mx-auto max-w-5xl px-4">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="mb-8 text-center"
+          >
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
+              Blog MeuCorre
+            </p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+              Dicas que aumentam seu lucro
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-base text-zinc-600">
+              Artigos práticos sobre finanças, moto, economia e estratégia para
+              entregadores de app.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Carrossel rolando da direita para esquerda */}
+        <div className="mx-auto max-w-5xl">
+          <BlogCarousel />
+        </div>
+
+        <div className="mt-8 text-center">
+          <a
+            href="/blog"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-500 bg-white px-6 py-3 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-50"
+          >
+            Ver todos os artigos →
+          </a>
+        </div>
+      </section>
 
       {/* ===== 5. DEPOIMENTO (dark) ===== */}
       <section className="bg-ink py-16 text-white md:py-20">
@@ -950,6 +987,55 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ===== 7.5 GALERIA SOCIAL (imagens do Instagram/TikTok/YouTube) ===== */}
+      <section className="bg-white py-12 text-zinc-900 md:py-16">
+        <div className="mx-auto max-w-5xl px-4">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="mb-6 text-center"
+          >
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
+              @meucorre nas redes
+            </p>
+            <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900 md:text-3xl">
+              Siga o MeuCorre
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { src: "/social-post-1.png", label: "Instagram", href: "https://instagram.com/meucorre" },
+              { src: "/social-post-2.png", label: "TikTok", href: "https://tiktok.com/@meucorre" },
+              { src: "/social-post-3.png", label: "TikTok", href: "https://tiktok.com/@meucorre" },
+              { src: "/blog-comparison.png", label: "YouTube", href: "https://youtube.com/@meucorre" },
+            ].map((item, i) => (
+              <motion.a
+                key={i}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                variants={itemUp}
+                className="group relative overflow-hidden rounded-xl border border-zinc-200 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+              >
+                <img
+                  src={item.src}
+                  alt={`MeuCorre no ${item.label}`}
+                  className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                <span className="absolute bottom-2 left-2 text-[10px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  {item.label} →
+                </span>
+              </motion.a>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ===== 8. CTA FINAL grande ===== */}
       <section className="relative overflow-hidden bg-ink py-20 text-center text-white md:py-28">
         {/* Glow */}
@@ -1008,16 +1094,14 @@ export default function LandingPage() {
             {/* Coluna 1 — Produto */}
             <div>
               <div className="flex items-center gap-2">
-                <div className="grid h-7 w-7 place-items-center rounded-lg bg-neon text-sm">
-                  ⚡
-                </div>
-                <span className="font-bold text-neon">MeuCorre</span>
+                <img src="/logo-meucorre.png" alt="MeuCorre" className="h-8 w-auto rounded-lg" />
               </div>
               <ul className="mt-4 space-y-2 text-xs">
                 <li><a href="/app" className="hover:text-neon">Abrir app</a></li>
                 <li><a href="#planos" className="hover:text-neon">Planos</a></li>
                 <li><a href="/servicos" className="hover:text-neon">Serviços</a></li>
                 <li><a href="/cases" className="hover:text-neon">Cases</a></li>
+                <li><a href="/blog" className="hover:text-neon">Blog</a></li>
               </ul>
             </div>
 
@@ -1107,9 +1191,7 @@ function Header({ onCheckout }: { onCheckout: () => void }) {
     <header className="sticky top-0 z-50 border-b border-neon/10 bg-ink/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <a href="#" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-neon text-base shadow-neon">
-            ⚡
-          </div>
+          <img src="/logo-meucorre.png" alt="MeuCorre" className="h-8 w-8 rounded-lg shadow-neon" />
           <span className="text-base font-extrabold tracking-tight text-neon text-glow-neon">
             MeuCorre
           </span>

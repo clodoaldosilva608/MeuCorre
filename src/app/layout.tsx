@@ -52,7 +52,8 @@ export const metadata: Metadata = {
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icon-192.png", sizes: "192x192" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "192x192" }],
+    shortcut: [{ url: "/logo-meucorre.png", type: "image/png" }],
   },
   openGraph: {
     title: "MeuCorre - Gestão de Entregas",

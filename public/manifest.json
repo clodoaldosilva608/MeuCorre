@@ -1,13 +1,13 @@
 {
-  "name": "MeuCorre - Gestão de Entregas",
+  "name": "MeuCorre - Finanças para Entregadores",
   "short_name": "MeuCorre",
-  "description": "Controle suas corridas e ganhos por aplicativo de entrega. 100% offline.",
+  "description": "Controle suas corridas, despesas e lucro real. 100% offline. Feito para quem move o Brasil.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#09090b",
-  "theme_color": "#10b981",
+  "background_color": "#0D0D0D",
+  "theme_color": "#39FF14",
   "categories": ["finance", "productivity", "lifestyle"],
   "lang": "pt-BR",
   "dir": "ltr",
@@ -37,6 +37,12 @@
       "short_name": "Nova",
       "description": "Lançar uma nova corrida",
       "url": "/?action=new"
+    },
+    {
+      "name": "Blog",
+      "short_name": "Blog",
+      "description": "Dicas para entregadores",
+      "url": "/blog"
     }
   ]
 }
