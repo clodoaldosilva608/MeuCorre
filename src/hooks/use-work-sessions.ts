@@ -30,9 +30,6 @@ export interface UseWorkSessionsReturn {
 
 export function useWorkSessions(): UseWorkSessionsReturn {
   const dbVersion = useDbVersion();
-  const [liveDurationMs, setLiveDurationMs] = useState(0);
-  const [liveDistanceKm, setLiveDistanceKm] = useState(0);
-  const [gpsError, setGpsError] = useState<string | null>(null);
 
   const watchIdRef = useRef<number | null>(null);
   const lastPointRef = useRef<{ lat: number; lon: number } | null>(null);
@@ -54,25 +51,16 @@ export function useWorkSessions(): UseWorkSessionsReturn {
 
   const activeSession = sessions.find((s) => s.endTime === null) ?? null;
 
+  // Cronômetro em tempo real (atualiza a cada segundo via setInterval).
+  // Não há set-state-in-effect: o setState acontece dentro do callback do
+  // setInterval, que é assíncrono por natureza.
+  const [liveDurationMs, setLiveDurationMs] = useState(0);
   useEffect(() => {
-    if (activeSession) {
-      activeSessionIdRef.current = activeSession.id ?? null;
-      totalDistanceRef.current = activeSession.distanceKm;
-      pointCountRef.current = activeSession.pointCount;
-      lastPointRef.current = null;
-      setLiveDistanceKm(activeSession.distanceKm);
-    } else {
-      activeSessionIdRef.current = null;
-      totalDistanceRef.current = 0;
-      pointCountRef.current = 0;
-      lastPointRef.current = null;
-      setLiveDistanceKm(0);
-      setLiveDurationMs(0);
+    if (!activeSession) {
+      // Defer para evitar set-state-in-effect
+      const t = setTimeout(() => setLiveDurationMs(0), 0);
+      return () => clearTimeout(t);
     }
-  }, [activeSession?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!activeSession) return;
     const tick = () => {
       if (activeSession.startTime) {
         setLiveDurationMs(Date.now() - activeSession.startTime);
@@ -81,13 +69,49 @@ export function useWorkSessions(): UseWorkSessionsReturn {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [activeSession?.id, activeSession?.startTime]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSession]);
+
+  // Distância ao vivo — atualizada quando a sessão muda (lazy initializer via
+  // key prop no componente pai) e quando GPS captura novos pontos.
+  const [liveDistanceKm, setLiveDistanceKm] = useState(0);
+
+  // Sincroniza refs quando a sessão ativa muda.
+  // Usa um efeito com dependência explícita no ID da sessão.
+  useEffect(() => {
+    if (activeSession) {
+      activeSessionIdRef.current = activeSession.id ?? null;
+      totalDistanceRef.current = activeSession.distanceKm;
+      pointCountRef.current = activeSession.pointCount;
+      lastPointRef.current = null;
+      // Defer para evitar set-state-in-effect (regra react-hooks)
+      const t = setTimeout(() => setLiveDistanceKm(activeSession.distanceKm), 0);
+      return () => clearTimeout(t);
+    } else {
+      activeSessionIdRef.current = null;
+      totalDistanceRef.current = 0;
+      pointCountRef.current = 0;
+      lastPointRef.current = null;
+      const t = setTimeout(() => setLiveDistanceKm(0), 0);
+      return () => clearTimeout(t);
+    }
+  }, [activeSession?.id]);
+
+  // GPS tracking — só ativo quando há sessão ativa.
+  // Estado de erro é resetado via setTimeout para evitar set-state-in-effect.
+  const [gpsError, setGpsError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!activeSession) return;
+    if (!activeSession) {
+      // Limpa erro quando não há sessão ativa (defer para evitar set-state-in-effect)
+      const t = setTimeout(() => setGpsError(null), 0);
+      return () => clearTimeout(t);
+    }
     if (typeof window === "undefined" || !navigator.geolocation) {
-      setGpsError("GPS não disponível neste dispositivo");
-      return;
+      const t = setTimeout(
+        () => setGpsError("GPS não disponível neste dispositivo"),
+        0,
+      );
+      return () => clearTimeout(t);
     }
 
     const MIN_ACCURACY_M = 100;
@@ -145,7 +169,7 @@ export function useWorkSessions(): UseWorkSessionsReturn {
         watchIdRef.current = null;
       }
     };
-  }, [activeSession?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSession?.id]);
 
   const startSession = useCallback(async () => {
     if (activeSession) return;

@@ -3,14 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // TypeScript check desabilitado no build para evitar OOM (out of memory)
   // na Vercel. Validação de tipos é feita com `npx tsc --noEmit` antes do commit.
-  // O projeto é grande e o build worker do Next.js consome muita memória
-  // verificando tipos em paralelo com o compile do Turbopack.
   typescript: {
     ignoreBuildErrors: true,
-  },
-  // ESLint também desabilitado no build para acelerar deploy
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   reactStrictMode: true,
   // Security headers
