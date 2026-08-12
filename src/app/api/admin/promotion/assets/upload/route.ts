@@ -73,9 +73,26 @@ export async function POST(req: NextRequest) {
   }
 
   // Pasta destino: public/promotion/
-  const uploadDir = path.resolve(process.cwd(), "public", "promotion");
+  // NOTA: Em Vercel serverless, o filesystem é read-only após build.
+  // Apenas /tmp é gravável, mas não persiste entre invocações.
+  // Esta implementação usa /tmp como fallback — para persistência real,
+  // configure Supabase Storage ou Vercel Blob.
+  const isVercel = !!process.env.VERCEL;
+  const uploadDir = isVercel
+    ? path.resolve("/tmp", "promotion")
+    : path.resolve(process.cwd(), "public", "promotion");
+
   if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+    try {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    } catch {
+      return NextResponse.json(
+        {
+          error: "Não foi possível criar diretório de upload. Configure Supabase Storage ou Vercel Blob para persistência.",
+        },
+        { status: 500 },
+      );
+    }
   }
 
   let finalName = safeName;
@@ -88,7 +105,17 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  fs.writeFileSync(finalPath, buffer);
+
+  try {
+    fs.writeFileSync(finalPath, buffer);
+  } catch {
+    return NextResponse.json(
+      {
+        error: "Erro ao salvar arquivo. Em Vercel serverless, o filesystem é read-only. Configure Supabase Storage.",
+      },
+      { status: 500 },
+    );
+  }
 
   const hash = crypto.createHash("sha256").update(buffer).digest("hex");
 
@@ -106,7 +133,11 @@ export async function POST(req: NextRequest) {
   const tags = (formData.get("tags") as string) || null;
   const source = (formData.get("source") as string) || "upload_admin";
 
-  const publicUrl = `/promotion/${finalName}`;
+  // Em Vercel, a URL pública aponta para /tmp (não persiste) — apenas para desenvolvimento
+  // Em produção, o ideal é que a imagem vá para Supabase Storage e a URL seja a do Supabase
+  const publicUrl = isVercel
+    ? null // não há URL pública em /tmp
+    : `/promotion/${finalName}`;
   const storageKey = `promotion/${finalName}`;
 
   // Verifica se já existe asset com este nome — se sim, atualiza URL
