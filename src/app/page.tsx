@@ -1157,14 +1157,17 @@ export default function LandingPage() {
               Siga o MeuCorre nas redes
             </p>
             <div className="f1-helmets-row mt-5">
-              {SOCIAL_LINKS.map(({ name, href, helmetImage, glowColor, brandColor, label }) => (
+              {SOCIAL_LINKS.map(({ name, href, helmetImage, glowColor, brandColor, bounceDelay, label }) => (
                 <a
                   key={name}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="f1-helmet-card"
-                  style={{ ["--helmet-glow" as string]: glowColor }}
+                  style={{
+                    ["--helmet-glow" as string]: glowColor,
+                    ["--bounce-delay" as string]: bounceDelay,
+                  }}
                   title={label}
                   aria-label={name}
                 >

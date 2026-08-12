@@ -487,39 +487,63 @@
    ========================================
    Cada capacete é um card vertical: imagem + nome da rede social.
    Dispostos em linha horizontal, centralizados, com wrap em mobile.
+   Animação: cada capacete "pula" de forma aleatória (bounce com delay
+   diferente para cada um, criando efeito assíncrono).
 */
+
+/* Animação de pulo — cada capacete usa um delay diferente */
+@keyframes helmet-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
 
 .f1-helmets-row {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: center;
-  gap: 16px;
+  gap: 24px;
   flex-wrap: wrap;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  padding: 12px 0;
 }
 
 .f1-helmet-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   text-decoration: none;
   transition: transform 0.2s ease;
   flex-shrink: 0;
+  /* Animação de pulo — cada capacete tem delay próprio (setado via inline style) */
+  animation: helmet-bounce 2.5s ease-in-out infinite;
+  animation-delay: var(--bounce-delay, 0s);
 }
 
 .f1-helmet-card:hover {
-  transform: translateY(-3px);
+  animation-play-state: paused;
+  transform: translateY(-6px) scale(1.05);
 }
 
 .f1-helmet-card:active {
+  animation-play-state: paused;
   transform: translateY(0) scale(0.97);
 }
 
 .f1-helmet-img-wrap {
-  width: 56px;
-  height: 56px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -531,21 +555,21 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
   transition: filter 0.3s ease;
 }
 
 .f1-helmet-card:hover .f1-helmet-img-wrap img {
-  filter: drop-shadow(0 0 14px var(--helmet-glow, rgba(74, 222, 128, 0.5)))
-          drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 0 18px var(--helmet-glow, rgba(74, 222, 128, 0.5)))
+          drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
 }
 
 .f1-helmet-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  opacity: 0.9;
+  opacity: 0.85;
   transition: opacity 0.2s ease;
 }
 

@@ -127,6 +127,7 @@ export function RodaCarroIcon({ className = "", size = 20 }: IconProps) {
 
 // Mapa de redes sociais com imagem do capacete F1 + label + URL
 // As imagens são capacetes 4D com fundo transparente (PNG alpha)
+// bounceDelay: delay da animação de pulo (cada capacete pula em momento diferente)
 export const SOCIAL_LINKS = [
   {
     name: "YouTube",
@@ -135,6 +136,7 @@ export const SOCIAL_LINKS = [
     helmetImage: "/social-helmet-youtube.png",
     glowColor: "rgba(255, 0, 0, 0.5)", // vermelho YouTube
     brandColor: "#FF0000", // vermelho YouTube (para texto)
+    bounceDelay: "0s", // começa pulando primeiro
     label: "Capacete F1 — YouTube",
   },
   {
@@ -144,6 +146,7 @@ export const SOCIAL_LINKS = [
     helmetImage: "/social-helmet-instagram.png",
     glowColor: "rgba(255, 20, 147, 0.5)", // magenta Instagram
     brandColor: "#E1306C", // rosa Instagram (para texto)
+    bounceDelay: "0.6s", // pula 0.6s depois do YouTube
     label: "Capacete F1 — Instagram",
   },
   {
@@ -153,6 +156,7 @@ export const SOCIAL_LINKS = [
     helmetImage: "/social-helmet-tiktok.png",
     glowColor: "rgba(0, 255, 255, 0.5)", // ciano TikTok
     brandColor: "#00F2EA", // ciano TikTok (para texto)
+    bounceDelay: "1.2s", // pula 1.2s depois do YouTube
     label: "Capacete F1 — TikTok",
   },
   {
@@ -162,6 +166,7 @@ export const SOCIAL_LINKS = [
     helmetImage: "/social-helmet-facebook.png",
     glowColor: "rgba(24, 119, 242, 0.5)", // azul Facebook
     brandColor: "#1877F2", // azul Facebook (para texto)
+    bounceDelay: "1.8s", // pula 1.8s depois do YouTube
     label: "Capacete F1 — Facebook",
   },
 ];
