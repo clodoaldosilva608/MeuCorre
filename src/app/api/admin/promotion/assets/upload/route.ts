@@ -5,22 +5,11 @@ import { sanitizeString } from "@/lib/validation";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as crypto from "node:crypto";
-import { uploadToSupabase, isSupabaseConfigured } from "@/lib/supabase-storage";
 
 // POST /api/admin/promotion/assets/upload
-// Faz upload de uma única imagem.
-//
-// Estratégia de armazenamento (automática):
-// 1. Se Supabase Storage estiver configurado → upload para Supabase (CDN, persistente)
-// 2. Senão → salva em public/promotion/ (filesystem local — não persiste em serverless)
-//
-// Multipart form-data:
-//   - file: File (PNG, JPG, WEBP, GIF — máx 10 MB)
-//   - name (opcional): nome do asset (default: nome do arquivo)
-//   - baseAssetName (opcional)
-//   - altText (opcional)
-//   - tags (opcional)
-//   - source (opcional, default: "upload_admin")
+// Faz upload de uma única imagem para public/promotion/ e registra no banco.
+// Em produção (Vercel), as imagens são perdidas a cada deploy.
+// Para persistência, use a página de upload que extrai .tar.gz no navegador.
 export async function POST(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -83,10 +72,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Buffer do arquivo
-  const buffer = Buffer.from(await file.arrayBuffer());
+  // Pasta destino: public/promotion/
+  const uploadDir = path.resolve(process.cwd(), "public", "promotion");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
 
-  // Calcula hash
+  let finalName = safeName;
+  let finalPath = path.join(uploadDir, safeName);
+  if (fs.existsSync(finalPath)) {
+    const ext = path.extname(safeName);
+    const base = path.basename(safeName, ext);
+    finalName = `${base}_${Date.now()}${ext}`;
+    finalPath = path.join(uploadDir, finalName);
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  fs.writeFileSync(finalPath, buffer);
+
   const hash = crypto.createHash("sha256").update(buffer).digest("hex");
 
   // Extrai dimensões PNG
@@ -103,51 +106,8 @@ export async function POST(req: NextRequest) {
   const tags = (formData.get("tags") as string) || null;
   const source = (formData.get("source") as string) || "upload_admin";
 
-  // === Estratégia de armazenamento ===
-  let publicUrl: string;
-  let storageKey: string;
-  let storageBackend: "supabase" | "local";
-
-  if (isSupabaseConfigured()) {
-    // === Supabase Storage ===
-    const supabaseResult = await uploadToSupabase(buffer, safeName, file.type);
-    if (supabaseResult.success && supabaseResult.publicUrl) {
-      publicUrl = supabaseResult.publicUrl;
-      storageKey = supabaseResult.storageKey ?? `promotion/${safeName}`;
-      storageBackend = "supabase";
-    } else {
-      return NextResponse.json(
-        {
-          error: `Erro no upload para Supabase: ${supabaseResult.error}`,
-          hint: "Verifique se o bucket 'promotion-assets' existe e é público.",
-        },
-        { status: 500 },
-      );
-    }
-  } else {
-    // === Fallback: filesystem local ===
-    // ATENÇÃO: Em Vercel serverless, o filesystem NÃO persiste entre deploys.
-    // Use Supabase Storage para persistência real.
-    const uploadDir = path.resolve(process.cwd(), "public", "promotion");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    let finalName = safeName;
-    let finalPath = path.join(uploadDir, safeName);
-    if (fs.existsSync(finalPath)) {
-      const ext = path.extname(safeName);
-      const base = path.basename(safeName, ext);
-      finalName = `${base}_${Date.now()}${ext}`;
-      finalPath = path.join(uploadDir, finalName);
-    }
-
-    fs.writeFileSync(finalPath, buffer);
-
-    publicUrl = `/promotion/${finalName}`;
-    storageKey = `promotion/${finalName}`;
-    storageBackend = "local";
-  }
+  const publicUrl = `/promotion/${finalName}`;
+  const storageKey = `promotion/${finalName}`;
 
   // Verifica se já existe asset com este nome — se sim, atualiza URL
   const existing = await prisma.promotionAsset.findFirst({
@@ -188,8 +148,8 @@ export async function POST(req: NextRequest) {
       publicUrl,
       fileSize: file.size,
       hash,
-      storageBackend,
-      persistent: storageBackend === "supabase",
+      storageBackend: "local",
+      persistent: false,
     },
     { status: existing ? 200 : 201 },
   );
