@@ -493,8 +493,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 32px;
-  flex-wrap: wrap;
+  gap: 12px;
+  flex-wrap: nowrap;
   max-width: 100%;
   overflow: visible;
   padding: 16px 0;
@@ -504,10 +504,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   text-decoration: none;
   transition: transform 0.2s ease;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .f1-helmet-card:hover {
@@ -519,13 +520,28 @@
 }
 
 .f1-helmet-img-wrap {
-  width: 96px;
-  height: 96px;
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   transition: filter 0.3s ease;
+}
+
+/* Em telas maiores (sm+), capacetes maiores com mais espaçamento */
+@media (min-width: 640px) {
+  .f1-helmets-row {
+    gap: 32px;
+  }
+  .f1-helmet-card {
+    flex-shrink: 0;
+    gap: 8px;
+  }
+  .f1-helmet-img-wrap {
+    width: 96px;
+    height: 96px;
+  }
 }
 
 .f1-helmet-img-wrap img {
@@ -542,12 +558,19 @@
 }
 
 .f1-helmet-label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   opacity: 0.85;
   transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .f1-helmet-label {
+    font-size: 13px;
+  }
 }
 
 .f1-helmet-card:hover .f1-helmet-label {
