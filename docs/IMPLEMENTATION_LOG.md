@@ -42,3 +42,23 @@
 | **Riscos residuais** | Nenhum |
 | **Rollback** | Deletar arquivo `docs/BASELINE_QA.md` |
 | **Próximo passo** | Release A concluída — iniciar Release B (Fundação Administrativa) |
+
+---
+
+## Unidade B.1 — Fundação administrativa (feature flags + navegação + rotas)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release B — Unidade 1 |
+| **Hash do commit** | `bc5a6da` |
+| **Escopo** | API de feature flags; layout admin com navegação condicional; rotas placeholder para Divulgação e Parceiros |
+| **Arquivos alterados** | `src/app/api/admin/feature-flags/route.ts` (novo), `src/app/admin/layout.tsx` (modificado), `src/app/admin/divulgacao/page.tsx` (novo), `src/app/admin/parceiros/page.tsx` (novo) |
+| **Feature flag** | `admin_marketing_hub_enabled` = false, `admin_partner_crm_enabled` = false |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint` (exit 0), `npx next build` (exit 0) |
+| **Resultado** | ✅ Build passa; 10 feature flags definidas (todas OFF); novos itens de menu não aparecem por padrão; rotas protegidas por auth |
+| **Regressão** | Nenhuma — NAV_BASE (8 itens existentes) preservado; NAV_FEATURED só aparece quando flag ON |
+| **Validação manual** | Menu admin não mostra novos itens (flags OFF); rotas /admin/divulgacao e /admin/parceiros acessíveis mas mostram placeholder |
+| **Riscos residuais** | Nenhum |
+| **Rollback** | Reverter commit; itens de menu e rotas são removidos sem afetar funcionalidades existentes |
+| **Próximo passo** | Release B concluída — iniciar Release C (Central de Divulgação) |
