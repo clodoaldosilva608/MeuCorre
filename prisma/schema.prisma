@@ -551,3 +551,175 @@ model PromotionReminder {
   @@index([postId])
   @@index([status, remindAt])
 }
+
+// ===== Release D — CRM Básico (Parceiros) =====
+//
+// 5 modelos para gerenciar parceiros B2B: empresas, contatos, oportunidades,
+// atividades e log de auditoria. Tudo protegido por admin_partner_crm_enabled.
+//
+// Foco inicial: Recife/PE (decisão #1), serviços em geral do nicho (decisão #2),
+// responsável: Clodoaldo Silva (decisão #3).
+//
+// Nenhuma tabela existente é modificada — apenas adição.
+
+// Empresa parceira (oficina, loja de pneus, acessórios, alimentação, etc.)
+model Partner {
+  id              String   @id @default(cuid())
+  // Identificação
+  companyName     String
+  tradeName       String?
+  cnpj            String?  @unique
+  category        String?  // oficina | pneus | acessorios | alimentacao | protecao | servicos | outros
+  origin          String?  // manual | form | indicacao | importacao_csv | outbound
+  // Localização
+  city            String?
+  state           String?
+  address         String?
+  website         String?
+  // Canais
+  phone           String?
+  email           String?
+  logoUrl         String?
+  // Comercial
+  assignedTo      String?  @default("Clodoaldo Silva") // responsável comercial
+  priority        String   @default("media") // baixa | media | alta | urgente
+  status          String   @default("active") // active | paused | archived | lost | disqualified
+  stage           String   @default("novo_lead") // novo_lead | qualificando | contato_iniciado | descoberta | proposta_enviada | negociacao | aguardando_aprovacao | ativacao | ativo | renovacao | perdido | desqualificado
+  // Qualificação (scores 0-100)
+  relevanceScore  Int?     // relevância para o MeuCorre
+  benefitScore    Int?     // benefício oferecido ao entregador
+  reputationScore Int?     // reputação no mercado
+  capacityScore   Int?     // capacidade de execução
+  riskScore       Int?     // risco percebido
+  // Tags livres (vírgula separada)
+  tags            String?
+  // Valores
+  potentialValue  Decimal? @db.Decimal(10, 2) // valor potencial mensal
+  notes           String?
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contacts        PartnerContact[]
+  opportunities   Opportunity[]
+  activities      PartnerActivity[]
+  logs            PartnerLog[]
+
+  @@index([city, state])
+  @@index([category])
+  @@index([stage])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([priority])
+}
+
+// Contato de uma empresa (pessoa)
+model PartnerContact {
+  id          String   @id @default(cuid())
+  partnerId   String
+  name        String
+  role        String?  // cargo: gerente | proprietario | marketing | etc.
+  email       String?
+  phone       String?
+  isPrimary   Boolean  @default(false)
+  optOut      Boolean  @default(false) // se true, nunca selecionar para outbound
+  // Rede social
+  linkedinUrl String?
+  // Notas específicas do contato
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  partner     Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  opportunities Opportunity[]
+
+  @@index([partnerId])
+  @@index([email])
+  @@index([phone])
+  @@index([optOut])
+}
+
+// Oportunidade comercial (negócio no pipeline)
+model Opportunity {
+  id              String   @id @default(cuid())
+  partnerId       String
+  // Contato principal da oportunidade (opcional)
+  contactId       String?
+  // Descrição
+  title           String
+  description     String?
+  // Estágio (espelha Partner.stage mas permite múltiplas oportunidades por empresa)
+  stage           String   @default("novo_lead")
+  // Valor
+  potentialValue  Decimal? @db.Decimal(10, 2)
+  // Datas
+  expectedCloseAt DateTime?
+  wonAt           DateTime?
+  lostAt          DateTime?
+  lostReason      String?
+  // Modelos de cobrança (decisão #7): por campanha, por lead, ou ambos
+  billingModel    String?  // campaign | lead | both
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  partner         Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  contact         PartnerContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  activities      PartnerActivity[]
+
+  @@index([partnerId])
+  @@index([stage])
+  @@index([expectedCloseAt])
+}
+
+// Atividade (ligação, email, reunião, follow-up, anotação)
+model PartnerActivity {
+  id          String   @id @default(cuid())
+  partnerId   String
+  opportunityId String?
+  // Tipo
+  type        String   // call | email | whatsapp | meeting | follow_up | note | document
+  // Conteúdo
+  title       String
+  description String?
+  // Agendamento
+  scheduledAt DateTime?
+  completedAt DateTime?
+  // Status
+  status      String   @default("pending") // pending | done | canceled
+  // Responsável
+  assignedTo  String?  @default("Clodoaldo Silva")
+  // Metadata (JSON string)
+  metadata    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  partner     Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  @@index([partnerId])
+  @@index([opportunityId])
+  @@index([status, scheduledAt])
+  @@index([assignedTo])
+}
+
+// Log de auditoria — todas as alterações em Partner e relacionados
+model PartnerLog {
+  id          String   @id @default(cuid())
+  partnerId   String
+  // Ação: created | updated | deleted | stage_changed | contact_added | etc.
+  action      String
+  // Detalhes (JSON string): { field, oldValue, newValue, ... }
+  details     String?
+  // Quem executou
+  adminId     String?
+  adminEmail  String?
+  ipAddress   String?
+  // Quando
+  createdAt   DateTime @default(now())
+
+  partner     Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, createdAt])
+  @@index([action])
+}
