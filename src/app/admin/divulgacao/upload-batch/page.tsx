@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   FileArchive,
   Package,
+  Cloud,
+  HardDrive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +39,10 @@ export default function UploadBatchPage() {
   const [extractProgress, setExtractProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [storageInfo, setStorageInfo] = useState<{
+    backend: "supabase" | "local" | "unknown";
+    persistent: boolean;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const archiveInputRef = useRef<HTMLInputElement>(null);
 
@@ -137,6 +143,13 @@ export default function UploadBatchPage() {
 
         if (res.ok) {
           const data = await res.json();
+          // Rastreia backend de armazenamento do primeiro upload
+          if (i === 0 && data.storageBackend) {
+            setStorageInfo({
+              backend: data.storageBackend,
+              persistent: data.persistent ?? false,
+            });
+          }
           allResults.push({
             fileName: file.name,
             status: "success",
@@ -226,6 +239,33 @@ export default function UploadBatchPage() {
           </ol>
         </div>
       </div>
+
+      {/* Indicador de armazenamento */}
+      {storageInfo && (
+        <div
+          className={`flex items-center gap-2 rounded-lg border p-3 text-xs ${
+            storageInfo.backend === "supabase"
+              ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-300"
+              : "border-amber-500/30 bg-amber-500/5 text-amber-300"
+          }`}
+        >
+          {storageInfo.backend === "supabase" ? (
+            <Cloud className="h-4 w-4 shrink-0" />
+          ) : (
+            <HardDrive className="h-4 w-4 shrink-0" />
+          )}
+          <div>
+            <p className="font-medium">
+              Armazenamento: {storageInfo.backend === "supabase" ? "Supabase Storage (CDN persistente)" : "Filesystem local (não persistente)"}
+            </p>
+            <p className={`mt-0.5 ${storageInfo.backend === "supabase" ? "text-emerald-400/80" : "text-amber-400/80"}`}>
+              {storageInfo.persistent
+                ? "✅ Imagens persistem entre deploys — armazenamento permanente"
+                : "⚠️ Imagens serão perdidas no próximo deploy. Configure Supabase Storage para persistência."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Erro */}
       {error && (
