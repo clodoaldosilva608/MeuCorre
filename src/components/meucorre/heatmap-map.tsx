@@ -296,36 +296,17 @@ function MapContainer({
 
         // ===== Determina o centro do mapa =====
         // Se há pontos de calor, usa a média deles.
-        // Se não há pontos, tenta obter a localização atual do usuário.
-        // Se não conseguir, usa São Paulo como fallback.
+        // Se não há pontos, usa São Paulo como fallback imediato.
+        // Tenta obter a localização atual do usuário em paralelo (não bloqueia).
         let centerLat = -23.5505;
         let centerLng = -46.6333;
 
         if (hasData && points.length > 0) {
           centerLat = points.reduce((s, p) => s + p.lat, 0) / points.length;
           centerLng = points.reduce((s, p) => s + p.lng, 0) / points.length;
-        } else {
-          // Tenta obter localização atual do usuário (mesmo sem sessão ativa)
-          try {
-            const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-              if (!navigator.geolocation) {
-                reject(new Error("GPS não disponível"));
-                return;
-              }
-              navigator.geolocation.getCurrentPosition(resolve, reject, {
-                enableHighAccuracy: false,
-                maximumAge: 60000,
-                timeout: 5000,
-              });
-            });
-            centerLat = pos.coords.latitude;
-            centerLng = pos.coords.longitude;
-          } catch {
-            // Mantém fallback São Paulo se não conseguir obter localização
-          }
         }
 
-        // Cria o mapa
+        // Cria o mapa IMEDIATAMENTE (não espera GPS)
         const map = L.map(containerRef.current, {
           center: [centerLat, centerLng],
           zoom: 13,
@@ -339,33 +320,37 @@ function MapContainer({
           maxZoom: 19,
         }).addTo(map);
 
-        // ===== Adiciona marcador da localização atual do usuário =====
-        // Sempre mostra um marcador azul pulsante na localização do usuário
-        try {
-          const userPos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            if (!navigator.geolocation) {
-              reject(new Error("GPS não disponível"));
-              return;
-            }
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
+        // ===== Tenta obter localização atual do usuário (em background) =====
+        // Se conseguir, move o mapa para a localização do usuário e adiciona marcador.
+        // Se não conseguir, mantém o centro atual (São Paulo ou média dos pontos).
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              if (cancelled || !mapInstanceRef.current) return;
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              map.setView([lat, lng], 14);
+
+              const userMarker = L.circleMarker([lat, lng], {
+                radius: 8,
+                fillColor: "#4ADE80",
+                color: "#22C55E",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8,
+              }).addTo(map);
+
+              userMarker.bindPopup("📍 Sua localização atual");
+            },
+            () => {
+              // Erro de GPS — mantém centro atual (São Paulo)
+            },
+            {
               enableHighAccuracy: true,
-              maximumAge: 0,
-              timeout: 5000,
-            });
-          });
-
-          const userMarker = L.circleMarker([userPos.coords.latitude, userPos.coords.longitude], {
-            radius: 8,
-            fillColor: "#4ADE80",
-            color: "#22C55E",
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.8,
-          }).addTo(map);
-
-          userMarker.bindPopup("📍 Sua localização atual");
-        } catch {
-          // Se não conseguir obter localização, não mostra marcador
+              maximumAge: 30000,
+              timeout: 8000,
+            },
+          );
         }
 
         // ===== Adiciona camada de calor (se houver pontos) =====
