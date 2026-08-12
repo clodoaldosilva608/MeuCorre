@@ -420,3 +420,134 @@ model Lead {
   @@index([convertedAt])
   @@index([source, createdAt])
 }
+
+// ===== Release C — Central de Divulgação =====
+//
+// 5 modelos para gerenciar 450 postagens (90 dias × 5 posts/dia),
+// assets visuais, canais oficiais e lembretes.
+// Tudo protegido por feature flag admin_marketing_hub_enabled.
+//
+// Nenhuma tabela existente é modificada — apenas adição.
+
+// Campanha editorial (ex: "Plano 90 Dias MeuCorre")
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  objective   String?
+  startAt     DateTime?
+  endAt       DateTime?
+  timezone    String   @default("America/Sao_Paulo")
+  status      String   @default("draft") // draft | active | paused | completed | archived
+  color       String   @default("#10b981")
+  defaultUtm  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       PromotionPost[]
+
+  @@index([status])
+  @@index([startAt, endAt])
+}
+
+// Postagem editorial (450 posts: 90 dias × 5/dia)
+model PromotionPost {
+  id              String   @id @default(cuid())
+  campaignId      String
+  editorialDay    Int      // 1-90 (dia editorial dentro da campanha)
+  sequenceNumber  Int      // 1-5 (sequência do dia)
+  publishAt       DateTime // horário programado (com timezone)
+  timezone        String   @default("America/Sao_Paulo")
+  platform        String   // Instagram | TikTok | Facebook | YouTube
+  format          String?  // Reels | Carrossel | Short | Feed | Story
+  pillar          String?  // Lucro real | Despesas | Comunidade | etc.
+  title           String
+  description     String   // legenda completa
+  hashtags        String?  // #MeuCorre #EntregadorDeApp ...
+  engagementText  String?  // texto curto para final da legenda
+  cta             String?  // chamada para ação
+  destinationUrl  String?  // link final (com UTM)
+  altText         String?  // acessibilidade da imagem
+  videoScript     String?  // roteiro para vídeo (se aplicável)
+  durationSeconds Int?     // duração do vídeo (se aplicável)
+  status          String   @default("pending") // pending | published | skipped | failed
+  publishedAt     DateTime?
+  notes           String?
+  utmQuery        String?  // ?utm_source=...&utm_campaign=...
+  assetId         String?  // referência ao PromotionAsset
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  asset           PromotionAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  reminders       PromotionReminder[]
+
+  @@unique([campaignId, editorialDay, sequenceNumber, platform])
+  @@index([campaignId, editorialDay])
+  @@index([platform, status])
+  @@index([publishAt])
+  @@index([status])
+}
+
+// Asset visual (imagem, vídeo) vinculado a uma ou mais postagens
+model PromotionAsset {
+  id            String   @id @default(cuid())
+  name          String   // nome do arquivo (ex: M01_D01_P01_Instagram_vendas_ig_feed_1.png)
+  storageKey    String   // caminho no storage (ex: promotion/M01/M01_D01_P01_...png)
+  publicUrl     String?  // URL pública (CDN, Vercel Blob, ou local /uploads/promotion/...)
+  mimeType      String   @default("image/png")
+  width         Int?
+  height        Int?
+  fileSize      Int?     // bytes
+  altText       String?
+  source        String?  // origem: kit_comercial | repositorio | upload_admin | importado
+  baseAssetName String?  // nome do arquivo-base aprovado (ex: vendas_ig_feed_1.png)
+  tags          String?  // tags separadas por vírgula
+  hash          String?  // hash do conteúdo para deduplicação
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  posts         PromotionPost[]
+
+  @@index([name])
+  @@index([baseAssetName])
+  @@index([hash])
+}
+
+// Canal oficial (Instagram, TikTok, YouTube, Facebook, Aplicação, Quiz)
+model SocialChannel {
+  id          String   @id @default(cuid())
+  name        String   // Instagram | TikTok | YouTube | Facebook | Aplicação | Quiz
+  platform    String   // instagram | tiktok | youtube | facebook | app | quiz
+  profileUrl  String   // URL do perfil
+  bannerUrl   String?
+  promoTitle  String?
+  promoText   String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([platform, active])
+  @@index([sortOrder])
+}
+
+// Lembrete de postagem (Notification API + fallback)
+model PromotionReminder {
+  id            String   @id @default(cuid())
+  postId        String
+  remindAt      DateTime // quando disparar
+  minutesBefore Int      @default(15) // minutos antes do publishAt
+  channel       String   @default("browser") // browser | email | whatsapp
+  status        String   @default("pending") // pending | sent | failed | canceled
+  sentAt        DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  post          PromotionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([status, remindAt])
+}
