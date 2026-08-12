@@ -486,30 +486,12 @@
    CAPACETE F1 CARD (rodapé — largura total)
    ========================================
    Cada capacete é um card vertical: imagem + nome da rede social.
-   Dispostos em linha horizontal, centralizados, com wrap em mobile.
-   Animação: cada capacete "pula" de forma aleatória (bounce com delay
-   diferente para cada um, criando efeito assíncrono).
+   Dispostos em linha horizontal, alinhados, parados (sem animação).
 */
-
-/* Animação de pulo — cada capacete usa um delay diferente */
-@keyframes helmet-bounce {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-10px) rotate(-3deg);
-  }
-  50% {
-    transform: translateY(-4px) rotate(0deg);
-  }
-  75% {
-    transform: translateY(-8px) rotate(2deg);
-  }
-}
 
 .f1-helmets-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   gap: 24px;
   flex-wrap: wrap;
@@ -526,18 +508,13 @@
   text-decoration: none;
   transition: transform 0.2s ease;
   flex-shrink: 0;
-  /* Animação de pulo — cada capacete tem delay próprio (setado via inline style) */
-  animation: helmet-bounce 2.5s ease-in-out infinite;
-  animation-delay: var(--bounce-delay, 0s);
 }
 
 .f1-helmet-card:hover {
-  animation-play-state: paused;
-  transform: translateY(-6px) scale(1.05);
+  transform: translateY(-4px) scale(1.05);
 }
 
 .f1-helmet-card:active {
-  animation-play-state: paused;
   transform: translateY(0) scale(0.97);
 }
 
