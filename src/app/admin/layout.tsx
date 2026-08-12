@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap, Gift, ShoppingBag, FileText } from "lucide-react";
+import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap, Gift, ShoppingBag, FileText, Calendar, Handshake } from "lucide-react";
 
-const NAV = [
+// NAV base — sempre visível (funcionalidades existentes preservadas)
+const NAV_BASE = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/ads", label: "Anúncios", icon: Megaphone },
   { href: "/admin/offers", label: "Ofertas", icon: ShoppingBag },
@@ -16,15 +17,31 @@ const NAV = [
   { href: "/admin/feedback", label: "Feedbacks", icon: MessageSquare },
 ];
 
+// NAV condicional — só aparece quando feature flag está ON
+const NAV_FEATURED = [
+  { href: "/admin/divulgacao", label: "Divulgação", icon: Calendar, flag: "admin_marketing_hub_enabled" },
+  { href: "/admin/parceiros", label: "Parceiros", icon: Handshake, flag: "admin_partner_crm_enabled" },
+];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [flags, setFlags] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // Testa se está logado chamando uma rota protegida
     fetch("/api/admin/ads", { method: "GET" })
-      .then((r) => setAuthed(r.ok))
+      .then((r) => {
+        setAuthed(r.ok);
+        if (r.ok) {
+          // Carrega feature flags
+          return fetch("/api/admin/feature-flags").then((res) => res.json());
+        }
+      })
+      .then((data) => {
+        if (data?.flags) setFlags(data.flags);
+      })
       .catch(() => setAuthed(false));
   }, []);
 
@@ -52,6 +69,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.refresh();
   };
 
+  // Combina navegação base (sempre visível) com condicional (filtrada por flags)
+  const navItems = [
+    ...NAV_BASE,
+    ...NAV_FEATURED.filter((item) => flags[item.flag] === true),
+  ];
+
   return (
     <div className="flex min-h-screen bg-zinc-950 text-zinc-100">
       {/* Sidebar */}
@@ -67,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname?.startsWith(item.href);
             return (
@@ -115,7 +138,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Mobile bottom nav */}
         <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-zinc-800 bg-zinc-900 md:hidden">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname?.startsWith(item.href);
             return (
