@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap, Gift, ShoppingBag, FileText, Calendar, Handshake } from "lucide-react";
+import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap, Gift, ShoppingBag, FileText, Calendar, Handshake, Flag } from "lucide-react";
 
 // NAV base — sempre visível (funcionalidades existentes preservadas)
 const NAV_BASE = [
@@ -15,6 +15,7 @@ const NAV_BASE = [
   { href: "/admin/users", label: "Usuários", icon: Users },
   { href: "/admin/referrals", label: "Indicações", icon: Gift },
   { href: "/admin/feedback", label: "Feedbacks", icon: MessageSquare },
+  { href: "/admin/flags", label: "Feature Flags", icon: Flag },
 ];
 
 // NAV condicional — só aparece quando feature flag está ON
