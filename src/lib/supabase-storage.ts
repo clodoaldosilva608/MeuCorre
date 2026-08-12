@@ -1,5 +1,3 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-
 // ===== Supabase Storage Utility =====
 //
 // Gerencia upload de arquivos para Supabase Storage (bucket: promotion-assets).
@@ -17,10 +15,12 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 //    - Public bucket: YES
 //    - Allowed MIME types: image/png, image/jpeg, image/webp, image/gif
 
+// Lazy import para evitar erro de build se @supabase/supabase-js não estiver disponível
+type SupabaseClient = unknown;
 let _client: SupabaseClient | null = null;
 let _configured: boolean | null = null;
 
-function getClient(): SupabaseClient | null {
+async function getClient(): Promise<SupabaseClient | null> {
   if (_client) return _client;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,18 +31,26 @@ function getClient(): SupabaseClient | null {
     return null;
   }
 
-  _client = createClient(url, key, {
-    auth: { persistSession: false },
-  });
-  _configured = true;
-  return _client;
+  try {
+    // Dynamic import — só carrega @supabase/supabase-js quando necessário
+    const { createClient } = await import("@supabase/supabase-js");
+    _client = createClient(url, key, {
+      auth: { persistSession: false },
+    });
+    _configured = true;
+    return _client;
+  } catch (err) {
+    console.error("Erro ao carregar @supabase/supabase-js:", err);
+    _configured = false;
+    return null;
+  }
 }
 
 export function isSupabaseConfigured(): boolean {
-  if (_configured === null) {
-    getClient();
-  }
-  return _configured ?? false;
+  // Verifica apenas se as env vars estão setadas (não cria o client)
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return !!(url && key);
 }
 
 const BUCKET_NAME = "promotion-assets";
@@ -68,7 +76,7 @@ export async function uploadToSupabase(
   fileName: string,
   mimeType: string,
 ): Promise<SupabaseUploadResult> {
-  const client = getClient();
+  const client = await getClient();
   if (!client) {
     return {
       success: false,
@@ -85,19 +93,31 @@ export async function uploadToSupabase(
   const storageKey = `promotion/${safeName}`;
 
   try {
+    // Cast para any pois o client foi carregado dinamicamente
+    const supabase = client as {
+      storage: {
+        from: (bucket: string) => {
+          upload: (path: string, file: unknown, options?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+          getPublicUrl: (path: string) => { data: { publicUrl: string } };
+          remove: (paths: string[]) => Promise<{ error: { message: string } | null }>;
+        };
+        createBucket: (name: string, options: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+        list: (prefix: string, options?: Record<string, unknown>) => Promise<{ data: Array<{ name: string; updated_at?: string; metadata?: { size?: number } }> | null; error: { message: string } | null }>;
+      };
+    };
+
     // Tenta fazer upload
-    const { data, error } = await client
-      .storage
+    const { error } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(storageKey, file, {
         contentType: mimeType,
-        upsert: true, // sobrescreve se já existe
+        upsert: true,
       });
 
     if (error) {
       // Se o bucket não existe, tenta criar
       if (error.message.includes("not found") || error.message.includes("Bucket")) {
-        const { error: createError } = await client.storage.createBucket(BUCKET_NAME, {
+        const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
           public: true,
           allowedMimeTypes: ["image/png", "image/jpeg", "image/webp", "image/gif"],
           fileSizeLimit: "10MB",
@@ -111,8 +131,7 @@ export async function uploadToSupabase(
         }
 
         // Tenta upload novamente
-        const { data: retryData, error: retryError } = await client
-          .storage
+        const { error: retryError } = await supabase.storage
           .from(BUCKET_NAME)
           .upload(storageKey, file, {
             contentType: mimeType,
@@ -124,14 +143,13 @@ export async function uploadToSupabase(
         }
 
         // URL pública
-        const { data: publicUrlData } = client
-          .storage
+        const publicUrlData = supabase.storage
           .from(BUCKET_NAME)
           .getPublicUrl(storageKey);
 
         return {
           success: true,
-          publicUrl: publicUrlData.publicUrl,
+          publicUrl: publicUrlData.data.publicUrl,
           storageKey,
         };
       }
@@ -140,14 +158,13 @@ export async function uploadToSupabase(
     }
 
     // Obtém URL pública
-    const { data: publicUrlData } = client
-      .storage
+    const publicUrlData = supabase.storage
       .from(BUCKET_NAME)
       .getPublicUrl(storageKey);
 
     return {
       success: true,
-      publicUrl: publicUrlData.publicUrl,
+      publicUrl: publicUrlData.data.publicUrl,
       storageKey,
     };
   } catch (err) {
@@ -162,15 +179,22 @@ export async function uploadToSupabase(
  * Remove um arquivo do Supabase Storage.
  */
 export async function deleteFromSupabase(storageKey: string): Promise<boolean> {
-  const client = getClient();
+  const client = await getClient();
   if (!client) return false;
 
-  const { error } = await client
-    .storage
-    .from(BUCKET_NAME)
-    .remove([storageKey]);
-
-  return !error;
+  try {
+    const supabase = client as {
+      storage: {
+        from: (bucket: string) => {
+          remove: (paths: string[]) => Promise<{ error: { message: string } | null }>;
+        };
+      };
+    };
+    const { error } = await supabase.storage.from(BUCKET_NAME).remove([storageKey]);
+    return !error;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -181,21 +205,33 @@ export async function listSupabaseFiles(prefix: string = "promotion/"): Promise<
   size: number;
   lastModified: string;
 }>> {
-  const client = getClient();
+  const client = await getClient();
   if (!client) return [];
 
-  const { data, error } = await client
-    .storage
-    .from(BUCKET_NAME)
-    .list(prefix, { limit: 1000 });
+  try {
+    const supabase = client as {
+      storage: {
+        from: (bucket: string) => {
+          list: (prefix: string, options?: Record<string, unknown>) => Promise<{
+            data: Array<{ name: string; updated_at?: string; metadata?: { size?: number } }> | null;
+            error: { message: string } | null;
+          }>;
+        };
+      };
+    };
 
-  if (error || !data) return [];
+    const { data, error } = await supabase.storage.from(BUCKET_NAME).list(prefix, { limit: 1000 });
 
-  return data
-    .filter((f) => f.name !== ".emptyFolderPlaceholder")
-    .map((f) => ({
-      name: f.name,
-      size: f.metadata?.size ?? 0,
-      lastModified: f.updated_at ?? "",
-    }));
+    if (error || !data) return [];
+
+    return data
+      .filter((f) => f.name !== ".emptyFolderPlaceholder")
+      .map((f) => ({
+        name: f.name,
+        size: f.metadata?.size ?? 0,
+        lastModified: f.updated_at ?? "",
+      }));
+  } catch {
+    return [];
+  }
 }
