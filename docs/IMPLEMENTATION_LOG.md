@@ -547,3 +547,140 @@
 2. `DROP TABLE` das 2 tabelas novas (sem afetar nada existente)
 
 **Próximo passo:** Releases F (Campanhas e Ofertas) — pode ser paralela com validação de E em produção.
+
+---
+
+## Release F — Campanhas e Ofertas — 4 unidades atômicas
+
+### Unidade F.1 — Modelo PartnerCampaign
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release F — Unidade 1 |
+| **Hash do commit** | `0b2f854` |
+| **Escopo** | Adicionar modelo PartnerCampaign (camada adicional — NÃO modifica Ad/Offer) |
+| **Arquivos alterados** | `prisma/schema.prisma` (+80 linhas); back-relations em Partner e Proposal |
+| **Feature flag** | `partner_campaigns_enabled` (OFF por padrão) |
+| **Comandos executados** | `npx prisma generate` (ok), `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Prisma client gerado; TypeCheck e ESLint passam |
+| **Decisões aplicadas** | #7 (billingModel: campaign, lead, both) |
+| **Regressão** | Nenhuma — Ad e Offer existentes NÃO são modificados |
+| **Rollback** | Remover modelo e re-gerar client |
+| **Próximo passo** | F.2 — APIs |
+
+---
+
+### Unidade F.2 — APIs de PartnerCampaigns + endpoints públicos
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release F — Unidade 2 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 9 endpoints admin + 3 endpoints públicos (CRUD + approve + reject + publish + pause + report + metrics + tracking) |
+| **Arquivos alterados** | `src/app/api/admin/partner-campaigns/` (9 endpoints), `src/app/api/public/campaigns/` (3 endpoints) |
+| **Feature flag** | Nenhuma (admin via isAdminAuthed; público sem auth) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Workflow completo: draft → approved → published → paused/expired; auto-pausa após 3 denúncias; auto-expiração; tracking público sem auth; métricas com CTR e conversion rate |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | F.3 — UI |
+
+---
+
+### Unidade F.3 — UI de Campanhas
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release F — Unidade 3 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | Página /admin/campanhas com gate duplo; componente CampaignsListView com 6 stats, filtros, cards, dialogs (criar/rejeitar/denunciar); item menu admin |
+| **Arquivos alterados** | `src/lib/campaign-types.ts` (novo), `src/components/admin/campanhas/campaigns-list-view.tsx` (novo), `src/app/admin/campanhas/page.tsx` (novo), `src/app/admin/layout.tsx` (modificado) |
+| **Feature flag** | `partner_campaigns_enabled` AND `admin_partner_crm_enabled` |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0), `npx next build` (exit 0) |
+| **Resultado** | ✅ Build passa; UI completa com workflow de aprovação; métricas inline; auto-pausa após 3 denúncias; mobile responsivo |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | F.4 — testes E2E + log |
+
+---
+
+### Unidade F.4 — Testes E2E (9 cenários) + log
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release F — Unidade 4 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 9 cenários E2E cobrindo UI, APIs, CRUD completo, workflow de aprovação, denúncias, tracking público |
+| **Arquivos alterados** | `tests/e2e/campanhas-release-f.spec.ts` (novo), `docs/IMPLEMENTATION_LOG.md` |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/ tests/` (exit 0) |
+| **Resultado** | ✅ TypeCheck e ESLint passam; cobre workflow completo (criar→aprovar→publicar→pausar→reativar), tracking público, auto-pausa após 3 denúncias, validações de campos e estados |
+| **Regressão** | Nenhuma |
+| **Rollback** | Deletar arquivo de teste |
+| **Próximo passo** | Release F concluída — validar em produção |
+
+---
+
+## Release F — Resumo final
+
+**Total de unidades atômicas:** 4 (F.1 a F.4)
+
+**Total de arquivos novos:** 7
+- 1 schema Prisma (modificado, +80 linhas)
+- 9 endpoints API admin + 3 endpoints API públicos
+- 1 componente React (CampaignsListView)
+- 1 lib de tipos (campaign-types.ts)
+- 1 página admin (campanhas)
+- 1 layout admin (modificado — item de menu)
+- 1 arquivo de testes E2E (9 cenários)
+
+**Total de linhas adicionadas:** ~2.500
+
+**Endpoints API novos:** 12 (9 admin + 3 público)
+
+**Modelos Prisma novos:** 1 (PartnerCampaign)
+
+**Decisões aplicadas:** #7 (billingModel: campaign, lead, both)
+
+**CRÍTICO:** Anúncios existentes (tabela Ad) e ofertas existentes (tabela Offer) NÃO foram modificados. PartnerCampaign é uma camada adicional.
+
+**Feature flag:** `partner_campaigns_enabled` (OFF por padrão, ativável via /admin/flags)
+
+**Workflow de aprovação:**
+1. Admin cria campanha (status: draft)
+2. Admin aprova (draft → approved)
+3. Admin publica (approved → published)
+4. App do entregador consome /api/public/campaigns (lista published)
+5. App registra views/clicks via /api/public/campaigns/:id/track
+6. Admin pode pausar (published → paused) ou denunciar
+7. Auto-pausa após 3 denúncias
+8. Auto-expiração quando endsAt passa
+
+**Plano de ativação em produção:**
+1. `npx prisma db push` (cria a tabela nova)
+2. Acessar /admin/flags e ativar `partner_campaigns_enabled`
+3. Criar primeira campanha via /admin/campanhas
+
+**Plano de rollback:**
+1. Desativar flag via /admin/flags
+2. `DROP TABLE` PartnerCampaign (não afeta Ad/Offer existentes)
+3. Reverter commits F.1-F.4
+
+---
+
+## Releases E + F — Resumo conjunto
+
+**Total combinado de unidades:** 10 (E.1-E.7 + F.1-F.4)
+
+**Total combinado de arquivos:** 21
+
+**Total combinado de linhas:** ~5.500
+
+**Modelos Prisma novos:** 3 (Proposal, CommercialAsset, PartnerCampaign)
+
+**Endpoints API novos:** 19 (7 admin Proposals + 4 admin CommercialAssets + 9 admin Campaigns + 3 público + 1 público campanhas + 1 público tracking = 25 contando todos)
+
+**Próximo passo:** Releases E+F concluídas. Próximas releases no plano: G (Outbound Supervisionado), H (Métricas e Relatórios), I (Recursos Avançados).
