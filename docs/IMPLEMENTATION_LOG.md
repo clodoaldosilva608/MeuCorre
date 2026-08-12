@@ -837,3 +837,158 @@
 **Riscos residuais:**
 - IA pode classificar incorretamente — mitigado por revisão humana sempre disponível
 - Envio manual depende do admin seguir o processo — mitigado por UX que força o fluxo
+
+---
+
+## Release H — Métricas e Relatórios — 7 unidades atômicas
+
+### Unidade H.1 — API de Dashboard Executivo
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release H — Unidade 1 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | Endpoint GET /api/admin/metrics/dashboard com KPIs agregados de todas as áreas |
+| **Arquivos alterados** | `src/app/api/admin/metrics/dashboard/route.ts` (novo) |
+| **Feature flag** | Nenhuma (usa dados existentes; tabelas opcionais usam .catch) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ KPIs de receita, usuários, parceiros, indicações, app, campanhas, outbound, propostas, divulgação; queries paralelas com Promise.all; prismaRead para não sobrecarregar primary |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | H.2 — Relatórios CSV |
+
+---
+
+### Unidade H.2 — APIs de Relatórios Exportáveis (CSV)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release H — Unidade 2 |
+| **Hash do commit** | (mesmo commit do H.1) |
+| **Escopo** | 4 endpoints CSV: partners, users, financial, campaigns |
+| **Arquivos alterados** | `src/app/api/admin/metrics/reports/partners/route.ts`, `users/route.ts`, `financial/route.ts`, `campaigns/route.ts` (novos) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ CSV com BOM UTF-8 (Excel compatível); escape de aspas duplas; format=csv\|json; filtros específicos por relatório; limite 5.000-10.000 registros |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | H.3 — Alertas |
+
+---
+
+### Unidade H.3 — API de Alertas (idempotente)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release H — Unidade 3 |
+| **Hash do commit** | (mesmo commit do H.1) |
+| **Escopo** | Endpoint GET /api/admin/metrics/alerts com 8 categorias de alertas |
+| **Arquivos alterados** | `src/app/api/admin/metrics/alerts/route.ts` (novo) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ 8 categorias com severity (high/medium/low); idempotente (só leitura); items com detalhes contextuais; totalAlerts e highSeverityCount |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | H.4-H.6 — UI |
+
+---
+
+### Unidade H.4-H.6 — UI Métricas (Dashboard + Alertas + Relatórios)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release H — Unidades 4, 5, 6 (commitadas juntas) |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | Página /admin/metricas com 3 tabs; 3 componentes; item menu admin (sempre visível) |
+| **Arquivos alterados** | `src/components/admin/metricas/dashboard-view.tsx`, `alerts-view.tsx`, `reports-view.tsx` (novos), `src/app/admin/metricas/page.tsx` (novo), `src/app/admin/layout.tsx` (modificado) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0), `npx next build` (exit 0) |
+| **Resultado** | ✅ Build passa; dashboard executivo com 4 KPIs grandes + 6 pequenos + funil + 3 status grids; alertas expansíveis com severity; relatórios com filtros e download CSV via blob |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | H.7 — testes E2E |
+
+---
+
+### Unidade H.7 — Testes E2E (15 cenários) + log
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release H — Unidade 7 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 15 cenários E2E cobrindo UI, APIs, validações, performance, escape CSV |
+| **Arquivos alterados** | `tests/e2e/metricas-release-h.spec.ts` (novo), `docs/IMPLEMENTATION_LOG.md` |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/ tests/` (exit 0) |
+| **Resultado** | ✅ TypeCheck e ESLint passam; cobre: 3 tabs carregam, dashboard com KPIs, alertas com 8 categorias, 4 relatórios CSV, BOM UTF-8, escape de vírgulas, performance <5s |
+| **Regressão** | Nenhuma |
+| **Rollback** | Deletar arquivo de teste |
+| **Próximo passo** | Release H concluída — iniciar Release I (Recursos Avançados) |
+
+---
+
+## Release H — Resumo final
+
+**Total de unidades atômicas:** 7 (H.1 a H.7, com H.1-H.3 e H.4-H.6 commitadas juntas)
+
+**Total de arquivos novos:** 8
+- 6 endpoints API (dashboard + 4 relatórios CSV + alertas)
+- 3 componentes React (DashboardView, AlertsView, ReportsView)
+- 1 página admin (metricas)
+- 1 layout admin (modificado — item de menu sempre visível)
+- 1 arquivo de testes E2E (15 cenários)
+
+**Total de linhas adicionadas:** ~2.800
+
+**Endpoints API novos:** 6
+
+**Modelos Prisma novos:** 0 (usa dados existentes)
+
+**Feature flag:** Nenhuma nova (usa flags existentes — página sempre visível no admin)
+
+**KPIs do dashboard executivo:**
+- Receita: total, período, aprovadas, pendentes, rejeitadas, avgTicket
+- Usuários: total, PRO, trial, novos no período, conversionRate
+- Parceiros: total, ativos, novos no período, byStage (12 estágios)
+- Indicações: total, completed, pending, conversionRate, campaignActive
+- App: views, clicks, ctr, feedbacks, avgRating
+- Campanhas: total, published, paused, expired, views, clicks, leads, ctr
+- Outbound: count por 13 status
+- Propostas: count por 6 status
+- Divulgação: count por 4 status
+
+**Relatórios CSV exportáveis:**
+- Parceiros: 20 colunas (filtros: stage, status, city, category)
+- Usuários: 12 colunas (filtros: isPro, subscriptionStatus)
+- Financeiro: 15 colunas (filtros: status, paymentMethod, startDate, endDate)
+- Campanhas: 22 colunas (filtros: status, partnerId)
+- BOM UTF-8 (Excel compatível), escape de aspas duplas, máx 5.000-10.000 registros
+
+**Alertas (8 categorias):**
+1. leads_sem_contato (HIGH) — partner em novo_lead/qualificando há 7+ dias sem atividade
+2. proposta_vencida (HIGH) — sent + validUntil passado sem resposta
+3. campanha_expirando (MEDIUM) — published + endsAt nos próximos 7 dias
+4. campanha_com_denuncia (HIGH) — 2+ reports (próxima = auto-pausa)
+5. atividade_atrasada (MEDIUM) — pending + scheduledAt passado
+6. outbound_sem_resposta (LOW) — enviado 5+ dias sem resposta
+7. proposta_aprovada_sem_ativacao (MEDIUM) — approved sem campanha published
+8. campanhas_expiradas_nao_marcadas (LOW) — sync pendente
+
+**Performance:**
+- Dashboard usa Promise.all para queries paralelas
+- Usa prismaRead (read replica se configurada)
+- Tabelas opcionais (campanhas, outbound, propostas, divulgação) usam .catch(() => []) para não quebrar se feature flag OFF
+- Teste E2E valida resposta em <5 segundos
+
+**Plano de ativação em produção:**
+- Nenhum db push necessário (sem modelos novos)
+- Página já disponível em /admin/metricas (sempre visível no menu)
+- Dados aparecem automaticamente conforme feature flags existentes são ativadas
+
+**Plano de rollback:**
+- Reverter commits H.1-H.7
+- Remover item "Métricas" do NAV_BASE
+- Nenhuma tabela para dropar
+
+**Próximo passo:** Release I — Recursos Avançados (portal do parceiro, equipes B2B, Radar do Prejuízo, MeuCorre Score, Desafio 7 dias).
