@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap, Gift, ShoppingBag, FileText, Calendar, Handshake, Flag, FileStack, Tag } from "lucide-react";
+import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap, Gift, ShoppingBag, FileText, Calendar, Handshake, Flag, FileStack, Tag, Send } from "lucide-react";
 
 // NAV base — sempre visível (funcionalidades existentes preservadas)
 const NAV_BASE = [
@@ -24,6 +24,7 @@ const NAV_FEATURED = [
   { href: "/admin/parceiros", label: "Parceiros", icon: Handshake, flag: "admin_partner_crm_enabled" },
   { href: "/admin/propostas", label: "Propostas", icon: FileStack, flag: "admin_partner_crm_enabled" },
   { href: "/admin/campanhas", label: "Campanhas", icon: Tag, flag: "partner_campaigns_enabled" },
+  { href: "/admin/outbound", label: "Outbound", icon: Send, flag: "partner_outbound_preview_enabled" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
