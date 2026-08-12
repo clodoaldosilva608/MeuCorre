@@ -187,7 +187,7 @@ export function HeatmapMap({ open, onOpenChange, deliveries }: HeatmapMapProps) 
             </div>
           )}
 
-          {/* Mapa */}
+          {/* Mapa — sempre visível (mostra localização do usuário mesmo sem dados) */}
           <div className="overflow-hidden rounded-xl border border-border dark:border-zinc-800">
             <MapContainer
               points={points}
@@ -195,7 +195,7 @@ export function HeatmapMap({ open, onOpenChange, deliveries }: HeatmapMapProps) 
             />
           </div>
 
-          {/* Top áreas quentes */}
+          {/* Top áreas quentes — só aparece se houver dados */}
           {hasData && topAreas.length > 0 && (
             <div className="space-y-2">
               <h4 className="flex items-center gap-1.5 text-sm font-semibold text-foreground/80 dark:text-zinc-300">
@@ -230,24 +230,15 @@ export function HeatmapMap({ open, onOpenChange, deliveries }: HeatmapMapProps) 
             </div>
           )}
 
-          {/* Empty state */}
+          {/* Dica quando não há dados (mas mapa ainda visível acima) */}
           {!hasData && (
-            <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-6 text-center">
-              <MapPin className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
-              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                Sem dados de localização ainda
-              </p>
-              <p className="mt-1 text-[11px] text-zinc-500">
-                Quando você registrar corridas com localização, o mapa de calor vai mostrar
-                suas áreas quentes automaticamente.
-              </p>
-              <div className="mt-3 flex items-start gap-2 rounded-lg bg-blue-500/5 p-2 text-left text-[10px] text-blue-500">
-                <Info className="mt-0.5 h-3 w-3 shrink-0" />
-                <span>
-                  Dica: inicie uma sessão "Corre do dia" com GPS ligado para capturar
-                  sua localização automaticamente durante as corridas.
-                </span>
-              </div>
+            <div className="flex items-start gap-2 rounded-lg bg-blue-500/5 p-3 text-left text-[11px] text-blue-500">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>
+                O mapa mostra sua localização atual. Para ver áreas quentes,
+                inicie uma sessão "Corre do dia" com GPS ligado para capturar
+                sua localização automaticamente durante as corridas.
+              </span>
             </div>
           )}
         </div>
