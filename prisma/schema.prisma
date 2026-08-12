@@ -997,3 +997,213 @@ model OutboundLog {
   @@index([followUpAt])
   @@index([responseClassification])
 }
+
+// ===== Release I — Recursos Avançados =====
+//
+// Modelos para:
+// 1. MeuCorre Equipes (Team, TeamMember, TeamInvite) — B2B MVP
+// 2. Portal do Parceiro (PartnerPortalToken) — visão restrita
+// 3. Radar do Prejuízo (RadarAlert) — alertas explicáveis no app
+// 4. MeuCorre Score (ScoreSnapshot) — consistência, não julga
+// 5. Desafio de 7 dias (ChallengeParticipant) — engajamento
+//
+// Tudo protegido por feature flags.
+// Nenhuma tabela existente é modificada — apenas adição.
+
+// ===== Equipes B2B =====
+// Permite que empresas organizem seus entregadores em times.
+// Privacidade: cada membro só vê dados agregados do próprio time.
+// Admin gerencia times; membros não veem outros times.
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  // Empresa/organização responsável
+  companyName String?
+  cnpj        String?
+  // Contato do gestor
+  managerName String?
+  managerEmail String?
+  managerPhone String?
+  // Configurações
+  active      Boolean  @default(true)
+  maxMembers  Int      @default(50) // limite de membros
+  // Metadata
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     TeamMember[]
+  invites     TeamInvite[]
+
+  @@index([active])
+  @@index([companyName])
+}
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  teamId      String
+  userId      String?  // link com User quando aceita convite
+  // Dados do membro (preenchidos no convite, antes de linkar com User)
+  name        String
+  email       String
+  phone       String?
+  // Role no time
+  role        String   @default("member") // owner | admin | member
+  // Status
+  status      String   @default("active") // active | suspended | removed
+  joinedAt    DateTime @default(now())
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, email])
+  @@index([teamId, status])
+  @@index([userId])
+  @@index([email])
+}
+
+model TeamInvite {
+  id          String   @id @default(cuid())
+  teamId      String
+  // Dados do convidado
+  email       String
+  name        String?
+  phone       String?
+  // Token de aceite (único, expira em 7 dias)
+  token       String   @unique
+  // Role que terá ao aceitar
+  role        String   @default("member")
+  // Status
+  status      String   @default("pending") // pending | accepted | rejected | expired
+  invitedBy   String?
+  invitedAt   DateTime @default(now())
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  acceptedUserId String? // User que aceitou
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, status])
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// ===== Portal do Parceiro =====
+// Token de acesso para parceiro ver suas campanhas e métricas.
+// Sem auth admin — usa token único por parceiro.
+
+model PartnerPortalToken {
+  id          String   @id @default(cuid())
+  partnerId   String
+  token       String   @unique
+  // Permissões
+  canViewCampaigns Boolean @default(true)
+  canViewMetrics   Boolean @default(true)
+  canViewProposals Boolean @default(false)
+  // Vigência
+  expiresAt   DateTime? // null = sem expiração
+  lastUsedAt  DateTime?
+  // Status
+  active      Boolean  @default(true)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([partnerId])
+  @@index([token])
+  @@index([active])
+}
+
+// ===== Radar do Prejuízo =====
+// Alertas explicáveis no app do entregador.
+// Cada alerta tem: gatilho, explicação, ação sugerida, e pode ser desligado.
+
+model RadarAlert {
+  id          String   @id @default(cuid())
+  userId      String   // entregador
+  // Tipo de alerta
+  type        String   // despesa_alta | lucro_baixo | sem_corrida_dias | despesa_recorrente | meta_atrasada | gastos_vs_ganhos
+  // Conteúdo explicável
+  title       String
+  message     String   // explicação em linguagem natural
+  // Dados que dispararam o alerta (JSON)
+  triggerData String?
+  // Ação sugerida
+  suggestedAction String?
+  // Severidade
+  severity    String   @default("medium") // low | medium | high
+  // Status
+  status      String   @default("active") // active | dismissed | resolved
+  dismissedAt DateTime?
+  dismissedReason String?
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([type, status])
+  @@index([severity, status])
+  @@index([createdAt])
+}
+
+// ===== MeuCorre Score =====
+// Score de consistência do entregador (0-100).
+// NÃO JULGA — mostra evolução. Não compara com outros.
+// Fatores: regularidade de lançamentos, consistência de lucro, acompanhamento de metas.
+
+model ScoreSnapshot {
+  id          String   @id @default(cuid())
+  userId      String
+  // Score total (0-100)
+  score       Int
+  // Fatores (cada um 0-100, ponderados)
+  regularityScore    Int // regularidade de lançamentos (corridas/despesas)
+  consistencyScore   Int // consistência de lucro positivo
+  goalAdherenceScore Int // acompanhamento de metas
+  // Detalhes (JSON: { factor, value, weight, contribution })
+  details     String?
+  // Período de referência
+  periodStart DateTime
+  periodEnd   DateTime
+  // Metadata
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([periodStart, periodEnd])
+}
+
+// ===== Desafio de 7 dias =====
+// Engajamento: entregador se compromete com hábitos por 7 dias.
+// Cada dia tem uma tarefa. Sistema rastreia progresso.
+
+model ChallengeParticipant {
+  id          String   @id @default(cuid())
+  userId      String
+  // Status do desafio
+  status      String   @default("active") // active | completed | abandoned | expired
+  // Progresso (7 dias)
+  currentDay  Int      @default(1) // 1-7
+  // Tarefas concluídas (JSON: { day: 1, completed: true, completedAt: "..." })
+  tasksJson   String   @default("[]")
+  // Recompensa
+  rewardClaimed Boolean @default(false)
+  rewardClaimedAt DateTime?
+  // Vigência
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  expiresAt   DateTime  // 7 dias + tolerância
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([status, expiresAt])
+}
