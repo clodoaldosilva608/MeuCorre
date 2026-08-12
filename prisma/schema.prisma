@@ -602,6 +602,7 @@ model Partner {
 
   contacts        PartnerContact[]
   opportunities   Opportunity[]
+  proposals       Proposal[]
   activities      PartnerActivity[]
   logs            PartnerLog[]
 
@@ -666,6 +667,7 @@ model Opportunity {
   partner         Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   contact         PartnerContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
   activities      PartnerActivity[]
+  proposals       Proposal[]
 
   @@index([partnerId])
   @@index([stage])
@@ -722,4 +724,90 @@ model PartnerLog {
 
   @@index([partnerId, createdAt])
   @@index([action])
+}
+
+// ===== Release E — Propostas e Materiais =====
+//
+// 2 modelos para gerenciar propostas comerciais (com versões e validade)
+// e biblioteca de materiais (media kit, cases, contratos).
+// Usa feature flag admin_partner_crm_enabled (já existente).
+//
+// Modelo duplo de cobrança (decisão #7): campaign | lead | both
+// Nenhuma tabela existente é modificada — apenas adição.
+
+// Proposta comercial — vinculada a uma Opportunity (negócio no pipeline)
+model Proposal {
+  id              String   @id @default(cuid())
+  partnerId       String
+  opportunityId   String?
+  // Identificação
+  number          String   @unique // ex: PROP-2026-001
+  title           String
+  // Conteúdo (Markdown)
+  body            String   // corpo da proposta
+  summary         String?  // resumo executivo
+  // Modelo de cobrança (decisão #7)
+  billingModel    String?  // campaign | lead | both
+  campaignPrice   Decimal? @db.Decimal(10, 2) // preço por campanha (mensal)
+  leadPrice       Decimal? @db.Decimal(10, 2) // preço por lead
+  // Vigência
+  validUntil      DateTime? // prazo de validade
+  sentAt          DateTime?
+  // Aprovação humana
+  status          String   @default("draft") // draft | sent | approved | rejected | expired | canceled
+  approvedAt      DateTime?
+  approvedBy      String?
+  approvedByEmail String?
+  rejectedAt      DateTime?
+  rejectedReason  String?
+  // Versão (incremental)
+  version         Int      @default(1)
+  parentProposalId String? // se for revisão, aponta para a proposta pai
+  // Link público (gerado quando enviada)
+  publicToken     String?  @unique // token para acesso público sem auth
+  // Metadata
+  notes           String?
+  createdBy       String?
+  createdByEmail  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  partner         Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  opportunity     Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  @@index([partnerId])
+  @@index([opportunityId])
+  @@index([status])
+  @@index([validUntil])
+  @@index([publicToken])
+}
+
+// Asset comercial (media kit, case, contrato, apresentação)
+model CommercialAsset {
+  id          String   @id @default(cuid())
+  // Tipo
+  type        String   // media_kit | case | contract | presentation | one_pager | pricing_table | video | other
+  // Identificação
+  name        String
+  description String?
+  // Arquivo
+  storageKey  String
+  publicUrl   String?
+  mimeType    String
+  fileSize    Int?     // bytes
+  // Versão
+  version     String?  // ex: "v1.0", "2026-08"
+  // Tags e categoria
+  tags        String?
+  // Status
+  active      Boolean  @default(true)
+  // Metadata
+  createdBy   String?
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type, active])
+  @@index([name])
+  @@index([tags])
 }
