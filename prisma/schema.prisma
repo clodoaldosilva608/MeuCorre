@@ -606,6 +606,7 @@ model Partner {
   campaigns       PartnerCampaign[]
   activities      PartnerActivity[]
   logs            PartnerLog[]
+  outboundLogs    OutboundLog[]
 
   @@index([city, state])
   @@index([category])
@@ -634,6 +635,7 @@ model PartnerContact {
 
   partner     Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   opportunities Opportunity[]
+  outboundLogs OutboundLog[]
 
   @@index([partnerId])
   @@index([email])
@@ -890,4 +892,108 @@ model PartnerCampaign {
   @@index([city, state])
   @@index([startsAt, endsAt])
   @@index([proOnly])
+}
+
+// ===== Release G — Outbound Supervisionado =====
+//
+// 2 modelos para prospecção B2B supervisionada.
+// PRINCÍPIO CRÍTICO: o sistema prepara; o administrador executa.
+// Nenhum envio automático — sempre supervisionado.
+//
+// Feature flags:
+//   - partner_outbound_preview_enabled (ON após validação interna)
+//   - partner_outbound_send_enabled (OFF por padrão — só ativa com revisão humana)
+//
+// Opt-out permanente: contato com optOut=true NUNCA é selecionado.
+// Nenhuma tabela existente é modificada — apenas adição.
+
+// Template de mensagem outbound (versionado)
+model OutboundTemplate {
+  id            String   @id @default(cuid())
+  // Identificação
+  name          String   // ex: "Oficina local — primeiro contato"
+  channel       String   // email | whatsapp | linkedin | phone
+  segment       String?  // categoria + região (ex: "oficina-recife")
+  objective     String   // permission | discovery | proposal | follow_up | renewal
+  // Conteúdo
+  subject       String?  // assunto (só para email)
+  body          String   // template com variáveis: {NOME}, {EMPRESA}, {CIDADE}, {CATEGORIA}, {MOTIVO}
+  cta           String?  // chamada para ação (curta)
+  optOutText    String?  // texto de opt-out (ex: "Responda PARE para não receber mais")
+  // Variáveis suportadas (documentadas no campo)
+  variables     String?  // lista de variáveis: "NOME,EMPRESA,CIDADE,CATEGORIA,MOTIVO"
+  // Status
+  status        String   @default("draft") // draft | approved | paused | archived
+  // Versão
+  version       Int      @default(1)
+  parentTemplateId String? // se for revisão, aponta para o template pai
+  // Metadata
+  notes         String?
+  createdBy     String?
+  createdByEmail String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  logs          OutboundLog[]
+
+  @@index([channel, status])
+  @@index([objective])
+  @@index([status])
+  @@index([parentTemplateId])
+}
+
+// Log de envio outbound (uma mensagem por contato)
+model OutboundLog {
+  id            String   @id @default(cuid())
+  // Relacionamentos
+  partnerId     String
+  contactId     String
+  templateId    String?
+  // Mensagem
+  channel       String   // email | whatsapp | linkedin | phone
+  // Preview expandido (variáveis substituídas)
+  renderedSubject String?
+  renderedBody  String   // conteúdo final após substituição de variáveis
+  renderedCta   String?
+  // Status (13 valores conforme especificação)
+  status        String   @default("preparado") // preparado | aguardando_aprovacao | enviado | respondeu | interessado | reuniao_marcada | proposta_enviada | negociacao | ganho | ativo | opt_out | perdido | erro
+  // Classificação da resposta (se houve)
+  responseText  String?  // texto da resposta recebida
+  responseClassification String? // permission_to_send | interessado | pricing_question | meeting_ready | opt_out | nurture_future | ambiguous | risk
+  responseClassifiedAt DateTime?
+  responseClassifiedBy String?
+  responseClassifiedByEmail String?
+  responseClassifiedByMethod String? // manual | ai
+  // Razão de perda (se status=perdido)
+  lostReason    String?
+  // Follow-up
+  followUpAt    DateTime? // quando retomar contato
+  followUpNotes String?
+  // Envio manual
+  sentAt        DateTime?
+  sentBy        String?
+  sentByEmail   String?
+  sentManuallyAt DateTime? // quando o admin registrou o envio no sistema
+  // Aprovação (dry-run aprovado)
+  approvedAt    DateTime?
+  approvedBy    String?
+  approvedByEmail String?
+  // Erro
+  errorMessage  String?
+  // Metadata
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  partner       Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  contact       PartnerContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  template      OutboundTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([partnerId])
+  @@index([contactId])
+  @@index([templateId])
+  @@index([status])
+  @@index([channel, status])
+  @@index([followUpAt])
+  @@index([responseClassification])
 }
