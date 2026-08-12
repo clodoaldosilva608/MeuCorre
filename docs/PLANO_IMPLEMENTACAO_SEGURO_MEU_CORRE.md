@@ -971,20 +971,27 @@ Nova aba `/admin/parceiros` no painel admin, protegida por `admin_partner_crm_en
 
 ---
 
-## 16. Perguntas de Decisão que Exigem Resposta do Responsável pelo Produto
+## 16. Decisões do Responsável pelo Produto (Respondidas em 12/08/2026)
 
-| # | Pergunta | Contexto | Impacto se não respondida |
-|---|----------|----------|--------------------------|
-| 1 | Qual cidade-piloto para o CRM de parceiros? | Estratégia CRM recomenda começar local | Release D não tem leads reais para testar |
-| 2 | Qual categoria inicial (oficinas, pneus, acessórios...)? | Estratégia CRM recomenda oficinas/manutenção | Templates de mensagem não personalizados |
-| 3 | Quem é o responsável comercial que vai operar o CRM? | Necessário para `assignedTo` | CRM não tem usuário atribuído |
-| 4 | As 450 imagens das postagens estão disponíveis para download? | URLs do manifest.json podem expirar | Release C não tem assets para vincular |
-| 5 | O plano vitalício R$ 18,90 continua vigente ou deve mudar? | Estudo estratégico recomenda limitar como campanha | Não afeta implementação técnica, mas afeta comunicação |
-| 6 | Deseja reativar o GitHub Actions CI? | Atualmente desabilitado (limite de minutos) | Commits não validados automaticamente |
-| 7 | Qual modelo de cobrança inicial para parceiros? (mensalidade, lead, comissão) | Estratégia CRM recomenda mensalidade simples | Propostas não têm preço definido |
-| 8 | O outbound deve usar WhatsApp, email ou ambos? | Análise outbound recomenda canais oficiais | Templates não têm canal definido |
-| 9 | Deseja implementar o MeuCorre Equipes (B2B) no curto prazo? | Estudo estratégico recomenda médio/longo prazo | Release I pode ser adiada |
-| 10 | O blog interno deve continuar sendo publicado também no Blogger externo? | Já implementado via OAuth2 | Não afeta plano, mas confirmação evita retrabalho |
+| # | Pergunta | Resposta | Impacto no plano |
+|---|----------|----------|-----------------|
+| 1 | Qual cidade-piloto para o CRM? | **Pernambuco-Recife** | Release D: leads iniciais focados em Recife/PE; templates personalizados para região |
+| 2 | Qual categoria inicial? | **Serviços em geral do nicho** (amplo: oficinas, pneus, acessórios, alimentação, proteção, etc.) | Release D: categorias múltiplas desde o início; templates por categoria |
+| 3 | Responsável comercial? | **Clodoaldo Silva** | `assignedTo` = "Clodoaldo Silva" em todos os leads iniciais |
+| 4 | 450 imagens disponíveis? | **Usuário fará upload via admin** — criar seção de upload na página admin | Release C: adicionar UI de upload de arquivo ZIP/pasta de imagens; sistema processa e vincula aos posts |
+| 5 | Vitalício R$ 18,90 vigente? | **Sim, continua** | Manter preço atual; não alterar checkout |
+| 6 | Reativar GitHub Actions CI? | **Sim, sem dar erro nos commits** | Reativar CI com workflow que não bloqueia commits (warn-only ou CI otimizado sem build) |
+| 7 | Modelo de cobrança para parceiros? | **Por campanha E por lead** (ambos) | Release E/F: templates de proposta com ambos os modelos; tabela de preços configurável |
+| 8 | Canal de outbound? | **Ambos (WhatsApp e email)** | Release G: templates para ambos os canais; `OutboundTemplate.channel` aceita "whatsapp" e "email" |
+| 9 | Implementar Equipes (B2B)? | **Sim, no curto prazo** | Release I: trazida para o escopo imediato; MVP de Equipes incluído no roadmap principal |
+| 10 | Continuar no Blogger externo? | **Sim** | Manter integração Blogger OAuth2 existente; não modificar |
+
+### 16.1 Decisões adicionais baseadas nas respostas
+
+- **Upload de imagens na Central de Divulgação:** Criar seção `/admin/divulgacao/assets` com upload de arquivo ZIP contendo as 450 imagens organizadas por mês/dia/postagem. O sistema descompacta, processa, vincula aos posts pelo nome do arquivo e registra no `PromotionAsset`.
+- **CI sem bloqueio:** Reativar GitHub Actions com workflow que roda `tsc --noEmit` e `eslint` mas usa `continue-on-error: true` para não bloquear commits se houver warnings (repositório privado com limite de minutos).
+- **Equipes B2B no curto prazo:** Release I é movida para logo após Release H (não mais "longo prazo"). MVP: criar organização, convidar membros, painel agregado, benefícios.
+- **Modelo duplo de cobrança:** `PartnerCampaign` suporta `billingModel: "campaign" | "lead" | "both"`. Propostas incluem os dois modelos.
 
 ---
 
