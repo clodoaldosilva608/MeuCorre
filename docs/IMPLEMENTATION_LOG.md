@@ -684,3 +684,156 @@
 **Endpoints API novos:** 19 (7 admin Proposals + 4 admin CommercialAssets + 9 admin Campaigns + 3 público + 1 público campanhas + 1 público tracking = 25 contando todos)
 
 **Próximo passo:** Releases E+F concluídas. Próximas releases no plano: G (Outbound Supervisionado), H (Métricas e Relatórios), I (Recursos Avançados).
+
+---
+
+## Release G — Outbound Supervisionado — 7 unidades atômicas
+
+### Unidade G.1 — Modelos Prisma (2 tabelas novas)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release G — Unidade 1 |
+| **Hash do commit** | `c20bb1e` |
+| **Escopo** | Adicionar 2 modelos: OutboundTemplate (versionado) + OutboundLog (com 13 status e 8 classificações) |
+| **Arquivos alterados** | `prisma/schema.prisma` (+106 linhas); back-relations em Partner e PartnerContact |
+| **Feature flag** | `partner_outbound_preview_enabled` (OFF) + `partner_outbound_send_enabled` (OFF) |
+| **Comandos executados** | `npx prisma generate` (ok), `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Prisma client gerado; TypeCheck e ESLint passam |
+| **Princípios** | Sistema prepara; admin executa. Nenhum envio automático. Opt-out permanente. |
+| **Regressão** | Nenhuma — apenas adição |
+| **Rollback** | Remover os 2 modelos e re-gerar client |
+| **Próximo passo** | G.2 — APIs de Templates |
+
+---
+
+### Unidade G.2 — APIs de OutboundTemplates (CRUD + versionar + dry-run)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release G — Unidade 2 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 7 endpoints: CRUD + version + dry-run + lista com filtros |
+| **Arquivos alterados** | `src/app/api/admin/outbound/templates/route.ts`, `[id]/route.ts`, `[id]/version/route.ts`, `[id]/dry-run/route.ts`, `src/lib/outbound-variables.ts` (novo) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Versionamento funcional (arquiva versão anterior); dry-run substitui variáveis e detecta missing; LGPD bloqueia optOut |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | G.3 — APIs de Logs |
+
+---
+
+### Unidade G.3 — APIs de OutboundLogs (prepare + approve + send + classify IA + opt-out)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release G — Unidade 3 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 8 endpoints: lista + prepare + CRUD + approve + send + opt-out + classify (manual/IA) |
+| **Arquivos alterados** | `src/app/api/admin/outbound/logs/route.ts`, `prepare/route.ts`, `[id]/route.ts`, `[id]/approve/route.ts`, `[id]/send/route.ts`, `[id]/opt-out/route.ts`, `[id]/classify/route.ts` |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Workflow completo: preparado→aguardando_aprovacao→enviado→classificado; classificação via z-ai-web-dev-sdk funcional; opt-out PERMANENTE |
+| **Decisões aplicadas** | #8 (ambos canais: WhatsApp + email — channel aceita ambos) |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | G.4-G.6 — UI |
+
+---
+
+### Unidade G.4-G.6 — UI completa (página + templates + logs + drawer + dialogs)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release G — Unidades 4, 5, 6 (commitadas juntas) |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | Página /admin/outbound com gate duplo + 2 componentes (TemplatesView, LogsView) + lib de tipos + item menu admin |
+| **Arquivos alterados** | `src/lib/outbound-types.ts` (novo), `src/components/admin/outbound/templates-view.tsx` (novo), `logs-view.tsx` (novo), `src/app/admin/outbound/page.tsx` (novo), `src/app/admin/layout.tsx` (modificado) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0), `npx next build` (exit 0) |
+| **Resultado** | ✅ Build passa; UI completa com: editor de templates com variáveis, dry-run sheet com preview renderizado, lista de mensagens com filtros, drawer de detalhe com workflow completo (approve/send/opt-out/classify), prepare dialog com seleção multi-contatos |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | G.7 — testes E2E |
+
+---
+
+### Unidade G.7 — Testes E2E (14 cenários) + log
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release G — Unidade 7 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 14 cenários E2E cobrindo UI, APIs, CRUD completo, workflow, opt-out, classificação, validações |
+| **Arquivos alterados** | `tests/e2e/outbound-release-g.spec.ts` (novo, 480 linhas), `docs/IMPLEMENTATION_LOG.md` |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/ tests/` (exit 0) |
+| **Resultado** | ✅ TypeCheck e ESLint passam; cobre: UI flag OFF/ON, APIs 401, CRUD template, versionamento, dry-run, workflow completo (prepare→approve→send), feature flag send bloqueia, opt-out PERMANENTE bloqueia prepare, classificação manual, validações de campos e lote |
+| **Regressão** | Nenhuma |
+| **Rollback** | Deletar arquivo de teste |
+| **Próximo passo** | Release G concluída — validar em produção |
+
+---
+
+## Release G — Resumo final
+
+**Total de unidades atômicas:** 7 (G.1 a G.7, com G.4-G.6 commitadas juntas)
+
+**Total de arquivos novos:** 13
+- 1 schema Prisma (modificado, +106 linhas)
+- 15 endpoints API (7 templates + 8 logs)
+- 2 componentes React (TemplatesView, LogsView)
+- 2 libs (outbound-types.ts, outbound-variables.ts)
+- 1 página admin (outbound)
+- 1 layout admin (modificado — item de menu)
+- 1 arquivo de testes E2E (14 cenários)
+
+**Total de linhas adicionadas:** ~3.500
+
+**Endpoints API novos:** 15
+
+**Modelos Prisma novos:** 2 (OutboundTemplate, OutboundLog)
+
+**Decisões aplicadas:** #8 (ambos canais: WhatsApp + email)
+
+**Feature flags:**
+- `partner_outbound_preview_enabled` (OFF por padrão, ativa preview e preparação)
+- `partner_outbound_send_enabled` (OFF por padrão, ativa registro de envio manual)
+
+**Princípios implementados:**
+1. Sistema prepara; admin executa. Nenhum envio automático.
+2. Dry-run obrigatório (preview com variáveis substituídas).
+3. Opt-out PERMANENTE (contato com optOut=true NUNCA é selecionado).
+4. Logs de tudo (cada preparação, aprovação, envio, classificação).
+5. Sem anti-ban (canais oficiais, volume controlado, máx 100/lote).
+6. Classificação de respostas via IA (z-ai-web-dev-sdk) ou manual.
+
+**Workflow completo:**
+1. Admin cria template (draft)
+2. Admin aprova template (draft → approved)
+3. Admin seleciona contatos qualificados (LGPD: optOut filtrado)
+4. Sistema prepara mensagens (substitui variáveis, status: preparado)
+5. Admin revisa dry-run
+6. Admin aprova (preparado → aguardando_aprovacao)
+7. Admin envia MANUALMENTE pelo canal (WhatsApp, email)
+8. Admin registra envio no sistema (aguardando_aprovacao → enviado)
+9. Admin recebe resposta e classifica (manual ou IA)
+10. Sistema atualiza status do lead e cria follow-up se necessário
+11. Opt-outs são PERMANENTES
+
+**Plano de ativação em produção:**
+1. `npx prisma db push` (cria as 2 tabelas novas)
+2. Acessar /admin/flags e ativar:
+   - `partner_outbound_preview_enabled` (permite preparar e aprovar)
+   - `partner_outbound_send_enabled` (permite registrar envios — ativar com cautela)
+
+**Plano de rollback:**
+1. Desativar ambas flags via /admin/flags
+2. `DROP TABLE` das 2 tabelas novas (não afeta nada existente)
+3. Reverter commits G.1-G.7
+
+**Riscos residuais:**
+- IA pode classificar incorretamente — mitigado por revisão humana sempre disponível
+- Envio manual depende do admin seguir o processo — mitigado por UX que força o fluxo
