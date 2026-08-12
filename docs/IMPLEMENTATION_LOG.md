@@ -432,3 +432,118 @@
 **Riscos residuais:** Nenhum — todas as funcionalidades são aditivas e protegidas por feature flag.
 
 **Próximo passo:** Releases E (Propostas e Materiais) e F (Campanhas e Ofertas) podem ser paralelizadas. Recomenda-se validar D em produção antes de iniciar E.
+
+---
+
+## Release E — Propostas e Materiais — 6 unidades atômicas
+
+### Unidade E.1 — Modelos Prisma (2 tabelas novas)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release E — Unidade 1 |
+| **Hash do commit** | `81026a5` |
+| **Escopo** | Adicionar 2 modelos Prisma: Proposal, CommercialAsset |
+| **Arquivos alterados** | `prisma/schema.prisma` (+88 linhas); back-relations em Partner e Opportunity |
+| **Feature flag** | `admin_partner_crm_enabled` (já existente) |
+| **Comandos executados** | `npx prisma generate` (ok), `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Prisma client gerado; back-relations adicionados; TypeCheck e ESLint passam |
+| **Decisões aplicadas** | #7 (billingModel: campaign, lead, both) |
+| **Regressão** | Nenhuma — apenas adição |
+| **Rollback** | Remover os 2 modelos e re-gerar client |
+| **Próximo passo** | E.2 — APIs de Proposals |
+
+---
+
+### Unidade E.2 — APIs de Proposals com templates, versões, aprovação e link público
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release E — Unidade 2 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 6 endpoints admin + 1 público: CRUD + send + approve + reject + templates + public view |
+| **Arquivos alterados** | `src/app/api/admin/proposals/route.ts`, `[id]/route.ts`, `[id]/send/route.ts`, `[id]/approve/route.ts`, `[id]/reject/route.ts`, `templates/route.ts`, `src/app/api/public/proposals/[token]/route.ts` |
+| **Feature flag** | Nenhuma (proteção via isAdminAuthed) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Number único PROP-AAAA-NNN; publicToken 32 chars; 3 templates; auditoria completa; sync stage Partner |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | E.3 — APIs de CommercialAssets |
+
+---
+
+### Unidade E.3-E.6 — APIs de CommercialAssets + UI Propostas + UI Materiais + Templates + página pública
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release E — Unidades 3, 4, 5, 6 (commitadas juntas por coesão) |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 4 endpoints CommercialAssets (CRUD + upload 50MB); 2 componentes UI (ProposalsListView, CommercialAssetsView); página /admin/propostas; página pública /propostas/[token] com renderizador Markdown; tipos compartilhados; item menu admin |
+| **Arquivos alterados** | `src/app/api/admin/commercial-assets/` (4 endpoints), `src/components/admin/propostas/proposals-list-view.tsx`, `commercial-assets-view.tsx`, `src/lib/proposal-types.ts`, `src/app/admin/propostas/page.tsx`, `src/app/propostas/[token]/page.tsx`, `src/app/admin/layout.tsx` |
+| **Feature flag** | `admin_partner_crm_enabled` |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0), `npx next build` (exit 0) |
+| **Resultado** | ✅ Build passa; UI completa; página pública renderiza Markdown; upload multi-arquivo; auditoria em todas as ações |
+| **Regressão** | Nenhuma |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | E.7 — testes E2E |
+
+---
+
+### Unidade E.7 — Testes E2E (14 cenários) + log
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release E — Unidade 7 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 14 cenários E2E cobrindo UI, APIs, CRUD completo, validações e página pública |
+| **Arquivos alterados** | `tests/e2e/propostas-release-e.spec.ts` (novo, 320 linhas), `docs/IMPLEMENTATION_LOG.md` |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/ tests/` (exit 0) |
+| **Resultado** | ✅ TypeCheck e ESLint passam; cobre login, navegação, tabs, APIs 401, CRUD completo (criar/buscar/atualizar/enviar/público/aprovar/rejeitar), CommercialAsset CRUD, validações |
+| **Regressão** | Nenhuma |
+| **Rollback** | Deletar arquivo de teste |
+| **Próximo passo** | Release E concluída — iniciar Release F (Campanhas e Ofertas) |
+
+---
+
+## Release E — Resumo final
+
+**Total de unidades atômicas:** 6 (E.1 a E.7, com E.3-E.6 commitadas juntas)
+
+**Total de arquivos novos:** 14
+- 1 schema Prisma (modificado, +88 linhas)
+- 7 endpoints API (6 admin + 1 público)
+- 2 componentes React (ProposalsListView, CommercialAssetsView)
+- 1 lib de tipos (proposal-types.ts)
+- 1 página admin (propostas)
+- 1 página pública (propostas/[token])
+- 1 layout admin (modificado — item de menu)
+- 1 arquivo de testes E2E (14 cenários)
+
+**Total de linhas adicionadas:** ~3.000
+
+**Endpoints API novos:** 7 (Proposals CRUD + send + approve + reject + templates + CommercialAssets CRUD + upload + public view)
+
+**Modelos Prisma novos:** 2 (Proposal, CommercialAsset)
+
+**Templates de proposta:** 3 (standard_both, campaign_only, lead_only) — aplicam variáveis {EMPRESA}, {CIDADE}, {ESTADO}, {CATEGORIA}
+
+**Tipos de material comercial:** 8 (media_kit, case, contract, presentation, one_pager, pricing_table, video, other)
+
+**Decisões aplicadas:** #7 (modelo duplo de cobrança: campaign, lead, both)
+
+**Feature flag:** `admin_partner_crm_enabled` (já existente — mesma do CRM)
+
+**Plano de ativação em produção:**
+1. `npx prisma db push` (cria as 2 tabelas novas)
+2. Acessar /admin/propostas (já visível se CRM ativo)
+3. Criar primeira proposta usando template standard_both
+
+**Plano de rollback:**
+1. Reverter commits E.1-E.7
+2. `DROP TABLE` das 2 tabelas novas (sem afetar nada existente)
+
+**Próximo passo:** Releases F (Campanhas e Ofertas) — pode ser paralela com validação de E em produção.
