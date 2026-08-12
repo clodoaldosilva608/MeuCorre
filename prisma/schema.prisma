@@ -603,6 +603,7 @@ model Partner {
   contacts        PartnerContact[]
   opportunities   Opportunity[]
   proposals       Proposal[]
+  campaigns       PartnerCampaign[]
   activities      PartnerActivity[]
   logs            PartnerLog[]
 
@@ -774,6 +775,7 @@ model Proposal {
 
   partner         Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   opportunity     Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  campaigns       PartnerCampaign[]
 
   @@index([partnerId])
   @@index([opportunityId])
@@ -810,4 +812,82 @@ model CommercialAsset {
   @@index([type, active])
   @@index([name])
   @@index([tags])
+}
+
+// ===== Release F — Campanhas de Parceiros =====
+//
+// 1 modelo para conectar venda comercial à operação do app.
+// PartnerCampaign é uma camada ADICIONAL — NÃO modifica Ad/Offer existentes.
+// Anúncios atuais continuam funcionando intactos.
+//
+// Modelo duplo de cobrança (decisão #7): campaign | lead | both
+// Feature flag: partner_campaigns_enabled
+// Nenhuma tabela existente é modificada — apenas adição.
+
+// Campanha de parceiro — oferta promovida no app + redes sociais
+model PartnerCampaign {
+  id              String   @id @default(cuid())
+  partnerId       String
+  proposalId      String?  // proposta que originou (opcional)
+  // Identificação
+  name            String
+  description     String?
+  // Oferta
+  offerTitle      String   // título exibido no app
+  offerDescription String  // descrição exibida
+  offerCta        String   @default("Aproveitar") // texto do botão
+  offerUrl        String   // URL de destino (com UTM)
+  couponCode      String?  // cupom de desconto (ex: MEUCORRE10)
+  discountText    String?  // texto do desconto (ex: "10% OFF" ou "Frete grátis")
+  // Assets
+  imageUrl        String?  // imagem da campanha (pode usar CommercialAsset)
+  videoUrl        String?  // vídeo promocional
+  // Segmentação
+  category        String   @default("servicos") // espelha Offer.category
+  city            String?  // cidade-alvo (null = nacional)
+  state           String?  // estado-alvo (null = nacional)
+  proOnly         Boolean  @default(false) // só PRO vê?
+  // Vigência
+  startsAt        DateTime @default(now())
+  endsAt          DateTime? // null = sem expiração
+  // Modelo de cobrança (decisão #7)
+  billingModel    String   @default("campaign") // campaign | lead | both
+  campaignPrice   Decimal? @db.Decimal(10, 2) // preço mensal da campanha
+  leadPrice       Decimal? @db.Decimal(10, 2) // preço por lead gerado
+  // Status
+  status          String   @default("draft") // draft | pending_approval | approved | published | paused | expired | rejected | canceled
+  approvedAt      DateTime?
+  approvedBy      String?
+  approvedByEmail String?
+  publishedAt     DateTime?
+  pausedAt        DateTime?
+  rejectedReason  String?
+  // Métricas (counters incrementais)
+  views           Int      @default(0)
+  clicks          Int      @default(0)
+  leads           Int      @default(0) // cliques que geraram cadastro
+  redemptions     Int      @default(0) // cupons resgatados
+  // Denúncia
+  reportsCount    Int      @default(0)
+  reportedAt      DateTime?
+  reportedReason  String?
+  // Metadata
+  utmSource       String?  @default("parceiro")
+  utmMedium       String?  @default("app")
+  utmCampaign     String?  // campaign name slug
+  notes           String?
+  createdBy       String?
+  createdByEmail  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  partner         Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  proposal        Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+
+  @@index([partnerId])
+  @@index([status])
+  @@index([category])
+  @@index([city, state])
+  @@index([startsAt, endsAt])
+  @@index([proOnly])
 }
