@@ -132,11 +132,10 @@ export const SOCIAL_LINKS = [
   {
     name: "YouTube",
     href: "https://youtube.com/@meucorre-z4j",
-    Icon: CapaceteIcon, // fallback SVG (não usado quando helmetImage existe)
+    Icon: CapaceteIcon,
     helmetImage: "/social-helmet-youtube.png",
-    glowColor: "rgba(255, 0, 0, 0.5)", // vermelho YouTube
-    brandColor: "#FF0000", // vermelho YouTube (para texto)
-    bounceDelay: "0s", // começa pulando primeiro
+    glowColor: "rgba(255, 0, 0, 0.5)",
+    brandColor: "#FF0000",
     label: "Capacete F1 — YouTube",
   },
   {
@@ -144,9 +143,8 @@ export const SOCIAL_LINKS = [
     href: "https://www.instagram.com/meucorr",
     Icon: RodaMotoIcon,
     helmetImage: "/social-helmet-instagram.png",
-    glowColor: "rgba(255, 20, 147, 0.5)", // magenta Instagram
-    brandColor: "#E1306C", // rosa Instagram (para texto)
-    bounceDelay: "0.6s", // pula 0.6s depois do YouTube
+    glowColor: "rgba(255, 20, 147, 0.5)",
+    brandColor: "#E1306C",
     label: "Capacete F1 — Instagram",
   },
   {
@@ -154,9 +152,8 @@ export const SOCIAL_LINKS = [
     href: "https://www.tiktok.com/@meucorr",
     Icon: RodaCarroIcon,
     helmetImage: "/social-helmet-tiktok.png",
-    glowColor: "rgba(0, 255, 255, 0.5)", // ciano TikTok
-    brandColor: "#00F2EA", // ciano TikTok (para texto)
-    bounceDelay: "1.2s", // pula 1.2s depois do YouTube
+    glowColor: "rgba(0, 255, 255, 0.5)",
+    brandColor: "#C9CCD1", // cinza claro (preto não visível no fundo escuro)
     label: "Capacete F1 — TikTok",
   },
   {
@@ -164,9 +161,8 @@ export const SOCIAL_LINKS = [
     href: "https://www.facebook.com/share/1QqGSn22NC/",
     Icon: RodaBicicletaIcon,
     helmetImage: "/social-helmet-facebook.png",
-    glowColor: "rgba(24, 119, 242, 0.5)", // azul Facebook
-    brandColor: "#1877F2", // azul Facebook (para texto)
-    bounceDelay: "1.8s", // pula 1.8s depois do YouTube
+    glowColor: "rgba(24, 119, 242, 0.5)",
+    brandColor: "#1877F2",
     label: "Capacete F1 — Facebook",
   },
 ];
