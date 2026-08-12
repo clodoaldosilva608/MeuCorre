@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { substituteVariables } from "@/lib/outbound-variables";
 
 // POST /api/admin/outbound/templates/:id/dry-run
 // Gera preview da mensagem com variáveis substituídas — NÃO ENVIA NADA.
@@ -129,16 +130,3 @@ export async function POST(
       : [],
   });
 }
-
-// ===== Substituição de variáveis =====
-// Padrão: {VARIAVEL} — substitui pelo valor em variables (case-sensitive).
-// Variável ausente → mantém o placeholder (para detecção de missing).
-function substituteVariables(text: string, variables: Record<string, string>): string {
-  return text.replace(/\{([A-Z_]+)\}/g, (match, varName) => {
-    const value = variables[varName];
-    return value !== undefined && value !== null ? value : match;
-  });
-}
-
-// Export para reuso em outros módulos
-export { substituteVariables };
