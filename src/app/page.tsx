@@ -1137,35 +1137,53 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* Coluna 4 — Redes sociais (capacetes F1 4D) */}
+            {/* Coluna 4 — Redes sociais (link rápido) */}
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
                 Siga-nos
               </p>
-              <div className="f1-helmets-row mt-4">
-                {SOCIAL_LINKS.map(({ name, href, helmetImage, glowColor, label }) => (
-                  <a
-                    key={name}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="f1-helmet-btn"
-                    style={{ ["--helmet-glow" as string]: glowColor }}
-                    title={label}
-                    aria-label={name}
-                  >
+              <ul className="mt-4 space-y-2 text-xs">
+                <li><a href="https://youtube.com/@meucorre-z4j" target="_blank" rel="noopener noreferrer" className="hover:text-neon">YouTube</a></li>
+                <li><a href="https://www.instagram.com/meucorr" target="_blank" rel="noopener noreferrer" className="hover:text-neon">Instagram</a></li>
+                <li><a href="https://www.tiktok.com/@meucorr" target="_blank" rel="noopener noreferrer" className="hover:text-neon">TikTok</a></li>
+                <li><a href="https://www.facebook.com/share/1QqGSn22NC/" target="_blank" rel="noopener noreferrer" className="hover:text-neon">Facebook</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* ===== Capacetes F1 4D — redes sociais (largura total) ===== */}
+          <div className="mt-8 border-t border-zinc-800 pt-8">
+            <p className="text-center text-xs font-bold uppercase tracking-wider text-zinc-500">
+              Siga o MeuCorre nas redes
+            </p>
+            <div className="f1-helmets-row mt-5">
+              {SOCIAL_LINKS.map(({ name, href, helmetImage, glowColor, brandColor, label }) => (
+                <a
+                  key={name}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="f1-helmet-card"
+                  style={{ ["--helmet-glow" as string]: glowColor }}
+                  title={label}
+                  aria-label={name}
+                >
+                  <div className="f1-helmet-img-wrap">
                     <img
                       src={helmetImage}
                       alt={label}
                       loading="lazy"
                       draggable={false}
                     />
-                  </a>
-                ))}
-              </div>
-              <p className="mt-3 text-[9px] text-zinc-600">
-                Capacetes F1 4D • YouTube • Instagram • TikTok • Facebook
-              </p>
+                  </div>
+                  <span
+                    className="f1-helmet-label"
+                    style={{ color: brandColor }}
+                  >
+                    {name}
+                  </span>
+                </a>
+              ))}
             </div>
           </div>
 

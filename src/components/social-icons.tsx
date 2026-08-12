@@ -134,6 +134,7 @@ export const SOCIAL_LINKS = [
     Icon: CapaceteIcon, // fallback SVG (não usado quando helmetImage existe)
     helmetImage: "/social-helmet-youtube.png",
     glowColor: "rgba(255, 0, 0, 0.5)", // vermelho YouTube
+    brandColor: "#FF0000", // vermelho YouTube (para texto)
     label: "Capacete F1 — YouTube",
   },
   {
@@ -142,6 +143,7 @@ export const SOCIAL_LINKS = [
     Icon: RodaMotoIcon,
     helmetImage: "/social-helmet-instagram.png",
     glowColor: "rgba(255, 20, 147, 0.5)", // magenta Instagram
+    brandColor: "#E1306C", // rosa Instagram (para texto)
     label: "Capacete F1 — Instagram",
   },
   {
@@ -150,6 +152,7 @@ export const SOCIAL_LINKS = [
     Icon: RodaCarroIcon,
     helmetImage: "/social-helmet-tiktok.png",
     glowColor: "rgba(0, 255, 255, 0.5)", // ciano TikTok
+    brandColor: "#00F2EA", // ciano TikTok (para texto)
     label: "Capacete F1 — TikTok",
   },
   {
@@ -158,6 +161,7 @@ export const SOCIAL_LINKS = [
     Icon: RodaBicicletaIcon,
     helmetImage: "/social-helmet-facebook.png",
     glowColor: "rgba(24, 119, 242, 0.5)", // azul Facebook
+    brandColor: "#1877F2", // azul Facebook (para texto)
     label: "Capacete F1 — Facebook",
   },
 ];

@@ -482,12 +482,75 @@
   border-radius: 12px;
 }
 
-/* Container dos capacetes — alinhamento horizontal */
+/* ========================================
+   CAPACETE F1 CARD (rodapé — largura total)
+   ========================================
+   Cada capacete é um card vertical: imagem + nome da rede social.
+   Dispostos em linha horizontal, centralizados, com wrap em mobile.
+*/
+
 .f1-helmets-row {
   display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.f1-helmet-card {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   gap: 6px;
-  flex-wrap: nowrap;
+  text-decoration: none;
+  transition: transform 0.2s ease;
   flex-shrink: 0;
 }
+
+.f1-helmet-card:hover {
+  transform: translateY(-3px);
+}
+
+.f1-helmet-card:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.f1-helmet-img-wrap {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: filter 0.3s ease;
+}
+
+.f1-helmet-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+  transition: filter 0.3s ease;
+}
+
+.f1-helmet-card:hover .f1-helmet-img-wrap img {
+  filter: drop-shadow(0 0 14px var(--helmet-glow, rgba(74, 222, 128, 0.5)))
+          drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+.f1-helmet-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.f1-helmet-card:hover .f1-helmet-label {
+  opacity: 1;
+}
+
+/* ===== Botão individual (legado — mantido para compatibilidade) ===== */
