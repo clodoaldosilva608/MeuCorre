@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
   let formData: FormData;
   try {
     formData = await req.formData();
-  } catch {
+  } catch (err) {
     return NextResponse.json(
-      { error: "Esperado multipart/form-data" },
+      { error: "Esperado multipart/form-data", detail: err instanceof Error ? err.message : String(err) },
       { status: 400 },
     );
   }
@@ -141,9 +141,17 @@ export async function POST(req: NextRequest) {
   const storageKey = `promotion/${finalName}`;
 
   // Verifica se já existe asset com este nome — se sim, atualiza URL
-  const existing = await prisma.promotionAsset.findFirst({
-    where: { name: safeName },
-  });
+  let existing;
+  try {
+    existing = await prisma.promotionAsset.findFirst({
+      where: { name: safeName },
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Erro ao buscar asset existente", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
+  }
 
   const assetData = {
     storageKey,
@@ -159,17 +167,25 @@ export async function POST(req: NextRequest) {
     hash,
   };
 
-  const asset = existing
-    ? await prisma.promotionAsset.update({
-        where: { id: existing.id },
-        data: assetData,
-      })
-    : await prisma.promotionAsset.create({
-        data: {
-          name: safeName,
-          ...assetData,
-        },
-      });
+  let asset;
+  try {
+    asset = existing
+      ? await prisma.promotionAsset.update({
+          where: { id: existing.id },
+          data: assetData,
+        })
+      : await prisma.promotionAsset.create({
+          data: {
+            name: safeName,
+            ...assetData,
+          },
+        });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Erro ao salvar no banco", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json(
     {
