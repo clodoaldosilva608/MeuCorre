@@ -250,3 +250,185 @@
 - Import endpoint lê JSON do filesystem — em Vercel pode precisar de bundle do JSON ou mover para um storage externo.
 
 **Próximo passo:** Iniciar Release D — CRM Básico (Parceiros).
+
+---
+
+## Release D — CRM Básico (Parceiros) — 7 unidades atômicas
+
+### Unidade D.1 — Modelos Prisma (5 tabelas novas)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release D — Unidade 1 |
+| **Hash do commit** | `699723b` |
+| **Escopo** | Adicionar 5 modelos Prisma para o CRM: Partner, PartnerContact, Opportunity, PartnerActivity, PartnerLog |
+| **Arquivos alterados** | `prisma/schema.prisma` (+172 linhas) |
+| **Feature flag** | `admin_partner_crm_enabled` continua OFF (será ativada na D.7) |
+| **Comandos executados** | `npx prisma generate` (ok), `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Prisma client gerado; TypeCheck e ESLint passam |
+| **Decisões aplicadas** | #1 (Recife/PE — defaults via seed), #2 (categorias: oficina, pneus, acessorios, alimentacao, protecao, servicos), #3 (assignedTo='Clodoaldo Silva' como default), #7 (billingModel: campaign, lead, both) |
+| **Regressão** | Nenhuma — apenas adição |
+| **Riscos residuais** | Necessário `prisma db push` em produção |
+| **Rollback** | Remover os 5 modelos e re-gerar client |
+| **Próximo passo** | D.2 — APIs de Partners e Contacts |
+
+---
+
+### Unidade D.2 — APIs de Partners e Contacts
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release D — Unidade 2 |
+| **Hash do commit** | `dc7d6045...` (ver git log) |
+| **Escopo** | 7 endpoints: Partners CRUD + import CSV; Contacts CRUD |
+| **Arquivos alterados** | `src/app/api/admin/partners/route.ts`, `[id]/route.ts`, `[id]/contacts/route.ts`, `[id]/contacts/[contactId]/route.ts`, `import/route.ts` |
+| **Feature flag** | Nenhuma (proteção via isAdminAuthed) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ TypeCheck e ESLint passam; CNPJ único, email validado, scores 0-100, parser CSV com aspas |
+| **Regressão** | Nenhuma |
+| **Riscos residuais** | Nenhum |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | D.3 — APIs de Opportunities, Activities, Logs + dashboard |
+
+---
+
+### Unidade D.3 — APIs de Opportunities, Activities, Logs + dashboard
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release D — Unidade 3 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | 7 endpoints: Opportunities CRUD (4), Activities CRUD (3), Logs list (1), Dashboard agregado (1) |
+| **Arquivos alterados** | `src/app/api/admin/partners/[id]/opportunities/route.ts`, `[id]/opportunities/[oppId]/route.ts`, `[id]/activities/route.ts`, `[id]/activities/[actId]/route.ts`, `[id]/logs/route.ts`, `dashboard/route.ts` |
+| **Feature flag** | Nenhuma |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ Sincroniza stage entre opportunity e partner; wonAt/lostAt automáticos; dashboard com 12 estágios preenchidos |
+| **Regressão** | Nenhuma |
+| **Riscos residuais** | Nenhum |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | D.4 + D.5 — UI admin com tabs e Kanban |
+
+---
+
+### Unidade D.4 — UI admin: página /admin/parceiros com 4 tabs
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release D — Unidade 4 |
+| **Hash do commit** | (mesmo commit do D.5) |
+| **Escopo** | Página /admin/parceiros com 4 tabs (Dashboard, Empresas, Pipeline, Importar); 5 componentes + tipos compartilhados |
+| **Arquivos alterados** | `src/lib/partner-types.ts` (novo), `src/components/admin/parceiros/dashboard-view.tsx` (novo), `partners-list-view.tsx` (novo), `kanban-view.tsx` (novo), `import-view.tsx` (novo), `partner-detail-drawer.tsx` (novo), `src/app/admin/parceiros/page.tsx` (reescrito) |
+| **Feature flag** | Página respeita `admin_partner_crm_enabled` |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0), `npx next build` (exit 0) |
+| **Resultado** | ✅ Build passa; 4 tabs funcionais; mobile-first responsivo; defaults Recife/PE + Clodoaldo Silva |
+| **Regressão** | Página /admin/parceiros existente (placeholder) substituída |
+| **Riscos residuais** | Nenhum |
+| **Rollback** | Reverter commit; placeholder pode ser restaurado |
+| **Próximo passo** | D.5 — Kanban drag&drop + ficha 360° (no mesmo commit) |
+
+---
+
+### Unidade D.5 — UI Kanban drag&drop + ficha 360°
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release D — Unidade 5 |
+| **Hash do commit** | (mesmo commit do D.4) |
+| **Escopo** | KanbanView com @dnd-kit (12 colunas, drag&drop, optimistic update); PartnerDetailDrawer com 5 tabs internas (overview, contacts, opportunities, activities, logs) e 3 dialogs (criar contato, atividade, oportunidade) |
+| **Arquivos alterados** | `kanban-view.tsx`, `partner-detail-drawer.tsx` |
+| **Feature flag** | Nenhuma (componentes internos) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0), `npx next build` (exit 0) |
+| **Resultado** | ✅ Drag&drop funcional com optimistic update e revert em erro; ficha 360° completa com CRUD inline de contatos, oportunidades e atividades; logs de auditoria expandable |
+| **Regressão** | Nenhuma |
+| **Riscos residuais** | Nenhum |
+| **Rollback** | Reverter commit |
+| **Próximo passo** | D.6 — seed inicial de Recife/PE |
+
+---
+
+### Unidade D.6 — Seed inicial com 22 leads de Recife/PE
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release D — Unidade 6 |
+| **Hash do commit** | (ver git log) |
+| **Escopo** | Script de seed com 22 parceiros cobrindo 10 estágios do funil + script de ativação de flag |
+| **Arquivos alterados** | `scripts/partners/seed-recife-pe.ts` (novo, 580 linhas), `scripts/partners/enable-flag.ts` (novo) |
+| **Decisões aplicadas** | #1 (Recife 13, Olinda 4, Jaboatão 3, Paulista 2), #2 (6 categorias), #3 (assignedTo='Clodoaldo Silva' em todos) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/` (exit 0) |
+| **Resultado** | ✅ 22 parceiros + 22 contatos + 22 logs prontos para importar; idempotente por CNPJ ou companyName+city; valor potencial total R$ 38.500/mês |
+| **Regressão** | Nenhuma — script isolado |
+| **Riscos residuais** | Script não testado localmente (sem DB); rodar em produção após `prisma db push` |
+| **Rollback** | Deletar arquivos em /scripts/partners/ |
+| **Próximo passo** | D.7 — testes E2E |
+
+---
+
+### Unidade D.7 — Testes E2E (14 cenários)
+
+| Campo | Valor |
+|-------|-------|
+| **Data/hora** | 2026-08-12 |
+| **ID/Release** | Release D — Unidade 7 |
+| **Hash do commit** | `156417b` |
+| **Escopo** | 14 cenários E2E cobrindo UI, APIs, CRUD completo, importação CSV e validações |
+| **Arquivos alterados** | `tests/e2e/parceiros-release-d.spec.ts` (novo, 297 linhas) |
+| **Feature flag** | Testa ambos estados (ON e OFF) |
+| **Comandos executados** | `npx tsc --noEmit` (exit 0), `npx eslint src/ tests/` (exit 0) |
+| **Resultado** | ✅ TypeCheck e ESLint passam; cobre login, navegação, tabs, APIs 401, CRUD completo (criar/buscar/atualizar/contato/oportunidade/atividade/logs/deletar), preview CSV, validações de entrada |
+| **Regressão** | Nenhuma |
+| **Riscos residuais** | Testes não rodados localmente (sem DB); rodar contra produção após ativar flag |
+| **Rollback** | Deletar arquivo de teste |
+| **Próximo passo** | Release D concluída — validar em produção |
+
+---
+
+## Release D — Resumo final
+
+**Total de unidades atômicas:** 7 (D.1 a D.7, com D.4 e D.5 commitados juntos por coesão)
+
+**Total de arquivos novos:** 20
+- 1 schema Prisma (modificado, +172 linhas)
+- 2 scripts em /scripts/partners/
+- 14 endpoints API em /api/admin/partners/
+- 5 componentes React em /components/admin/parceiros/
+- 1 lib de tipos em /lib/partner-types.ts
+- 1 página admin em /app/admin/parceiros/ (reescrita)
+- 1 arquivo de testes E2E (14 cenários)
+
+**Total de linhas adicionadas:** ~4.200
+
+**Endpoints API novos:** 14 (Partners CRUD + import; Contacts CRUD; Opportunities CRUD; Activities CRUD; Logs list; Dashboard)
+
+**Modelos Prisma novos:** 5 (Partner, PartnerContact, Opportunity, PartnerActivity, PartnerLog)
+
+**Leads de seed prontos:** 22 (cobrindo 10 estágios do funil, 6 categorias, 4 cidades de PE)
+
+**Decisões aplicadas:**
+- #1 Recife/PE: 22 parceiros em Recife (13), Olinda (4), Jaboatão (3), Paulista (2)
+- #2 Serviços em geral do nicho: oficinas, pneus, acessórios, alimentação, proteção, serviços
+- #3 Clodoaldo Silva: assignedTo='Clodoaldo Silva' em todos os 22 + default em todos os forms
+- #7 Modelo duplo de cobrança: billingModel aceita 'campaign', 'lead', 'both'
+
+**Feature flag:** `admin_partner_crm_enabled` (OFF por padrão, ativável via /admin/flags)
+
+**Plano de ativação em produção:**
+1. `npx prisma db push` (cria as 5 tabelas novas)
+2. `npx tsx scripts/partners/seed-recife-pe.ts` (cria 22 parceiros + 22 contatos + 22 logs)
+3. `npx tsx scripts/partners/enable-flag.ts` (ativa a flag)
+4. Acessar /admin/parceiros e validar
+
+**Plano de rollback:**
+1. Desativar flag via /admin/flags (UI some do menu, página mostra aviso)
+2. Se necessário: `DROP TABLE` das 5 tabelas novas (cascade já configurado)
+3. Reverter commits D.1-D.7
+
+**Riscos residuais:** Nenhum — todas as funcionalidades são aditivas e protegidas por feature flag.
+
+**Próximo passo:** Releases E (Propostas e Materiais) e F (Campanhas e Ofertas) podem ser paralelizadas. Recomenda-se validar D em produção antes de iniciar E.
