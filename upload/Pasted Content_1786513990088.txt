@@ -1,0 +1,524 @@
+# Prompt para IA — Plano de Implementação Seguro e Incremental do MeuCorre
+
+> **Instrução de uso:** copie integralmente o conteúdo abaixo e entregue-o à IA que irá analisar o repositório e planejar a evolução do MeuCorre. Este prompt solicita **planejamento detalhado**, não implementação imediata.
+
+---
+
+## 1. Papel e objetivo
+
+Você é uma pessoa **sênior em arquitetura de software, produto, UX, PWA, segurança, dados, CRM B2B e plataformas SaaS**. Sua tarefa é analisar o repositório, a aplicação já implantada e **todos os documentos estratégicos, comerciais, visuais e técnicos disponíveis** do projeto **MeuCorre**.
+
+Seu resultado deve ser um **plano de implementação incremental, seguro, priorizado e verificável** para evoluir o produto. O plano deve incluir, conforme os documentos analisados, a Central de Divulgação, o pacote visual e editorial, a Central de Parceiros com CRM, o outbound supervisionado, ofertas/benefícios, campanhas, relatórios, melhorias de ativação, planos, indicação, alertas e demais funcionalidades propostas.
+
+> **Regra absoluta:** nada que já funciona na aplicação pode quebrar, desaparecer, mudar de comportamento sem justificativa, perder dados, perder compatibilidade ou ficar inacessível. Primeiro você deve entender, registrar e proteger o sistema atual; somente depois pode propor evolução incremental.
+
+Você não deve começar modificando código, banco de dados, configurações de produção, integrações, pagamento, campanhas, contatos externos ou dados reais. Primeiro entregue o diagnóstico e o plano. A implementação somente poderá começar após aprovação explícita do responsável pelo produto.
+
+---
+
+## 2. Fontes obrigatórias de análise
+
+Analise o repositório inteiro e localize todos os materiais relevantes, sem presumir que a lista abaixo é completa. Leia `README.md`, `docs/`, arquivos de configuração, schema de banco, rotas, componentes, APIs, migrations, testes, variáveis de ambiente de exemplo, documentação de deploy e arquivos de produto.
+
+Além do repositório, localize e analise os documentos já produzidos para o MeuCorre, incluindo quando disponíveis:
+
+| Material | Finalidade na análise |
+| --- | --- |
+| `Plano_Divulgacao_MeuCorre_90_Dias.md` | Calendário editorial de 90 dias e 450 publicações |
+| `Pacote_Visual_MeuCorre_90_Dias/PLANO_DIVULGACAO_90_DIAS_COM_IMAGENS.md` | Vínculo explícito entre descrições e imagens por postagem |
+| `Pacote_Visual_MeuCorre_90_Dias/MAPA_VISUAL_450_POSTAGENS.md` | Mapa técnico e operacional de 450 imagens |
+| `Pacote_Visual_MeuCorre_90_Dias/README.md` | Regras de organização do acervo visual |
+| `ESTUDO_ESTRATEGICO_MEU_CORRE_Oportunidades_Melhorias_Monetizacao.md` | Oportunidades de produto, receita, ativação, parceiros, equipes e dados |
+| `ESTRATEGIA_CRM_PARCEIROS_MEU_CORRE.md` | Estratégia de captação de parceiros e CRM administrativo |
+| `ANALISE_E_APERFEICOAMENTO_OUTBOUND_MEU_CORRE.md` | Adaptação segura da operação outbound para parceiros do MeuCorre |
+| `PROMPT_IA_CENTRAL_DIVULGACAO_MEU_CORRE.md` | Requisitos preliminares para a aba de divulgação no admin |
+| `MeuCorre_Kit_Comercial_Consolidado/README.md` | Identidade visual, ativos e regras de uso do kit comercial |
+| Repositório público e landing page | Contexto funcional e comercial atualmente exposto |
+
+Se algum documento estiver ausente, inacessível, duplicado ou em conflito com o código, registre isso claramente. Não invente conteúdo. Não trate uma ideia de documento como funcionalidade já implementada.
+
+---
+
+## 3. Princípios inegociáveis de preservação
+
+As regras abaixo têm prioridade sobre conveniência técnica, velocidade ou preferência pessoal de arquitetura.
+
+### 3.1 Proteção do comportamento atual
+
+Você deve mapear e preservar, no mínimo, as funcionalidades existentes relacionadas a:
+
+| Área existente | Obrigação de preservação |
+| --- | --- |
+| Registro de corridas | Continuar funcionando com mesmos dados, validações e fluxos aprovados |
+| Registro de despesas, quilômetros e lucro | Não alterar cálculos nem perder registros existentes |
+| Dashboard e gráficos | Preservar rotas, visualização e desempenho existente |
+| Funcionamento offline/local-first | Não exigir internet para funções que hoje trabalham offline |
+| PWA e instalação | Manter manifest, service worker, cache e experiência instalável |
+| Autenticação e autorização | Não quebrar sessão, perfil, recuperação de conta ou permissões atuais |
+| Plano PRO, trial e checkout | Não alterar regras de assinatura, preço, webhook ou acesso sem migração explícita e aprovada |
+| Programa de indicação | Preservar códigos, status, regras e histórico já existente |
+| Painel administrativo | Manter todas as abas, ações e dados atuais, incluindo anúncios, feedbacks e assinaturas |
+| Blog, landing page, quiz e links | Não remover rotas, SEO, CTAs ou conteúdo já publicado |
+| Exportações e relatórios existentes | Preservar formato, dados e acesso |
+| Assets e identidade visual | Não substituir ou apagar peças existentes sem aprovação |
+
+### 3.2 Proibição de regressões silenciosas
+
+Não faça refatoração ampla, troca de framework, redesign completo, reescrita de banco, troca de autenticação ou alteração de pagamentos como condição para adicionar uma nova funcionalidade. Se alguma modernização for realmente necessária, ela deve ser uma iniciativa independente, justificada, com plano de migração, compatibilidade e rollback.
+
+Não altere contratos de API existentes sem versionamento ou camada de compatibilidade. Não renomeie campos persistidos sem migração segura. Não converta dados locais em dados de servidor sem consentimento, estratégia de sincronização e plano de recuperação. Não modifique dados de produção em massa durante descoberta.
+
+### 3.3 Segurança, privacidade e controle humano
+
+Recursos de CRM, mensagens, parceiros e ofertas devem respeitar privacidade, minimização de dados, consentimento quando aplicável, papéis de acesso, trilha de auditoria e opt-out. A operação outbound deve ser supervisionada: **o sistema pode preparar, organizar, pré-visualizar, registrar e lembrar ações; não deve iniciar contatos externos, enviar mensagens em massa, publicar conteúdo ou realizar pagamentos sem autorização explícita do administrador.**
+
+---
+
+## 4. Método obrigatório de análise
+
+Siga as fases abaixo em ordem. Não pule uma fase. Se alguma informação estiver ausente, registre a lacuna e faça perguntas objetivas antes de recomendar solução irreversível.
+
+### Fase 0 — Segurança, cópia e baseline
+
+1. Crie uma branch ou worktree de análise; não trabalhe diretamente na branch principal.
+
+1. Registre hash do commit inicial, versão de dependências e estado do repositório.
+
+1. Identifique ambiente de desenvolvimento, comandos de build, lint, testes, migrations e deploy.
+
+1. Faça uma execução local de baseline, quando possível, sem alterar dados reais.
+
+1. Registre todas as rotas, APIs, páginas e fluxos visíveis existentes.
+
+1. Execute os testes já existentes e guarde o resultado inicial.
+
+1. Se não houver testes, prepare uma matriz de teste manual de baseline antes de qualquer implementação.
+
+### Fase 1 — Inventário funcional e técnico
+
+Mapeie a aplicação atual de forma rastreável.
+
+| Entregável | Conteúdo esperado |
+| --- | --- |
+| Mapa de arquitetura atual | Frontend, backend, banco, autenticação, storage, pagamentos, PWA, integrações e deploy |
+| Inventário de rotas | Rota, propósito, acesso, dependências e risco de regressão |
+| Inventário de dados | Entidades, tabelas, campos, relacionamentos, dados locais e migrations |
+| Inventário de APIs | Endpoint, método, contrato, consumidores, validações e compatibilidade |
+| Inventário de componentes | Páginas, componentes compartilhados, estados e design system |
+| Inventário de integrações | Checkout, webhooks, e-mail, storage, analytics, calendário e outros |
+| Matriz de permissões | Papéis existentes, ações permitidas e lacunas |
+| Matriz de qualidade atual | Testes existentes, cobertura conhecida, erros e pontos frágeis |
+
+Para cada item, cite o caminho exato do arquivo, função, rota, entidade ou documento que sustenta sua conclusão. Não use termos vagos como “provavelmente”, “parece” ou “deve existir” quando puder verificar.
+
+### Fase 2 — Matriz de requisitos e rastreabilidade
+
+Converta os documentos em requisitos organizados, mas mantenha distinção entre:
+
+| Tipo | Definição |
+| --- | --- |
+| Existente | Já funciona no código e deve ser preservado |
+| Planejado | Está em documento, mas ainda não foi implementado |
+| Dependência | Exige decisão, integração, ativo, dado ou serviço externo |
+| Risco | Pode causar regressão, custo, privacidade ou complexidade |
+| Fora de escopo inicial | Deve ser adiado até haver evidência ou capacidade |
+
+Crie uma matriz com os campos: `ID`, `origem documental`, `requisito`, `tipo`, `impacto no produto atual`, `arquivos/entidades afetados`, `dependências`, `risco`, `prioridade`, `critério de aceite` e `estratégia de rollback`.
+
+### Fase 3 — Arquitetura alvo incremental
+
+Projete a arquitetura de evolução sem reescrever o núcleo do produto. Dê preferência a módulos novos, rotas novas, tabelas novas e adapters compatíveis, sempre que isso reduzir risco.
+
+A arquitetura alvo deve considerar, conforme aderência ao código atual:
+
+```
+Admin MeuCorre
+├── Funcionalidades atuais preservadas
+├── Central de Divulgação
+│   ├── Calendário de 90 dias
+│   ├── Publicações, copies e imagens
+│   ├── Botões de cópia e download
+│   ├── Status de publicação
+│   └── Exportação de lembretes (.ics)
+├── Central de Parceiros / CRM
+│   ├── Empresas e contatos
+│   ├── Leads e qualificação
+│   ├── Oportunidades e pipeline
+│   ├── Atividades e tarefas
+│   ├── Propostas, contratos e materiais
+│   ├── Campanhas, ofertas e benefícios
+│   ├── Relatórios e renovação
+│   └── Auditoria, permissões e opt-outs
+├── Operação comercial supervisionada
+│   ├── Templates de mensagem
+│   ├── Prévia e aprovação
+│   ├── Registro de envio e resposta
+│   └── Sem disparo automático não autorizado
+└── Fundamentos transversais
+    ├── Autorização e logs
+    ├── Privacidade e minimização de dados
+    ├── Feature flags
+    ├── Testes e observabilidade
+    └── Migrations compatíveis
+```
+
+Justifique a arquitetura sugerida com base no que já existe. Se o sistema atual usa determinada biblioteca, padrão, banco ou estrutura, aproveite-a sempre que não houver risco significativo.
+
+### Fase 4 — Plano por releases pequenos
+
+Divida a implementação em releases reversíveis. Cada release deve ser pequena o suficiente para testar, revisar e reverter sem afetar todo o produto.
+
+Para cada release, informe obrigatoriamente:
+
+| Campo | Exigência |
+| --- | --- |
+| Objetivo | Problema e resultado desejado |
+| Escopo incluído | Funcionalidades que entram |
+| Escopo excluído | O que explicitamente não entra |
+| Dependências | Dados, serviços, documentos, credenciais ou decisões necessárias |
+| Alterações técnicas | Rotas, entidades, APIs, componentes, workers e migrations esperadas |
+| Compatibilidade | Como os fluxos atuais continuam funcionais |
+| Feature flag | Nome, público autorizado e plano de desligamento |
+| Dados e migration | Estratégia forward-only, defaults, backfill e recuperação |
+| Testes | Unitários, integração, E2E, regressão manual, mobile/PWA e segurança |
+| Critérios de aceite | Condições mensuráveis para considerar a release pronta |
+| Monitoramento | Logs, métricas, alertas e sinais de falha |
+| Rollback | Como desligar, reverter ou isolar sem perda de dados |
+| Riscos | Impacto, probabilidade, mitigação e responsável |
+| Estimativa | Faixa de esforço, não promessa de prazo exato |
+
+A sequência padrão recomendada é:
+
+1. **Release A — Baseline e proteção:** testes, inventário, feature flags, auditoria e documentação.
+
+1. **Release B — Fundação administrativa:** nova navegação e módulos vazios protegidos por permissão, sem mudar fluxos existentes.
+
+1. **Release C — Central de Divulgação:** importar os 90 dias e 450 postagens, vincular assets, cópia/download, status e `.ics`, sem postagem automática.
+
+1. **Release D — CRM básico:** empresas, contatos, leads, pipeline, tarefas, busca, filtros, logs e permissões.
+
+1. **Release E — Propostas e materiais:** biblioteca, templates, versões, links e aprovação humana.
+
+1. **Release F — Parceiros e campanhas:** campanhas, ofertas, benefícios, assets, vigência, métricas e revisão.
+
+1. **Release G — Operação outbound supervisionada:** preview, aprovação, registro, respostas, opt-out e relatórios; nenhuma automação externa sem habilitação explícita.
+
+1. **Release H — Métricas e renovação:** dashboards, alertas, relatórios, saúde de campanha e renovação.
+
+1. **Release I — Recursos avançados:** integrações, portal de parceiro, equipe/B2B, alertas inteligentes ou demais itens validados por dados.
+
+A IA deve ajustar essa sequência quando a análise do repositório provar que outra ordem reduz risco. Nunca deve antecipar itens complexos — como sincronização, automação externa, dados agregados ou pagamentos — antes de existir base de segurança e métricas.
+
+---
+
+## 5. Requisitos detalhados que o plano deve contemplar
+
+### 5.1 Central de Divulgação
+
+Planeje uma nova aba administrativa dedicada à divulgação, usando o calendário e os assets existentes. A aba deve permitir CRUD completo de campanhas, publicações, assets, hashtags, CTAs, plataformas e horários.
+
+Cada publicação deve guardar e apresentar: plataforma, título, descrição, hashtags, CTA de seguir/curtir/compartilhar, imagem correta, data, hora, fuso horário, status, link de destino, UTM e observações. Deve existir botão para copiar título, descrição, hashtags, CTA, texto completo, link e referências de imagem, além de download da imagem correta.
+
+O sistema deve importar ou referenciar as 450 associações existentes entre posts e imagens sem duplicar os arquivos desnecessariamente. Deve manter todos os assets aprovados e informar se um arquivo está ausente, inválido ou desatualizado.
+
+Lembretes devem ser implementados inicialmente por exportação `.ics`, calendário e notificações locais opcionais. Não assuma que notificações em segundo plano funcionarão em todos os dispositivos; documente limitações de browser/PWA e ofereça fallback simples.
+
+### 5.2 Central de Parceiros e CRM
+
+Planeje um CRM administrativo completo para parceiros locais, estaduais e nacionais. O CRM deve suportar empresas, contatos, leads, qualificação, pipeline, tarefas, reuniões, oportunidades, propostas, documentos, contratos, campanhas, ofertas, métricas, renovação, perda, opt-out e auditoria.
+
+O sistema deve ter busca, filtros, tags, ordenação, paginação, ações em lote com confirmação, deduplicação, importação CSV com prévia, exportação por permissão e histórico de alterações. Uma empresa pode ter vários contatos, oportunidades e campanhas.
+
+Não trate o CRM como lista de anúncios. O fluxo deve cobrir descoberta, qualificação, contato, reunião, proposta, negociação, aprovação, ativação, monitoramento e renovação.
+
+### 5.3 Operação outbound supervisionada
+
+O plano deve adaptar a skill outbound ao contexto de parceiros B2B. Use leads comerciais qualificados, personalização baseada em informação pública e relevante, pequenos lotes revisados e respeito definitivo a opt-outs.
+
+A aplicação deve preparar e registrar mensagens; nenhum contato externo deve ser iniciado, agendado ou disparado sem confirmação explícita do administrador. Não projete mecanismos para burlar regras de plataformas, evitar bloqueios, ocultar identidade, contornar limites ou fazer spam.
+
+Mensagens, respostas, follow-ups e classificações devem ser versionados e auditáveis. A operação deve permitir status como: preparado, aguardando aprovação, enviado, entregue, respondeu, interessado, reunião marcada, proposta enviada, negociação, ganho, ativo, opt-out, perdido e erro.
+
+### 5.4 Parceiros, campanhas e benefícios
+
+Planeje campanha somente após proposta e aprovação. Cada oferta deve ter parceiro, período, região, categoria, benefício verificável, regras, CTA, assets, URL, cupom quando aplicável, frequência de exposição, status e métricas.
+
+Publicidade deve ser identificada de maneira clara. Deve haver processo de revisão, denúncia, pausa e encerramento de oferta. Não exponha dados pessoais de usuários a parceiros sem finalidade, base adequada, transparência e controles.
+
+---
+
+## 6. Estratégia obrigatória de compatibilidade e migração
+
+Apresente uma política explícita de mudança segura.
+
+| Área | Estratégia mínima |
+| --- | --- |
+| Banco de dados | Migrations aditivas primeiro; campos novos nullable/default; backfill controlado; nunca apagar dados sem plano de retenção e backup |
+| APIs | Manter contratos existentes; adicionar endpoints ou versionar; não mudar payload existente silenciosamente |
+| Interface | Adicionar itens de navegação sem remover telas atuais; reutilizar design system; proteger módulos novos por feature flag |
+| Permissões | Criar papéis e permissões novas sem ampliar acesso existente por acidente |
+| PWA/offline | Não substituir cache ou armazenamento local sem teste de atualização, migração e reversão |
+| Pagamentos | Isolar mudanças de plano/checkout; validar webhooks; não tocar em transações antigas |
+| Assets | Não mover, renomear ou apagar imagens existentes sem aliases, manifest ou migração de referências |
+| Jobs e integrações | Idempotência, filas, retry controlado, logs e desligamento seguro |
+| Produção | Canary interno, observabilidade e rollout gradual |
+
+Adote feature flags para todo módulo novo que possa afetar comportamento, por exemplo:
+
+```
+admin_marketing_hub_enabled
+admin_partner_crm_enabled
+partner_campaigns_enabled
+partner_outbound_preview_enabled
+partner_outbound_send_enabled
+partner_portal_enabled
+```
+
+As flags devem ter documentação: propósito, público, dono, data de criação, critérios de ativação e condição para remoção. Nenhuma flag de envio externo pode ser ativada por padrão.
+
+---
+
+## 7. Plano de testes e garantia de qualidade
+
+Entregue uma matriz de testes detalhada. Ela deve cobrir comportamento atual e recursos novos.
+
+| Categoria | Cobertura mínima |
+| --- | --- |
+| Regressão do núcleo | Corridas, despesas, quilômetros, lucro, gráficos, metas, exportação e fluxos atuais |
+| Autenticação e autorização | Usuário comum, admin, papéis novos, sessão expirada e acesso negado |
+| PWA e offline | Instalação, cache, abertura sem rede, atualização, dados locais e reconexão |
+| Assinaturas e pagamento | Trial, plano PRO, acesso, webhook, retorno de checkout e falhas controladas |
+| Indicação | Código, vínculo, status, recompensa, prevenção de duplicação e opt-out aplicável |
+| Admin atual | Anúncios, assinaturas, feedback, rotas antigas e ações administrativas existentes |
+| Divulgação | Importação de posts, cópia, download, filtro, status, `.ics` e asset ausente |
+| CRM | CRUD, deduplicação, busca, filtros, tarefas, pipeline, permissões, auditoria e importação |
+| Campanhas | Aprovação, vigência, pausa, oferta, CTA, métricas e denúncia |
+| Outbound | Dry-run, preview, aprovação, registro, opt-out, falhas e nenhuma ação externa não autorizada |
+| Segurança | Validação de entrada, controle de acesso, upload, exportação, logs e proteção de dados |
+| Performance | Listas grandes, filtros, dashboards, imagens e páginas administrativas em mobile |
+| Acessibilidade | Navegação por teclado, contraste, labels, foco e texto alternativo |
+
+A matriz deve especificar testes automáticos possíveis, testes manuais obrigatórios, dados de teste, ambiente, responsável e resultado esperado. Todo bug de regressão é bloqueador de release até ser resolvido ou até que exista aprovação formal para exceção.
+
+---
+
+## 8. Formato obrigatório da resposta da IA
+
+Entregue **um único arquivo Markdown** chamado `PLANO_IMPLEMENTACAO_SEGURO_MEU_CORRE.md`, em português do Brasil, com as seguintes seções, nesta ordem:
+
+1. Resumo executivo e princípios inegociáveis.
+
+1. Inventário de fontes analisadas, com arquivos e lacunas.
+
+1. Mapa da aplicação atual e funcionalidades que devem ser preservadas.
+
+1. Matriz de requisitos rastreável aos documentos.
+
+1. Arquitetura atual e arquitetura alvo incremental.
+
+1. Mapa de dependências, dados, permissões e integrações.
+
+1. Estratégia de compatibilidade, migrations, feature flags e rollback.
+
+1. Releases detalhadas com escopo, exclusões, arquivos/entidades afetados, testes e critérios de aceite.
+
+1. Especificação funcional para Central de Divulgação.
+
+1. Especificação funcional para Central de Parceiros/CRM.
+
+1. Especificação de outbound supervisionado, sem spam e sem automação externa não autorizada.
+
+1. Plano de dados, privacidade, segurança e auditoria.
+
+1. Matriz de testes de regressão e QA.
+
+1. Matriz de riscos, mitigação, monitoramento e plano de contingência.
+
+1. Roadmap por prioridade e dependência.
+
+1. Perguntas de decisão que exigem resposta do responsável pelo produto.
+
+1. Checklist de go/no-go antes de qualquer deploy.
+
+1. Referências aos arquivos e fontes analisadas.
+
+Use tabelas Markdown para organizar informação. Cite caminhos exatos de arquivos do projeto. Não esconda conflitos, riscos, incertezas ou decisões pendentes. Diferencie com clareza fatos confirmados no código, requisitos documentados e hipóteses propostas.
+
+---
+
+## 9. Regras finais de execução
+
+- Não implemente nada antes de o plano ser aprovado.
+
+- Não faça ações externas, envios, publicações, pagamentos, contratos ou contatos sem confirmação explícita.
+
+- Não invente estado do banco, credenciais, integrações, resultados de teste ou comportamento do código.
+
+- Não exponha segredos, tokens, sessões, dados pessoais ou dados de produção em logs ou relatórios.
+
+- Não aplique mudanças destrutivas, mudanças de preço ou alterações em pagamentos sem plano específico e aprovação.
+
+- Não apague funcionalidades, rotas, tabelas, imagens ou histórico existentes para “simplificar” a implementação.
+
+- Quando houver dúvida, prefira preservar, isolar via feature flag, testar em ambiente seguro e pedir decisão.
+
+- O sucesso do plano é medido por três critérios: **funcionalidades atuais preservadas**, **novos módulos implementáveis em etapas reversíveis** e **capacidade clara de verificar cada mudança antes de publicar**.
+
+---
+
+## 10. Instrução final
+
+Comece por analisar. Em seguida, entregue o arquivo `PLANO_IMPLEMENTACAO_SEGURO_MEU_CORRE.md`. Não escreva código de produção, não altere banco, não execute migration e não ative integrações enquanto o plano não for revisado e aprovado pelo responsável do MeuCorre.
+
+---
+
+## 11. Protocolo obrigatório de implementação, validação e commit pelo CLI
+
+> **Regra de bloqueio absoluto:** após a aprovação do plano, a IA deve implementar somente **uma unidade atômica por vez**. É proibido iniciar a próxima funcionalidade, próximo módulo, próxima migration, próxima tela ou próximo release enquanto a unidade atual não tiver sido completamente validada, commitada e verificada pelo CLI sem erros.
+
+Uma unidade atômica é uma mudança pequena e coerente, como uma entidade, endpoint, migration aditiva, componente, formulário, teste, permissão, job interno ou correção específica. Nunca misture mudanças independentes no mesmo ciclo ou commit.
+
+### 11.1 Execução obrigatória por terminal
+
+Após a aprovação do plano, toda implementação e validação deve ser conduzida pelo **CLI/terminal**, com comandos explícitos, saída verificável e registro de evidências. A IA deve descobrir os scripts reais do projeto no `package.json`, documentação, CI e ferramentas instaladas antes de executá-los. Não deve presumir nomes de comandos.
+
+A IA não pode afirmar que algo funciona sem executar e registrar os testes aplicáveis. Não pode usar execução visual ou alteração manual não rastreável como substituto de validação no CLI. A revisão visual e manual pode complementar os testes, mas não os substitui.
+
+### 11.2 Ciclo obrigatório para cada unidade atômica
+
+| Ordem | Ação obrigatória | Condição para avançar |
+| --- | --- | --- |
+| 1 | Declarar a unidade | Registrar objetivo, escopo, arquivos/entidades previstos, risco, feature flag e critérios de aceite |
+| 2 | Confirmar o ponto de partida | Executar `git status --short`, registrar branch/worktree, commit base e baseline de testes aplicáveis |
+| 3 | Implementar somente a unidade aprovada | Manter diff pequeno, coerente, compatível e sem alterações acidentais |
+| 4 | Executar verificações estáticas | Rodar formatador, lint e type-check reais do projeto; todos devem terminar com código zero |
+| 5 | Executar build | Rodar o build real do projeto pelo CLI; deve terminar com código zero |
+| 6 | Executar testes automatizados | Rodar testes unitários, integração e E2E afetados, além dos testes de regressão aplicáveis |
+| 7 | Executar validação manual/E2E | Conferir fluxo novo e comportamento antigo afetado em ambiente apropriado |
+| 8 | Registrar resultado | Guardar comandos, código de retorno, resultado esperado, resultado obtido e evidência |
+| 9 | Corrigir falha, se houver | Se qualquer teste, build, lint, type-check, migration de teste ou validação manual falhar, interromper avanço e corrigir a causa raiz |
+| 10 | Retestar após cada correção | Reexecutar todas as verificações afetadas; resultados anteriores à correção não são válidos |
+| 11 | Revisar diff pelo CLI | Executar `git diff --check`, revisar diff/estatísticas e confirmar ausência de segredos, arquivos acidentais e alterações fora do escopo |
+| 12 | Criar commit atômico | Só fazer commit quando todos os portões acima estiverem aprovados |
+| 13 | Verificar o commit pelo CLI | Executar `git status --short`, `git show --check --stat HEAD` e repetir ao menos o conjunto mínimo de testes pós-commit |
+| 14 | Encerrar a unidade | Atualizar log de implementação, documentar rollback e confirmar que a árvore está limpa antes de começar a próxima unidade |
+
+### 11.3 Loop obrigatório quando houver erro
+
+Se houver qualquer erro, falha de teste, diferença de comportamento, warning crítico, build quebrado, migration insegura, problema de permissão, regressão visual ou conflito de dados, execute este loop sem exceções:
+
+```
+falha detectada
+→ parar imediatamente o avanço
+→ coletar saída do CLI e diagnosticar causa raiz
+→ corrigir somente o necessário
+→ executar novamente formatador, lint, type-check, build e todos os testes afetados
+→ repetir validação de regressão do fluxo antigo e validação do fluxo novo
+→ revisar o diff novamente
+→ somente fazer commit se todas as verificações forem aprovadas
+→ somente iniciar a próxima unidade após verificar o commit pelo CLI
+```
+
+É proibido avançar “mesmo com um erro pequeno”. É proibido desativar testes, apagar asserções, reduzir cobertura, adicionar `skip`, usar `--no-verify`, ignorar hooks, ocultar erros de type-check ou alterar o critério de aceite somente para fazer a etapa passar. Caso a correção revele mudança de escopo, a IA deve parar, atualizar o plano e solicitar decisão antes de continuar.
+
+### 11.4 Comandos mínimos a descobrir e executar
+
+A IA deve identificar os equivalentes reais no projeto e registrá-los. A tabela abaixo é apenas uma referência de categorias; não use comandos inexistentes cegamente.
+
+| Objetivo | Exemplos de comandos CLI a adaptar ao projeto |
+| --- | --- |
+| Estado do repositório | `git status --short`, `git log -1 --oneline`, `git rev-parse --show-toplevel` |
+| Dependências | `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable` ou equivalente real |
+| Formatação | `npm run format:check`, `pnpm format:check` ou equivalente real |
+| Lint | `npm run lint` ou equivalente real |
+| Type-check | `npm run typecheck`, `tsc --noEmit` ou equivalente real |
+| Testes | `npm run test`, `npm run test:integration`, `npm run test:e2e` ou equivalente real |
+| Build | `npm run build` ou equivalente real |
+| Banco e migrations de teste | Comando documentado pelo projeto, usando ambiente de teste e sem tocar em produção |
+| Diff | `git diff --check`, `git diff --stat`, `git diff -- <arquivos>` |
+| Commit | `git add -- <arquivos-revisados>` e `git commit -m "tipo(escopo): descrição atômica"` |
+| Verificação pós-commit | `git status --short`, `git show --check --stat HEAD` e reteste mínimo aplicável |
+
+Nunca usar `git add .` sem antes revisar `git status` e o diff. Nunca incluir arquivos de segredo, dados locais, sessões, builds, caches, dependências ou arquivos fora do escopo. Use `git add -- <arquivos-revisados>` para adicionar somente o que foi inspecionado.
+
+### 11.5 Regra de commits
+
+Cada commit precisa ser pequeno, atômico, reversível e descritivo. Use convenção consistente, por exemplo:
+
+```
+feat(divulgacao): adiciona entidade de publicação
+feat(divulgacao): importa calendário validado
+feat(parceiros): adiciona cadastro de empresas
+fix(crm): corrige deduplicação por domínio
+chore(test): adiciona caracterização de cálculo de lucro
+```
+
+Antes de criar o commit, a IA deve confirmar que os testes e verificações correspondem exatamente ao conteúdo do diff. Depois do commit, deve verificar que não há alterações não rastreadas ou pendentes, salvo exceções deliberadamente documentadas e aprovadas.
+
+### 11.6 Log de implementação obrigatório
+
+A IA deve criar ou atualizar `docs/IMPLEMENTATION_LOG.md` a cada unidade concluída. O registro de cada commit deve conter:
+
+| Campo | Conteúdo obrigatório |
+| --- | --- |
+| Data/hora | Momento de encerramento da unidade |
+| ID e título | Referência à tarefa ou release |
+| Hash do commit | Hash curto e completo quando disponível |
+| Escopo | O que foi implementado e o que ficou explicitamente fora |
+| Arquivos e migrations | Lista dos itens alterados |
+| Feature flag | Nome, estado e público autorizado |
+| Comandos executados | CLI usado para formato, lint, type-check, build, testes e revisão |
+| Resultado | Código de retorno e síntese das validações |
+| Regressão | Fluxos antigos reavaliados e resultado |
+| Validação manual | Cenário, ambiente e resultado |
+| Riscos residuais | Limitações ou acompanhamento necessário |
+| Rollback | Como desligar ou reverter com segurança |
+| Próximo passo | Somente após a confirmação de todos os portões |
+
+### 11.7 Ordem de execução recomendada para excelência
+
+A execução deve seguir esta ordem, salvo se o diagnóstico do repositório comprovar que outra sequência reduz risco. Mesmo nesse caso, a justificativa deve ser registrada.
+
+| Ordem | Etapa | Regra de avanço |
+| --- | --- | --- |
+| 0 | Branch/worktree, baseline e inventário | Só avançar após registrar o commit base e aprovar testes de baseline |
+| 1 | Testes de caracterização do núcleo atual | Só avançar após proteger corridas, despesas, lucro, PWA, autenticação, PRO, admin e integrações existentes |
+| 2 | Fundamentos transversais | Feature flags, permissões, auditoria, validações, observabilidade e estrutura de migration |
+| 3 | Navegação administrativa protegida | Criar rotas e menu novos sem remover ou modificar abas atuais |
+| 4 | Central de Divulgação somente leitura | Importar referências de posts e assets com validação, sem automação externa |
+| 5 | CRUD da Divulgação | Edição, cópia, download, filtros, status e `.ics`, preservando importação reversível |
+| 6 | CRM básico | Empresas, contatos, leads, pipeline, tarefas e logs, sem envio externo |
+| 7 | Propostas e materiais | Templates, versões, biblioteca, permissões e aprovação humana |
+| 8 | Campanhas, ofertas e benefícios | Vigência, assets, CTA, aprovação, pausa e métricas, sem alterar anúncios atuais |
+| 9 | Outbound supervisionado | Preview, aprovação, registro, respostas e opt-out; sem envio externo automático |
+| 10 | Métricas, relatórios e renovação | Dashboards, alertas, relatórios e jobs internos idempotentes |
+| 11 | Recursos de maior risco | Integrações externas, portal de parceiro, equipes, dados agregados e mudanças comerciais somente após validação das etapas anteriores |
+| 12 | Rollout progressivo | Feature flags, canary interno, observabilidade, documentação e rollback pronto |
+
+A cada linha da tabela, aplique integralmente o ciclo desta seção. Não pule diretamente para CRM avançado, automação externa ou integrações de pagamentos antes de confirmar a estabilidade das camadas anteriores.
+
+### 11.8 Critério final de avanço
+
+Uma unidade só está concluída, e a IA só pode iniciar a próxima, quando todas as condições abaixo forem verdadeiras:
+
+- o escopo aprovado foi atendido sem mudanças não autorizadas;
+
+- formatador, lint, type-check, build e testes aplicáveis foram executados pelo CLI sem erros;
+
+- os fluxos existentes impactados foram testados novamente e continuam funcionando;
+
+- o fluxo novo foi validado automaticamente e manualmente quando necessário;
+
+- erros encontrados foram corrigidos e todos os testes foram executados novamente depois da correção;
+
+- o diff foi revisado e está livre de problemas detectáveis;
+
+- o commit atômico foi criado;
+
+- a verificação pós-commit pelo CLI foi concluída sem erro;
+
+- o log de implementação e o plano de rollback foram atualizados;
+
+- `git status --short` não mostra alterações pendentes não explicadas.
+
+Se uma única condição falhar, a IA deve permanecer na unidade atual até resolver o problema ou pedir decisão explícita ao responsável pelo produto.
