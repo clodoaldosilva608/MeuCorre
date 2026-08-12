@@ -415,23 +415,23 @@ function MapContainer({
     };
   }, [points, hasData]);
 
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center bg-muted dark:bg-zinc-900">
-        <p className="text-xs text-muted-foreground dark:text-zinc-500">
-          Carregando mapa...
-        </p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex h-64 items-center justify-center bg-muted dark:bg-zinc-900">
-        <p className="text-xs text-red-400">{error}</p>
-      </div>
-    );
-  }
-
-  return <div ref={containerRef} className="h-80 w-full" />;
+  // Sempre renderiza o div do mapa (para que o ref exista quando o effect rodar)
+  // Loading e error são sobrepostos como overlay
+  return (
+    <div className="relative h-80 w-full">
+      <div ref={containerRef} className="h-80 w-full" />
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted dark:bg-zinc-900">
+          <p className="text-xs text-muted-foreground dark:text-zinc-500">
+            Carregando mapa...
+          </p>
+        </div>
+      )}
+      {error && !loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted dark:bg-zinc-900">
+          <p className="text-xs text-red-400">{error}</p>
+        </div>
+      )}
+    </div>
+  );
 }
