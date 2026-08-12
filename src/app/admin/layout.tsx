@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap, Gift, ShoppingBag, FileText, Calendar, Handshake, Flag, FileStack, Tag, Send } from "lucide-react";
+import { LayoutDashboard, Megaphone, CreditCard, MessageSquare, Users, LogOut, Zap, Gift, ShoppingBag, FileText, Calendar, Handshake, Flag, FileStack, Tag, Send, BarChart3 } from "lucide-react";
 
 // NAV base — sempre visível (funcionalidades existentes preservadas)
 const NAV_BASE = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/metricas", label: "Métricas", icon: BarChart3 },
   { href: "/admin/ads", label: "Anúncios", icon: Megaphone },
   { href: "/admin/offers", label: "Ofertas", icon: ShoppingBag },
   { href: "/admin/blog", label: "Blog", icon: FileText },
