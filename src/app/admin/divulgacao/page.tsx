@@ -88,24 +88,26 @@ export default function DivulgacaoPage() {
       </div>
 
       <Tabs defaultValue="calendar" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 sm:w-auto">
-          <TabsTrigger value="calendar" className="gap-1.5 text-xs">
+        <TabsList className="flex w-full overflow-x-auto sm:grid sm:grid-cols-5 sm:w-auto sm:overflow-visible">
+          <TabsTrigger value="calendar" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <Calendar className="h-3.5 w-3.5" />
-            Calendário
+            <span className="hidden sm:inline">Calendário</span>
+            <span className="sm:hidden">Cal</span>
           </TabsTrigger>
-          <TabsTrigger value="list" className="gap-1.5 text-xs">
+          <TabsTrigger value="list" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <List className="h-3.5 w-3.5" />
             Lista
           </TabsTrigger>
-          <TabsTrigger value="campaigns" className="gap-1.5 text-xs">
+          <TabsTrigger value="campaigns" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <FolderKanban className="h-3.5 w-3.5" />
-            Campanhas
+            <span className="hidden sm:inline">Campanhas</span>
+            <span className="sm:hidden">Camp</span>
           </TabsTrigger>
-          <TabsTrigger value="channels" className="gap-1.5 text-xs">
+          <TabsTrigger value="channels" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <Radio className="h-3.5 w-3.5" />
             Canais
           </TabsTrigger>
-          <TabsTrigger value="assets" className="gap-1.5 text-xs">
+          <TabsTrigger value="assets" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <ImageIcon className="h-3.5 w-3.5" />
             Assets
           </TabsTrigger>

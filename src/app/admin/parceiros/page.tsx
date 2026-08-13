@@ -83,20 +83,20 @@ export default function ParceirosPage() {
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 sm:w-auto">
-          <TabsTrigger value="dashboard" className="gap-1.5 text-xs">
+        <TabsList className="flex w-full overflow-x-auto sm:grid sm:grid-cols-5 sm:w-auto sm:overflow-visible">
+          <TabsTrigger value="dashboard" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <LayoutDashboard className="h-3.5 w-3.5" />
             Dashboard
           </TabsTrigger>
-          <TabsTrigger value="list" className="gap-1.5 text-xs">
+          <TabsTrigger value="list" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <Building2 className="h-3.5 w-3.5" />
             Empresas
           </TabsTrigger>
-          <TabsTrigger value="kanban" className="gap-1.5 text-xs">
+          <TabsTrigger value="kanban" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <Trello className="h-3.5 w-3.5" />
             Pipeline
           </TabsTrigger>
-          <TabsTrigger value="import" className="gap-1.5 text-xs">
+          <TabsTrigger value="import" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <Upload className="h-3.5 w-3.5" />
             Importar
           </TabsTrigger>
