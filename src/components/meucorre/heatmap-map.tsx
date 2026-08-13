@@ -295,10 +295,10 @@ function MapContainer({
         }
 
         // ===== Determina o centro do mapa =====
-        // Se há pontos de calor, usa a média deles.
-        // Se não há pontos, usa São Paulo como fallback imediato.
-        // Tenta obter a localização atual do usuário em paralelo (não bloqueia).
-        let centerLat = -23.5505;
+        // SEMPRE tenta obter a localização atual do usuário PRIMEIRO.
+        // Se o GPS responder rápido, usa a localização real do usuário.
+        // Se falhar ou demorar, usa a média dos pontos de calor ou São Paulo como fallback.
+        let centerLat = -23.5505; // fallback São Paulo
         let centerLng = -46.6333;
 
         if (hasData && points.length > 0) {
@@ -306,10 +306,40 @@ function MapContainer({
           centerLng = points.reduce((s, p) => s + p.lng, 0) / points.length;
         }
 
-        // Cria o mapa IMEDIATAMENTE (não espera GPS)
+        // Tenta obter localização do usuário ANTES de criar o mapa
+        // Usa um timeout curto (3s) para não travar a renderização
+        let userLocation: { lat: number; lng: number } | null = null;
+        if (navigator.geolocation) {
+          try {
+            userLocation = await new Promise<{ lat: number; lng: number } | null>((resolve) => {
+              const timeout = setTimeout(() => resolve(null), 3000);
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  clearTimeout(timeout);
+                  resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                },
+                () => {
+                  clearTimeout(timeout);
+                  resolve(null);
+                },
+                { enableHighAccuracy: true, timeout: 3000, maximumAge: 60000 },
+              );
+            });
+          } catch {
+            userLocation = null;
+          }
+        }
+
+        // Se conseguiu a localização do usuário, usa ela como centro
+        if (userLocation) {
+          centerLat = userLocation.lat;
+          centerLng = userLocation.lng;
+        }
+
+        // Cria o mapa com o centro definido (localização do usuário ou fallback)
         const map = L.map(containerRef.current, {
           center: [centerLat, centerLng],
-          zoom: 13,
+          zoom: 14,
           scrollWheelZoom: false,
           attributionControl: true,
         });
@@ -320,37 +350,19 @@ function MapContainer({
           maxZoom: 19,
         }).addTo(map);
 
-        // ===== Tenta obter localização atual do usuário (em background) =====
-        // Se conseguir, move o mapa para a localização do usuário e adiciona marcador.
-        // Se não conseguir, mantém o centro atual (São Paulo ou média dos pontos).
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              if (cancelled || !mapInstanceRef.current) return;
-              const lat = pos.coords.latitude;
-              const lng = pos.coords.longitude;
-              map.setView([lat, lng], 14);
+        // ===== Adiciona marcador da localização atual do usuário =====
+        // Se já conseguimos a localização acima, adiciona o marcador verde
+        if (userLocation) {
+          const userMarker = L.circleMarker([userLocation.lat, userLocation.lng], {
+            radius: 8,
+            fillColor: "#4ADE80",
+            color: "#22C55E",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8,
+          }).addTo(map);
 
-              const userMarker = L.circleMarker([lat, lng], {
-                radius: 8,
-                fillColor: "#4ADE80",
-                color: "#22C55E",
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8,
-              }).addTo(map);
-
-              userMarker.bindPopup("📍 Sua localização atual");
-            },
-            () => {
-              // Erro de GPS — mantém centro atual (São Paulo)
-            },
-            {
-              enableHighAccuracy: true,
-              maximumAge: 30000,
-              timeout: 8000,
-            },
-          );
+          userMarker.bindPopup("📍 Sua localização atual");
         }
 
         // ===== Adiciona camada de calor (se houver pontos) =====
