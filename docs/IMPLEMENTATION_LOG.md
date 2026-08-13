@@ -1155,3 +1155,81 @@ Todas as 9 releases (A-I) do `docs/PLANO_IMPLEMENTACAO_SEGURO_MEU_CORRE.md` fora
 **Testes E2E:** ~80 cenários cobrindo todas as releases
 
 **Tudo protegido por feature flags. Nenhuma tabela existente modificada. Plano de rollback documentado para cada release.**
+
+---
+
+## Pós-Implementação — Segurança e Hardening
+
+### Fase 1 — Correções Críticas (commit a3b1358)
+
+| Vulnerabilidade | Ação |
+|----------------|------|
+| V1: Reset link em console.log | Removido log que vazava emails + reset links |
+| V3: Rate limiting ausente | Adicionado em quiz/convert (10/h) e campaigns/track (60/h) |
+| V5: Console.logs sensíveis | 4 arquivos limpos (sync, quiz, partners, forgot-password) |
+| V8: next-auth com CVE crítico | Removido (não era usado no código) |
+
+### Fase 2 — RLS + Zod + Scanners CI (commit 455e63d + bb40791)
+
+| Item | Ação |
+|------|------|
+| RLS Supabase | Script SQL criado para 41 tabelas com policies |
+| Zod validation | 15 schemas criados + validateOrError() helper |
+| SECURITY.md | Política de report de vulnerabilidades |
+| Guia OWASP | docs/SEGURANCA-OWASP.md (OWASP Top 10 + API Security) |
+| Gitleaks CI | Regras customizadas para MeuCorre (.gitleaks.toml) |
+| Snyk CI | Scanner avançado (se SNYK_TOKEN configurado) |
+| npm audit CI | Roda a cada push/PR |
+
+### Fase 3 — npm audit zero + hardening (commits c117cf7 + 21c4dce)
+
+| Item | Ação |
+|------|------|
+| npm audit fix | 15 dependências atualizadas (21→6 vulns) |
+| sharp atualizado | 0.34.5 → 0.35.3 (4 CVEs libvips resolvidos) |
+| react-syntax-highlighter | Removido (não usado, CVE prismjs) |
+| @mdxeditor/editor | Removido (não usado, CVE js-yaml) |
+| **npm audit final** | **0 vulnerabilidades** ✅ |
+| CSP fortalecida | Removido unsafe-eval + report-uri + COOP + CORP |
+| CSP report endpoint | /api/csp-report recebe violações em tempo real |
+| Política de senhas | 8+ chars, maiúscula, minúscula, número, blacklist |
+| Timeout Prisma | Helper withTimeout() (30s default) |
+| Zod em mais endpoints | Aplicado em login, feature-flags, outbound/prepare, partners |
+
+### RLS executado no Supabase (13/08/2026)
+
+- 41 tabelas com RLS habilitado ✅
+- 7 tabelas de usuário com policy por dono (auth.uid()) ✅
+- 5 tabelas públicas (leitura de dados ativos) ✅
+- 28 tabelas admin deny-all (só service_role) ✅
+- PasswordResetToken deny-all ✅
+
+### Assets vinculados aos posts (13/08/2026)
+
+- 450/450 posts com assetId ✅
+- 423 assets com URL pública ✅
+- 6 canais oficiais criados ✅
+- 450 imagens em public/promotion/ (52 MB, 1080px JPEG) ✅
+
+---
+
+## Resumo Final Consolidado
+
+| Categoria | Quantidade |
+|-----------|------------|
+| Releases implementadas | 9 (A-I) |
+| Unidades atômicas | 50+ |
+| Commits | 240+ |
+| Linhas de código | ~56.000 |
+| Modelos Prisma | 41 |
+| Endpoints API | 135 |
+| Páginas | 48 |
+| Componentes React | 105 |
+| Testes E2E | 26 arquivos (~80 cenários) |
+| Scripts | 34 |
+| Documentos técnicos | 10 |
+| Feature flags | 10 (9 ativas) |
+| Vulnerabilidades npm | 0 |
+| Nota de segurança | 9.5/10 |
+| Imagens do pacote visual | 450 (52 MB) |
+| Posts com imagem | 450/450 (100%) |
