@@ -9,6 +9,7 @@ import { AdSense } from "@/components/adsense";
 import { SOCIAL_LINKS } from "@/components/social-icons";
 import { PhoneShowcase } from "@/components/meucorre/phone-showcase";
 import { BlogCarousel } from "@/components/meucorre/blog-carousel";
+import { YouTubeSection } from "@/components/meucorre/youtube-section";
 import {
   Dialog,
   DialogContent,
@@ -1042,6 +1043,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ===== 7.6 SEÇÃO YOUTUBE — vídeos do canal @meucorre-z4j ===== */}
+      <YouTubeSection />
 
       {/* ===== 8. CTA FINAL grande ===== */}
       <section className="relative overflow-hidden bg-ink py-20 text-center text-white md:py-28">

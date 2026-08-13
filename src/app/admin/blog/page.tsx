@@ -34,6 +34,9 @@ import {
   Loader2,
   Send,
   Check,
+  AlertCircle,
+  KeyRound,
+  RefreshCw,
 } from "lucide-react";
 
 interface BlogPost {
@@ -71,6 +74,16 @@ export default function AdminBlogPage() {
   const [saving, setSaving] = useState(false);
   const [bloggerConfirm, setBloggerConfirm] = useState<BlogPost | null>(null);
   const [publishingBlogger, setPublishingBlogger] = useState(false);
+  const [tokenModalOpen, setTokenModalOpen] = useState(false);
+  const [tokenStatus, setTokenStatus] = useState<{
+    configured?: boolean;
+    hasToken?: boolean;
+    expired?: boolean;
+    needsEnvVars?: boolean;
+    authUrl?: string;
+  } | null>(null);
+  const [oauthCode, setOauthCode] = useState("");
+  const [exchangingCode, setExchangingCode] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,7 +99,37 @@ export default function AdminBlogPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  const loadTokenStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/blog/blogger-token");
+      if (res.ok) {
+        const data = await res.json();
+        setTokenStatus(data);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+    loadTokenStatus();
+  }, [load, loadTokenStatus]);
+
+  // Escuta postMessage do callback OAuth do Blogger
+  // (quando o callback abre em popup/nova aba e envia o code de volta)
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type === "blogger-oauth-code" && e.data.code) {
+        setOauthCode(e.data.code);
+        setTokenModalOpen(true);
+        toast.success("Código recebido! Clique em 'Salvar token'");
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
 
   const handleSave = async (postData: Partial<BlogPost>) => {
     setSaving(true);
@@ -130,14 +173,24 @@ export default function AdminBlogPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.needsAuth) {
-          toast.error("Token expirado", {
-            description: "Abra a URL de autorização no console",
+        if (data.needsEnvVars) {
+          toast.error("Variáveis de ambiente faltando", {
+            description:
+              "Configure BLOGGER_CLIENT_ID e BLOGGER_CLIENT_SECRET na Vercel",
           });
-          console.log("Autorize:", data.authUrl);
-        } else {
-          toast.error(data.error || "Erro ao publicar no Blogger");
+          return;
         }
+        if (data.needsAuth) {
+          // Abre modal com instruções de autorização
+          await loadTokenStatus();
+          setBloggerConfirm(null);
+          setTokenModalOpen(true);
+          toast.info("Autorização necessária", {
+            description: "Veja as instruções no modal aberto",
+          });
+          return;
+        }
+        toast.error(data.error || "Erro ao publicar no Blogger");
         return;
       }
       toast.success("Publicado no Blogger!", {
@@ -149,6 +202,34 @@ export default function AdminBlogPage() {
       toast.error("Erro de conexão");
     } finally {
       setPublishingBlogger(false);
+    }
+  };
+
+  const handleExchangeCode = async () => {
+    if (!oauthCode.trim()) {
+      toast.error("Cole o código de autorização");
+      return;
+    }
+    setExchangingCode(true);
+    try {
+      const res = await fetch("/api/admin/blog/blogger-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: oauthCode.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao trocar código por token");
+        return;
+      }
+      toast.success("Token salvo com sucesso!");
+      setOauthCode("");
+      setTokenModalOpen(false);
+      loadTokenStatus();
+    } catch {
+      toast.error("Erro de conexão");
+    } finally {
+      setExchangingCode(false);
     }
   };
 
@@ -177,14 +258,97 @@ export default function AdminBlogPage() {
             Crie e gerencie postagens. Publique no blog interno e no Blogger externo.
           </p>
         </div>
-        <Button
-          onClick={() => { setEditing(null); setDialogOpen(true); }}
-          className="bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
-        >
-          <Plus className="mr-1.5 h-4 w-4" />
-          Nova postagem
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setTokenModalOpen(true)}
+            className="border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800"
+          >
+            <KeyRound className="mr-1.5 h-4 w-4" />
+            Blogger
+            {tokenStatus?.needsEnvVars ? (
+              <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-red-400">
+                <AlertCircle className="h-2.5 w-2.5" />
+                Sem env
+              </span>
+            ) : tokenStatus?.hasToken ? (
+              tokenStatus?.expired ? (
+                <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-400">
+                  <AlertCircle className="h-2.5 w-2.5" />
+                  Expirado
+                </span>
+              ) : (
+                <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-emerald-400">
+                  <Check className="h-2.5 w-2.5" />
+                  Conectado
+                </span>
+              )
+            ) : (
+              <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-zinc-700 px-1.5 py-0.5 text-[9px] font-bold uppercase text-zinc-300">
+                Desconectado
+              </span>
+            )}
+          </Button>
+          <Button
+            onClick={() => { setEditing(null); setDialogOpen(true); }}
+            className="bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nova postagem
+          </Button>
+        </div>
       </div>
+
+      {/* Status do Blogger — banner de aviso quando não configurado */}
+      {tokenStatus?.needsEnvVars && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-red-400">
+              Blogger não configurado
+            </p>
+            <p className="mt-1 text-xs text-zinc-400">
+              Configure as variáveis de ambiente na Vercel:
+              <code className="mx-1 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                BLOGGER_CLIENT_ID
+              </code>
+              e
+              <code className="mx-1 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                BLOGGER_CLIENT_SECRET
+              </code>
+              . Depois clique em "Blogger" acima para autorizar o acesso.
+            </p>
+          </div>
+        </div>
+      )}
+      {tokenStatus?.hasToken === false && !tokenStatus?.needsEnvVars && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-amber-400">
+              Blogger precisa de autorização
+            </p>
+            <p className="mt-1 text-xs text-zinc-400">
+              Clique no botão "Blogger" acima para autorizar o acesso à sua
+              conta do Google e habilitar a publicação externa.
+            </p>
+          </div>
+        </div>
+      )}
+      {tokenStatus?.expired && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-amber-400">
+              Token do Blogger expirado
+            </p>
+            <p className="mt-1 text-xs text-zinc-400">
+              Clique no botão "Blogger" acima para reautorizar. O refresh
+              automático falhou ou não há refresh_token salvo.
+            </p>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex h-40 items-center justify-center text-zinc-500">
@@ -316,6 +480,162 @@ export default function AdminBlogPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de configuração do token do Blogger */}
+      <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
+        <DialogContent className="max-w-lg gap-0 overflow-y-auto border-zinc-800 bg-zinc-900 p-0 text-zinc-100">
+          <DialogHeader className="border-b border-zinc-800 px-5 py-4">
+            <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-400">
+              <KeyRound className="h-4 w-4" />
+              Configurar Blogger
+            </DialogTitle>
+            <DialogDescription className="text-xs text-zinc-500">
+              Autorize o MeuCorre a publicar no seu blog do Blogger
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 px-5 py-5">
+            {tokenStatus?.needsEnvVars ? (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4 text-sm text-zinc-300">
+                <p className="font-bold text-red-400">
+                  Variáveis de ambiente faltando
+                </p>
+                <p className="mt-2 text-xs">
+                  Configure na Vercel → Settings → Environment Variables:
+                </p>
+                <ul className="mt-2 space-y-1 text-xs text-zinc-400">
+                  <li>
+                    <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-emerald-400">
+                      BLOGGER_CLIENT_ID
+                    </code>
+                  </li>
+                  <li>
+                    <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-emerald-400">
+                      BLOGGER_CLIENT_SECRET
+                    </code>
+                  </li>
+                  <li>
+                    <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-emerald-400">
+                      BLOGGER_REDIRECT_URI
+                    </code>
+                    <span className="ml-1 text-zinc-500">
+                      = https://meucorre.vercel.app/api/blogger-callback
+                    </span>
+                  </li>
+                  <li>
+                    <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-emerald-400">
+                      BLOGGER_BLOG_ID
+                    </code>
+                  </li>
+                </ul>
+                <p className="mt-3 text-xs text-zinc-500">
+                  Crie as credenciais OAuth em:
+                  <br />
+                  <a
+                    href="https://console.cloud.google.com/apis/credentials"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 hover:underline"
+                  >
+                    console.cloud.google.com/apis/credentials
+                  </a>
+                </p>
+              </div>
+            ) : tokenStatus?.hasToken && !tokenStatus?.expired ? (
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 text-center">
+                <Check className="mx-auto mb-2 h-8 w-8 text-emerald-400" />
+                <p className="text-sm font-bold text-emerald-400">
+                  Blogger conectado!
+                </p>
+                <p className="mt-1 text-xs text-zinc-400">
+                  Você já pode publicar posts no Blogger externo.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Passo 1: autorizar */}
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-zinc-300">
+                    Passo 1: Autorize o acesso
+                  </p>
+                  <a
+                    href={tokenStatus?.authUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full rounded-lg bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-blue-500"
+                  >
+                    <ExternalLink className="mr-1.5 inline h-4 w-4" />
+                    Abrir página de autorização do Google
+                  </a>
+                  <p className="mt-2 text-[11px] text-zinc-500">
+                    Você será redirecionado para o Google. Após autorizar, você
+                    verá um código na tela.
+                  </p>
+                </div>
+
+                {/* Passo 2: colar código */}
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-zinc-300">
+                    Passo 2: Cole o código de autorização
+                  </p>
+                  <Textarea
+                    value={oauthCode}
+                    onChange={(e) => setOauthCode(e.target.value)}
+                    placeholder="Cole aqui o código 4/0A..."
+                    rows={4}
+                    className="border-zinc-700 bg-zinc-950 font-mono text-xs text-zinc-100 focus:border-emerald-500"
+                  />
+                  <Button
+                    onClick={handleExchangeCode}
+                    disabled={exchangingCode || !oauthCode.trim()}
+                    className="mt-2 w-full bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+                  >
+                    {exchangingCode ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                        Trocando código por token...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="mr-1.5 h-4 w-4" />
+                        Salvar token
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Ações adicionais */}
+            <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
+              <Button
+                variant="ghost"
+                onClick={loadTokenStatus}
+                className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                Atualizar status
+              </Button>
+              {tokenStatus?.hasToken && (
+                <Button
+                  variant="ghost"
+                  onClick={async () => {
+                    if (!confirm("Remover token do Blogger?")) return;
+                    await fetch("/api/admin/blog/blogger-token", {
+                      method: "DELETE",
+                    });
+                    toast.success("Token removido");
+                    loadTokenStatus();
+                  }}
+                  className="text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                >
+                  Remover token
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
