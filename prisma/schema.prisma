@@ -303,6 +303,8 @@ model AdminUser {
   passwordHash String
   role         String   @default("admin") // admin | super_admin
   active       Boolean  @default(true)
+  totpSecret   String?  // 2FA TOTP secret (base32) — null = 2FA não configurado
+  totpEnabled  Boolean  @default(false) // true = 2FA exigido no login
   lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

@@ -1,123 +1,197 @@
-// ===== Circuit Breaker =====
+// ===== Circuit Breaker para Supabase =====
 //
-// Previne thundering herd quando o banco de dados cai.
-// Se N operações falharem consecutivamente, o circuito "abre" e falha rápido
-// (retorna 503) em vez de esperar timeout. Após COOLDOWN_MS, entra em estado
-// "half-open" e testa se o banco voltou.
+// Monitora falhas de conexão com o banco e abre o circuito quando
+// o número de falhas excede o limite. Quando aberto, retorna erro
+// 503 em vez de tentar conectar (evita cascade failure).
 //
 // Estados:
-// - CLOSED: operações normais (falhas incrementam counter)
-// - OPEN: falha rápido (503) sem bater no banco (após FAILURE_THRESHOLD falhas)
-// - HALF_OPEN: testa 1 operação (se sucesso → CLOSED, se falha → OPEN)
+// - CLOSED: funcionando normalmente (falhas < threshold)
+// - OPEN: circuito aberto, recusando conexões (falhas >= threshold)
+// - HALF_OPEN: testando se o banco recuperou (após timeout)
 //
-// Em serverless, o estado é in-memory por instância. Não é perfeito, mas
-// reduz carga significativamente quando múltiplas instâncias detectam falha.
+// Uso automático: o Prisma client já usa este breaker via wrapper.
 
-type CircuitState = "closed" | "open" | "half-open";
+type CircuitState = "closed" | "open" | "half_open";
 
-interface CircuitBreakerEntry {
-  state: CircuitState;
-  failureCount: number;
-  openedAt: number;
-  lastSuccessAt: number;
+interface CircuitBreakerOptions {
+  failureThreshold: number; // falhas antes de abrir (default: 5)
+  resetTimeout: number; // ms antes de tentar half-open (default: 30000)
+  halfOpenMaxAttempts: number; // tentativas no estado half-open (default: 3)
 }
 
-const circuits = new Map<string, CircuitBreakerEntry>();
+class CircuitBreaker {
+  private state: CircuitState = "closed";
+  private failureCount = 0;
+  private lastFailureAt: number | null = null;
+  private halfOpenAttempts = 0;
+  private readonly options: CircuitBreakerOptions;
 
-const FAILURE_THRESHOLD = 5; // 5 falhas = abre circuito
-const COOLDOWN_MS = 30 * 1000; // 30s em OPEN antes de HALF_OPEN
-const SUCCESS_RESET_THRESHOLD = 2; // 2 sucessos em HALF_OPEN = CLOSE
-
-/**
- * Verifica se o circuito está aberto (deve falhar rápido).
- * Retorna true se o circuito permitir a operação, false se deve falhar rápido.
- */
-export function canExecute(circuitName: string): boolean {
-  const entry = circuits.get(circuitName);
-  if (!entry) return true; // sem estado = CLOSED (permite)
-
-  const now = Date.now();
-
-  if (entry.state === "open") {
-    // Verifica se cooldown passou → transita para HALF_OPEN
-    if (now - entry.openedAt > COOLDOWN_MS) {
-      entry.state = "half-open";
-      return true; // permite 1 tentativa de teste
-    }
-    return false; // ainda em cooldown, falha rápido
-  }
-
-  // CLOSED ou HALF_OPEN: permite execução
-  return true;
-}
-
-/**
- * Registra sucesso no circuito. Reseta failure count e fecha circuito.
- */
-export function recordSuccess(circuitName: string): void {
-  const entry = circuits.get(circuitName);
-  if (!entry) {
-    circuits.set(circuitName, {
-      state: "closed",
-      failureCount: 0,
-      openedAt: 0,
-      lastSuccessAt: Date.now(),
-    });
-    return;
-  }
-
-  entry.lastSuccessAt = Date.now();
-
-  if (entry.state === "half-open") {
-    // Sucesso em HALF_OPEN → fecha circuito
-    entry.state = "closed";
-    entry.failureCount = 0;
-  } else if (entry.state === "closed") {
-    // Sucesso em CLOSED → reseta contador
-    entry.failureCount = 0;
-  }
-}
-
-/**
- * Registra falha no circuito. Incrementa counter e abre circuito se threshold atingido.
- */
-export function recordFailure(circuitName: string): void {
-  let entry = circuits.get(circuitName);
-  if (!entry) {
-    entry = {
-      state: "closed",
-      failureCount: 0,
-      openedAt: 0,
-      lastSuccessAt: 0,
+  constructor(options: Partial<CircuitBreakerOptions> = {}) {
+    this.options = {
+      failureThreshold: options.failureThreshold ?? 5,
+      resetTimeout: options.resetTimeout ?? 30000,
+      halfOpenMaxAttempts: options.halfOpenMaxAttempts ?? 3,
     };
-    circuits.set(circuitName, entry);
   }
 
-  entry.failureCount++;
+  /**
+   * Verifica se uma requisição pode prosseguir.
+   * Retorna true se pode, false se o circuito está aberto.
+   */
+  canRequest(): boolean {
+    switch (this.state) {
+      case "closed":
+        return true;
 
-  if (entry.state === "half-open") {
-    // Falha em HALF_OPEN → reabre circuito
-    entry.state = "open";
-    entry.openedAt = Date.now();
-    return;
+      case "open":
+        // Verifica se já passou o tempo de reset
+        if (
+          this.lastFailureAt &&
+          Date.now() - this.lastFailureAt > this.options.resetTimeout
+        ) {
+          this.state = "half_open";
+          this.halfOpenAttempts = 0;
+          return true;
+        }
+        return false;
+
+      case "half_open":
+        if (this.halfOpenAttempts < this.options.halfOpenMaxAttempts) {
+          this.halfOpenAttempts++;
+          return true;
+        }
+        return false;
+    }
   }
 
-  if (entry.failureCount >= FAILURE_THRESHOLD) {
-    entry.state = "open";
-    entry.openedAt = Date.now();
+  /**
+   * Registra um sucesso.
+   * Se estava em half_open, volta para closed.
+   */
+  recordSuccess(): void {
+    if (this.state === "half_open") {
+      this.state = "closed";
+      this.failureCount = 0;
+      this.halfOpenAttempts = 0;
+    } else if (this.state === "closed") {
+      // Reset gradual de falhas em caso de sucesso
+      if (this.failureCount > 0) {
+        this.failureCount = Math.max(0, this.failureCount - 1);
+      }
+    }
+  }
+
+  /**
+   * Registra uma falha.
+   * Se atingir o threshold, abre o circuito.
+   */
+  recordFailure(): void {
+    this.failureCount++;
+    this.lastFailureAt = Date.now();
+
+    if (this.state === "half_open") {
+      // Falhou no half-open → volta para open
+      this.state = "open";
+    } else if (this.failureCount >= this.options.failureThreshold) {
+      this.state = "open";
+      console.error(
+        `[CircuitBreaker] Circuito ABERTO após ${this.failureCount} falhas. ` +
+          `Reset em ${this.options.resetTimeout / 1000}s.`,
+      );
+    }
+  }
+
+  /**
+   * Retorna o estado atual para monitoramento.
+   */
+  getState(): {
+    state: CircuitState;
+    failureCount: number;
+    lastFailureAt: number | null;
+  } {
+    return {
+      state: this.state,
+      failureCount: this.failureCount,
+      lastFailureAt: this.lastFailureAt,
+    };
   }
 }
 
-/**
- * Retorna estado atual do circuito (para monitoring/debug).
- */
-export function getCircuitState(circuitName: string): CircuitState {
-  return circuits.get(circuitName)?.state ?? "closed";
-}
+// Singleton — um breaker para todo o app
+export const dbCircuitBreaker = new CircuitBreaker({
+  failureThreshold: 5,
+  resetTimeout: 30000, // 30s antes de tentar novamente
+  halfOpenMaxAttempts: 3,
+});
 
 /**
- * Reseta circuito manualmente (para testes ou admin intervention).
+ * Wrapper para executar queries com circuito breaker.
+ * Se o circuito estiver aberto, lança erro 503 imediatamente.
+ *
+ * Uso:
+ *   const users = await withCircuitBreaker(() => prisma.user.findMany());
  */
-export function resetCircuit(circuitName: string): void {
-  circuits.delete(circuitName);
+export async function withCircuitBreaker<T>(
+  fn: () => Promise<T>,
+): Promise<T> {
+  if (!dbCircuitBreaker.canRequest()) {
+    throw new Error("CIRCUIT_OPEN: Banco de dados temporariamente indisponível");
+  }
+
+  try {
+    const result = await fn();
+    dbCircuitBreaker.recordSuccess();
+    return result;
+  } catch (err) {
+    // Só conta como falha se for erro de conexão (não erro de negócio)
+    const isConnectionError =
+      err instanceof Error &&
+      (err.message.includes("connect") ||
+        err.message.includes("timeout") ||
+        err.message.includes("ECONNREFUSED") ||
+        err.message.includes("ENOTFOUND") ||
+        err.message.includes("Can't reach database") ||
+        err.message.includes("Connection terminated") ||
+        err.message.includes("PrismaClientInitializationError"));
+
+    if (isConnectionError) {
+      dbCircuitBreaker.recordFailure();
+    }
+
+    throw err;
+  }
+}
+
+// ===== API compatível com webhook kiwify (nomeada por circuito) =====
+// Mantém múltiplos circuit breakers nomeados para diferentes serviços.
+
+const namedBreakers = new Map<string, CircuitBreaker>();
+
+function getNamedBreaker(name: string): CircuitBreaker {
+  let breaker = namedBreakers.get(name);
+  if (!breaker) {
+    breaker = new CircuitBreaker({
+      failureThreshold: 5,
+      resetTimeout: 30000,
+      halfOpenMaxAttempts: 3,
+    });
+    namedBreakers.set(name, breaker);
+  }
+  return breaker;
+}
+
+export function canExecute(name: string): boolean {
+  return getNamedBreaker(name).canRequest();
+}
+
+export function recordSuccess(name: string): void {
+  getNamedBreaker(name).recordSuccess();
+}
+
+export function recordFailure(name: string): void {
+  getNamedBreaker(name).recordFailure();
+}
+
+export function getCircuitState(name: string) {
+  return getNamedBreaker(name).getState();
 }
