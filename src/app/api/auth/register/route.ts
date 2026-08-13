@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, createUserToken } from "@/lib/user-auth";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { validatePassword } from "@/lib/password-policy";
 
 // POST /api/auth/register
 // Cadastro de novo usuário entregador
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const name = body.name?.trim();
   const email = body.email?.trim().toLowerCase();
-  const password = body.password;
+  const password = body.password ?? "";
 
   // Validações
   if (!name || name.length < 2 || name.length > 100) {
@@ -32,8 +33,13 @@ export async function POST(req: NextRequest) {
   if (!email || !emailRegex.test(email) || email.length > 254) {
     return NextResponse.json({ error: "Email inválido" }, { status: 400 });
   }
-  if (!password || password.length < 6 || password.length > 100) {
-    return NextResponse.json({ error: "Senha deve ter entre 6 e 100 caracteres" }, { status: 400 });
+  // Validação de senha com política forte
+  const pwCheck = validatePassword(password);
+  if (!pwCheck.valid) {
+    return NextResponse.json(
+      { error: pwCheck.errors[0] },
+      { status: 400 },
+    );
   }
 
   // Verifica se email já existe

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
+import { partnerCreateSchema, validateOrError } from "@/lib/zod-schemas";
 
 // GET /api/admin/partners — lista parceiros com filtros
 // Query: search, city, state, category, stage, status, assignedTo, priority, tag, limit, offset
@@ -67,44 +68,21 @@ export async function POST(req: NextRequest) {
   }
 
   const adminEmail = await getAdminEmail();
-  const body = (await req.json()) as {
-    companyName?: string;
-    tradeName?: string;
-    cnpj?: string;
-    category?: string;
-    origin?: string;
-    city?: string;
-    state?: string;
-    address?: string;
-    website?: string;
-    phone?: string;
-    email?: string;
-    logoUrl?: string;
-    assignedTo?: string;
-    priority?: string;
-    status?: string;
-    stage?: string;
-    relevanceScore?: number;
-    benefitScore?: number;
-    reputationScore?: number;
-    capacityScore?: number;
-    riskScore?: number;
-    tags?: string;
-    potentialValue?: number;
-    notes?: string;
-  };
+  const rawBody = await req.json().catch(() => ({}));
 
-  if (!body.companyName?.trim()) {
+  // Validação com Zod
+  const validation = validateOrError(partnerCreateSchema, rawBody);
+  if (!validation.success) {
     return NextResponse.json(
-      { error: "companyName é obrigatório" },
+      { error: validation.error },
       { status: 400 },
     );
   }
 
+  const body = validation.data;
+
   const validPriorities = ["baixa", "media", "alta", "urgente"];
-  const priority = validPriorities.includes(body.priority ?? "")
-    ? body.priority!
-    : "media";
+  const priority = body.priority ?? "media";
 
   const validStages = [
     "novo_lead",

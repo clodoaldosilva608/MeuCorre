@@ -57,6 +57,7 @@ export const partnerCreateSchema = z.object({
   website: z.string().max(300).optional(),
   phone: z.string().max(30).optional(),
   email: z.string().email("Email inválido").max(100).optional().or(z.literal("")),
+  logoUrl: z.string().max(500).optional(),
   assignedTo: z.string().max(100).optional(),
   priority: z.enum(["baixa", "media", "alta", "urgente"]).optional(),
   status: z.enum(["active", "paused", "archived", "lost", "disqualified"]).optional(),
@@ -65,10 +66,15 @@ export const partnerCreateSchema = z.object({
     "proposta_enviada", "negociacao", "aguardando_aprovacao",
     "ativacao", "ativo", "renovacao", "perdido", "desqualificado",
   ]).optional(),
+  relevanceScore: z.number().min(0).max(100).optional(),
+  benefitScore: z.number().min(0).max(100).optional(),
+  reputationScore: z.number().min(0).max(100).optional(),
+  capacityScore: z.number().min(0).max(100).optional(),
+  riskScore: z.number().min(0).max(100).optional(),
   tags: z.string().max(300).optional(),
   potentialValue: z.number().min(0).optional(),
   notes: z.string().max(2000).optional(),
-});
+}).passthrough(); // permite campos extras não validados
 
 export const partnerContactSchema = z.object({
   name: z.string().min(1, "name obrigatório").max(150),

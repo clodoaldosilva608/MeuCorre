@@ -20,8 +20,14 @@ export async function POST(req: NextRequest) {
   if (!token || !password) {
     return NextResponse.json({ error: "Token e nova senha são obrigatórios" }, { status: 400 });
   }
-  if (password.length < 6 || password.length > 100) {
-    return NextResponse.json({ error: "Senha deve ter entre 6 e 100 caracteres" }, { status: 400 });
+  // Validação de senha com política forte
+  const { validatePassword } = await import("@/lib/password-policy");
+  const pwCheck = validatePassword(password);
+  if (!pwCheck.valid) {
+    return NextResponse.json(
+      { error: pwCheck.errors[0] },
+      { status: 400 },
+    );
   }
 
   // Verifica JWT do token

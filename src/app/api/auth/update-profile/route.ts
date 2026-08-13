@@ -37,8 +37,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (body.password !== undefined) {
-    if (body.password.length < 6) {
-      return NextResponse.json({ error: "Senha deve ter no mínimo 6 caracteres" }, { status: 400 });
+    const { validatePassword } = await import("@/lib/password-policy");
+    const pwCheck = validatePassword(body.password);
+    if (!pwCheck.valid) {
+      return NextResponse.json({ error: pwCheck.errors[0] }, { status: 400 });
     }
     data.passwordHash = await hashPassword(body.password);
   }
