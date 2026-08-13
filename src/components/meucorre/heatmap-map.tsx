@@ -283,7 +283,6 @@ function MapContainer({
         await import("leaflet.heat");
 
         // Importa o CSS
-        // @ts-expect-error — CSS module import (sem declaração de tipo)
         await import("leaflet/dist/leaflet.css");
 
         if (cancelled || !containerRef.current) return;
