@@ -11,7 +11,20 @@ import {
   Sparkles,
 } from "lucide-react";
 
-interface Offer {
+interface PartnerCampaign {
+  id: string;
+  offerTitle: string;
+  offerDescription: string;
+  offerCta: string;
+  offerUrl: string;
+  couponCode: string | null;
+  discountText: string | null;
+  imageUrl: string | null;
+  category: string;
+  partnerName: string;
+}
+
+interface DisplayOffer {
   id: string;
   title: string;
   description: string;
@@ -23,6 +36,10 @@ interface Offer {
   productUrl: string;
   category: string;
   proOnly: boolean;
+  isPartnerCampaign?: boolean;
+  couponCode?: string | null;
+  discountText?: string | null;
+  partnerName?: string;
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -49,7 +66,7 @@ function formatBRL(v: number) {
 }
 
 export function OffersList({ isPro }: { isPro: boolean }) {
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offers, setOffers] = useState<DisplayOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [clicking, setClicking] = useState<string | null>(null);
@@ -57,16 +74,62 @@ export function OffersList({ isPro }: { isPro: boolean }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filter !== "all") params.set("category", filter);
-      const res = await fetch(`/api/offers?${params.toString()}`, {
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setOffers(data.offers ?? []);
+      // Busca ofertas regulares E campanhas de parceiros em paralelo
+      const [offersRes, campaignsRes] = await Promise.all([
+        fetch(`/api/offers${filter !== "all" ? `?category=${filter}` : ""}`, { cache: "no-store" }),
+        fetch("/api/public/campaigns", { cache: "no-store" }).catch(() => null),
+      ]);
+
+      const allOffers: DisplayOffer[] = [];
+
+      if (offersRes.ok) {
+        const data = await offersRes.json();
+        for (const o of data.offers ?? []) {
+          allOffers.push({
+            id: o.id,
+            title: o.title,
+            description: o.description,
+            price: o.price,
+            originalPrice: o.originalPrice,
+            discountPercent: o.discountPercent,
+            imageUrl: o.imageUrl,
+            videoUrl: o.videoUrl,
+            productUrl: o.productUrl,
+            category: o.category,
+            proOnly: o.proOnly,
+          });
+        }
+      }
+
+      // Adiciona campanhas de parceiros publicadas
+      if (campaignsRes && campaignsRes.ok) {
+        const campData = await campaignsRes.json();
+        for (const c of campData.campaigns ?? []) {
+          // Filtra por categoria se não for "all"
+          if (filter !== "all" && c.category !== filter) continue;
+          allOffers.push({
+            id: `camp_${c.id}`,
+            title: c.offerTitle,
+            description: c.offerDescription,
+            price: 0,
+            originalPrice: null,
+            discountPercent: null,
+            imageUrl: c.imageUrl || "/hero-banner.png",
+            videoUrl: c.videoUrl,
+            productUrl: c.offerUrl,
+            category: c.category,
+            proOnly: false,
+            isPartnerCampaign: true,
+            couponCode: c.couponCode,
+            discountText: c.discountText,
+            partnerName: c.partnerName,
+          });
+        }
+      }
+
+      setOffers(allOffers);
     } catch {
-      // silencioso — usuário não precisa ver erro de oferta
+      // silencioso
     } finally {
       setLoading(false);
     }
@@ -76,8 +139,22 @@ export function OffersList({ isPro }: { isPro: boolean }) {
     load();
   }, [load]);
 
-  const handleClick = async (offer: Offer) => {
+  const handleClick = async (offer: DisplayOffer) => {
     setClicking(offer.id);
+
+    // Se é campanha de parceiro, rastreia click via API pública
+    if (offer.isPartnerCampaign) {
+      const campId = offer.id.replace("camp_", "");
+      fetch(`/api/public/campaigns/${campId}/track`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "click" }),
+      }).catch(() => {});
+      window.open(offer.productUrl, "_blank");
+      setClicking(null);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/offers/${offer.id}/click`, {
         method: "POST",
@@ -196,7 +273,7 @@ function OfferCard({
   clicking,
   onClick,
 }: {
-  offer: Offer;
+  offer: DisplayOffer;
   isPro: boolean;
   clicking: boolean;
   onClick: () => void;
@@ -219,11 +296,26 @@ function OfferCard({
         </div>
       )}
 
+      {/* Badge Parceiro */}
+      {offer.isPartnerCampaign && (
+        <div className="absolute right-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-blue-500 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white shadow">
+          <Sparkles className="h-2.5 w-2.5" />
+          Parceiro
+        </div>
+      )}
+
       {/* Badge desconto */}
-      {offer.discountPercent && offer.discountPercent > 0 && (
+      {(offer.discountPercent && offer.discountPercent > 0) || offer.discountText ? (
         <div className="absolute left-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold uppercase text-zinc-950 shadow">
           <Tag className="h-2.5 w-2.5" />
-          -{offer.discountPercent}%
+          {offer.discountText || `-${offer.discountPercent}%`}
+        </div>
+      ) : null}
+
+      {/* Cupom */}
+      {offer.couponCode && (
+        <div className="absolute left-2 top-9 z-10 inline-flex items-center gap-0.5 rounded bg-zinc-900/80 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400">
+          Cupom: {offer.couponCode}
         </div>
       )}
 
@@ -264,20 +356,22 @@ function OfferCard({
 
         {/* Categoria */}
         <p className="mt-1 text-[9px] font-medium uppercase tracking-wider text-emerald-500">
-          {CATEGORY_LABEL[offer.category] ?? offer.category}
+          {offer.isPartnerCampaign ? `Parceiro: ${offer.partnerName ?? "MeuCorre"}` : (CATEGORY_LABEL[offer.category] ?? offer.category)}
         </p>
 
         {/* Preço */}
-        <div className="mt-1.5 flex items-baseline gap-1">
-          <span className="text-sm font-black text-emerald-500">
-            {formatBRL(offer.price)}
-          </span>
-          {offer.originalPrice && (
-            <span className="text-[10px] text-zinc-400 line-through">
-              {formatBRL(offer.originalPrice)}
+        {!offer.isPartnerCampaign && (
+          <div className="mt-1.5 flex items-baseline gap-1">
+            <span className="text-sm font-black text-emerald-500">
+              {formatBRL(offer.price)}
             </span>
-          )}
-        </div>
+            {offer.originalPrice && (
+              <span className="text-[10px] text-zinc-400 line-through">
+                {formatBRL(offer.originalPrice)}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* CTA */}
         <button
@@ -295,7 +389,7 @@ function OfferCard({
             "PRO apenas"
           ) : (
             <span className="inline-flex items-center gap-1">
-              Garanta seu desconto
+              {offer.isPartnerCampaign ? "Aproveitar oferta" : "Garanta seu desconto"}
               <ExternalLink className="h-2.5 w-2.5" />
             </span>
           )}
