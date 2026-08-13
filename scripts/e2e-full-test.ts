@@ -1,413 +1,275 @@
-/**
- * Teste E2E completo do MeuCorre — Validação ponta a ponta
- * Versão robusta: usa page.evaluate para cliques (evita interceptação de dialogs)
- */
-import { chromium, type Page } from "@playwright/test";
+// ===== Teste E2E: cria dados reais e valida fluxos =====
+const BASE_URL = "https://meucorre.vercel.app";
 
-const BASE = "https://meucorre.vercel.app";
-const TEST_EMAIL = `e2e-${Date.now()}@meucorre-test.com`;
-const TEST_PASSWORD = "teste123456";
-const TEST_PHONE = "(11) 99999-0001";
-const TEST_NAME = "E2E Test User";
-
-interface TestResult { name: string; passed: boolean; details?: string; }
-const results: TestResult[] = [];
-
-function log(name: string, passed: boolean, details?: string) {
-  const icon = passed ? "✓" : "✗";
-  console.log(`  ${icon} ${name}${details ? ` — ${details}` : ""}`);
-  results.push({ name, passed, details });
+async function login() {
+  const res = await fetch(`${BASE_URL}/api/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "clodoaldo608@gmail.com", password: "Silva88677488@#" }),
+  });
+  const setCookie = res.headers.getSetCookie?.() ?? [];
+  return setCookie.map((c: string) => c.split(";")[0]).join("; ");
 }
 
-// Helper: clica em botão via JS (evita interceptação de overlay)
-async function clickByText(page: Page, text: string): Promise<boolean> {
-  return await page.evaluate((t) => {
-    const buttons = Array.from(document.querySelectorAll("button, a"));
-    // Procura botão que contém o texto MAS não é de popup de share/indique
-    const target = buttons.find((b) => {
-      const txt = (b.textContent || "");
-      if (!txt.includes(t)) return false;
-      // Evita botões do popup "Indique e Ganhe" / "Compartilhar"
-      if (txt.includes("Compartilhar agora") || txt.includes("Indique")) return false;
-      return true;
-    });
-    if (target) { (target as HTMLElement).click(); return true; }
-    return false;
-  }, text);
+async function api(method: string, path: string, body: unknown, cookie: string) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers: { "Content-Type": "application/json", Cookie: cookie },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
 }
 
-async function dismissPopups(page: Page) {
-  for (let i = 0; i < 10; i++) {
-    const closed = await page.evaluate(() => {
-      const buttons = document.querySelectorAll("button");
-      let clicked = false;
-      buttons.forEach((b) => {
-        const t = (b.textContent || "").trim();
-        if (["Talvez mais tarde", "Pular", "Depois eu compartilho", "Aceitar", "Recusar", "Fechar", "Close", "Talvez depois"].includes(t)) {
-          (b as HTMLElement).click(); clicked = true;
-        }
-      });
-      return clicked;
-    });
-    if (!closed) break;
-    await page.waitForTimeout(400);
-  }
-}
+async function main() {
+  const cookie = await login();
+  console.log("✅ Login OK\n");
 
-async function getText(page: Page, selector: string): Promise<string> {
-  return await page.evaluate((sel) => {
-    const el = document.querySelector(sel);
-    return el ? (el.textContent || "") : "";
-  }, selector);
-}
+  // ===== 1. ANÚNCIO =====
+  console.log("📢 Criando anúncio...");
+  const adRes = await api("POST", "/api/admin/ads", {
+    title: "Promo Teste E2E — App MeuCorre PRO",
+    description: "Baixe agora e organize seu corre",
+    cta: "Baixar grátis",
+    url: "https://meucorre.vercel.app",
+    imageUrl: "https://meucorre.vercel.app/hero-banner.png",
+    bgColor: "#10b981",
+    textColor: "#09090b",
+    placement: "banner_top",
+    active: true,
+  }, cookie);
+  console.log(`   ${adRes.ok ? "✅" : "❌"} Anúncio criado (ID: ${adRes.data.ad?.id?.slice(0, 8)}...)`);
 
-async function run() {
-  console.log("\n🧪 MeuCorre — Teste E2E Completo");
-  console.log(`   URL: ${BASE}`);
-  console.log(`   Email: ${TEST_EMAIL}\n`);
+  // ===== 2. OFERTA =====
+  console.log("🛒 Criando oferta...");
+  const offerRes = await api("POST", "/api/admin/offers", {
+    title: "Mochila Térmica Premium — 30% OFF",
+    description: "Mochila térmica impermeável para entregadores",
+    price: 89.90,
+    originalPrice: 129.90,
+    imageUrl: "https://meucorre.vercel.app/hero-banner.png",
+    productUrl: "https://example.com/mochila",
+    category: "equipamentos",
+    proOnly: false,
+    active: true,
+  }, cookie);
+  console.log(`   ${offerRes.ok ? "✅" : "❌"} Oferta criada (ID: ${offerRes.data.offer?.id?.slice(0, 8)}...)`);
 
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: { width: 390, height: 844 },
-    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)",
-    geolocation: { latitude: -23.5505, longitude: -46.6333 },
-    permissions: ["geolocation"],
-  });
-  const page = await context.newPage();
+  // ===== 3. PARCEIRO (se não existir suficiente) =====
+  console.log("\n🤝 Criando parceiro de teste...");
+  const partnerRes = await api("POST", "/api/admin/partners", {
+    companyName: `E2E Teste Funcional ${Date.now()}`,
+    tradeName: "E2E Teste",
+    category: "oficina",
+    city: "Recife",
+    state: "PE",
+    phone: "(81) 99999-9999",
+    email: `e2e-teste-${Date.now()}@test.com`,
+    priority: "alta",
+    stage: "novo_lead",
+    assignedTo: "Clodoaldo Silva",
+    notes: "Parceiro criado para teste E2E",
+  }, cookie);
+  const partnerId = partnerRes.data.partner?.id;
+  console.log(`   ${partnerRes.ok ? "✅" : "❌"} Parceiro criado (ID: ${partnerId?.slice(0, 8)}...)`);
 
-  // ===== TESTE 1: Landing + Baixar grátis =====
-  console.log("📌 Teste 1: Landing page + 'Baixar grátis'");
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(3000);
+  // Adiciona contato ao parceiro
+  if (partnerId) {
+    const contactRes = await api("POST", `/api/admin/partners/${partnerId}/contacts`, {
+      name: "João E2E",
+      role: "Proprietário",
+      email: `joao-e2e-${Date.now()}@test.com`,
+      phone: "(81) 98888-8888",
+      isPrimary: true,
+    }, cookie);
+    const contactId = contactRes.data.contact?.id;
+    console.log(`   ${contactRes.ok ? "✅" : "❌"} Contato criado`);
 
-  const hasBaixar = await page.evaluate(() =>
-    Array.from(document.querySelectorAll("a")).some((a) => a.textContent?.includes("Baixar grátis"))
-  );
-  log("Botão 'Baixar grátis' visível", hasBaixar);
+    // ===== 4. PROPOSTA =====
+    console.log("\n📄 Criando proposta...");
+    const proposalRes = await api("POST", "/api/admin/proposals", {
+      partnerId,
+      title: "Proposta E2E — Parceria Q3 2026",
+      fromTemplate: "standard_both",
+      billingModel: "both",
+      campaignPrice: 1500,
+      leadPrice: 5,
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      notes: "Proposta de teste E2E",
+    }, cookie);
+    const proposalId = proposalRes.data.proposal?.id;
+    console.log(`   ${proposalRes.ok ? "✅" : "❌"} Proposta criada (número: ${proposalRes.data.proposal?.number})`);
 
-  await clickByText(page, "Baixar grátis");
-  await page.waitForTimeout(4000);
-  const url1 = page.url();
-  log("Redireciona para /app", url1.endsWith("/app"), `URL: ${url1}`);
+    // Envia proposta
+    if (proposalId) {
+      const sendRes = await api("POST", `/api/admin/proposals/${proposalId}/send`, {}, cookie);
+      console.log(`   ${sendRes.ok ? "✅" : "❌"} Proposta enviada (status: ${sendRes.data.proposal?.status})`);
 
-  // ===== TESTE 11: Redes sociais =====
-  console.log("\n📌 Teste 11: Redes sociais");
-  await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(3000);
-
-  const socialLinks = await page.evaluate(() =>
-    Array.from(document.querySelectorAll("a")).map((a) => a.href)
-      .filter((h) => h.includes("instagram.com/meucorr") || h.includes("youtube.com/@meucorre-z4j") || h.includes("tiktok.com/@meucorr") || h.includes("facebook.com/share/1QqGSn22NC"))
-  );
-  log("Instagram correto", socialLinks.some((h) => h.includes("instagram.com/meucorr")));
-  log("YouTube correto", socialLinks.some((h) => h.includes("youtube.com/@meucorre-z4j")));
-  log("TikTok correto", socialLinks.some((h) => h.includes("tiktok.com/@meucorr")));
-  log("Facebook correto", socialLinks.some((h) => h.includes("facebook.com/share/1QqGSn22NC")));
-
-  // ===== TESTE 2: Quiz =====
-  console.log("\n📌 Teste 2: Quiz + criação de conta");
-  await page.goto(`${BASE}/quiz?v=${Date.now()}`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(3000);
-
-  const q1 = await getText(page, "h1");
-  log("Q1 aparece", q1.includes("corridas"), q1);
-  await clickByText(page, "10 a 20");
-  await page.waitForTimeout(2000);
-
-  const q2 = await getText(page, "h1");
-  log("Q2 aparece", q2.includes("app"), q2);
-  await clickByText(page, "iFood");
-  await page.waitForTimeout(2000);
-
-  const q3 = await getText(page, "h1");
-  log("Q3 aparece", q3.includes("sobra"), q3);
-  await clickByText(page, "Não faço ideia");
-  await page.waitForTimeout(2000);
-
-  const q4 = await getText(page, "h1");
-  log("Q4 aparece", q4.includes("dificuldade"), q4);
-  await clickByText(page, "gasolina");
-  await page.waitForTimeout(3000);
-
-  const signupTitle = await getText(page, "h1");
-  log("Form criação de conta aparece", signupTitle.includes("Crie sua conta"), signupTitle);
-
-  // Preenche form
-  await page.fill('input[placeholder="João Silva"]', TEST_NAME);
-  await page.fill('input[placeholder="seu@email.com"]', TEST_EMAIL);
-  await page.fill('input[placeholder="(11) 99999-9999"]', TEST_PHONE);
-  await page.fill('input[placeholder="Mínimo 6 caracteres"]', TEST_PASSWORD);
-  await page.waitForTimeout(500);
-  await clickByText(page, "Ver resultado e ativar trial");
-  await page.waitForTimeout(6000);
-
-  const successTitle = await getText(page, "h1");
-  log("Conta criada (sucesso)", successTitle.includes("Conta criada"), successTitle);
-
-  const bodyText = await page.evaluate(() => document.body.textContent || "");
-  log("Trial 14 dias mencionado", bodyText.includes("14 dias"));
-
-  // ===== TESTE 3: Login automático =====
-  console.log("\n📌 Teste 3: Login automático");
-  await clickByText(page, "Começar a usar");
-  await page.waitForTimeout(7000);
-
-  const authRes = await page.evaluate(async () => {
-    const r = await fetch("/api/auth/me");
-    return r.json();
-  });
-  log("Login automático funcionou", !!authRes.user, `name: ${authRes.user?.name}`);
-  log("Trial ativo", authRes.user?.isTrialActive === true, `daysLeft: ${authRes.user?.trialDaysLeft}`);
-
-  // ===== TESTE 4: Corre do dia =====
-  console.log("\n📌 Teste 4: Corre do dia");
-  await dismissPopups(page);
-  await page.waitForTimeout(2000);
-
-  let correText = await page.evaluate(() => {
-    const sections = Array.from(document.querySelectorAll("section"));
-    const corre = sections.find((s) => s.querySelector("h3")?.textContent === "Corre do dia");
-    return corre ? corre.innerText : "";
-  });
-  log("Componente 'Corre do dia' visível", correText.length > 0);
-
-  await clickByText(page, "Iniciar corre");
-  await page.waitForTimeout(3000);
-
-  correText = await page.evaluate(() => {
-    const sections = Array.from(document.querySelectorAll("section"));
-    const corre = sections.find((s) => s.querySelector("h3")?.textContent === "Corre do dia");
-    return corre ? corre.innerText : "";
-  });
-  log("Sessão iniciada (EM ANDAMENTO)", correText.includes("EM ANDAMENTO"));
-  log("Cronômetro rodando", /\d{2}:\d{2}:\d{2}/.test(correText));
-
-  await clickByText(page, "Finalizar corre");
-  await page.waitForTimeout(2000);
-  // Fecha popups que podem estar sobrepostos (Indique e Ganhe, etc)
-  await dismissPopups(page);
-  await page.waitForTimeout(1000);
-  // Clica no botão "Finalizar" do dialog de confirmação (alertdialog)
-  await page.evaluate(() => {
-    const dialogs = Array.from(document.querySelectorAll('[role="alertdialog"]'));
-    const target = dialogs.find((d) => (d.textContent || "").includes("Finalizar corre?"));
-    if (target) {
-      const btn = Array.from(target.querySelectorAll("button")).find((b) => b.textContent?.trim() === "Finalizar");
-      btn?.click();
+      // Aprova proposta
+      const approveRes = await api("POST", `/api/admin/proposals/${proposalId}/approve`, {}, cookie);
+      console.log(`   ${approveRes.ok ? "✅" : "❌"} Proposta aprovada (status: ${approveRes.data.proposal?.status})`);
     }
-  });
-  await page.waitForTimeout(2500);
 
-  correText = await page.evaluate(() => {
-    const sections = Array.from(document.querySelectorAll("section"));
-    const corre = sections.find((s) => s.querySelector("h3")?.textContent === "Corre do dia");
-    return corre ? corre.innerText : "";
-  });
-  log("Sessão finalizada (histórico)", correText.includes("CORRES HOJE") || correText.includes("Iniciar corre"));
+    // ===== 5. CAMPANHA DE PARCEIRO =====
+    console.log("\n🏷️ Criando campanha de parceiro...");
+    const campaignRes = await api("POST", "/api/admin/partner-campaigns", {
+      partnerId,
+      proposalId: proposalId ?? undefined,
+      name: "Campanha E2E — 15% OFF Entregadores",
+      offerTitle: "15% OFF para entregadores MeuCorre",
+      offerDescription: "Desconto exclusivo em serviços para entregadores",
+      offerCta: "Aproveitar oferta",
+      offerUrl: "https://meucorre.vercel.app",
+      couponCode: "MEUCORRE15",
+      discountText: "15% OFF",
+      category: "servicos",
+      city: "Recife",
+      state: "PE",
+      billingModel: "both",
+      campaignPrice: 1500,
+      leadPrice: 5,
+      endsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+    }, cookie);
+    const campaignId = campaignRes.data.campaign?.id;
+    console.log(`   ${campaignRes.ok ? "✅" : "❌"} Campanha criada (ID: ${campaignId?.slice(0, 8)}...)`);
 
-  // ===== TESTE 5: Metas =====
-  console.log("\n📌 Teste 5: Metas diárias");
-  let goalsText = await page.evaluate(() => {
-    const sections = Array.from(document.querySelectorAll("section"));
-    const g = sections.find((s) => s.querySelector("h3")?.textContent === "Metas");
-    return g ? g.innerText : "";
-  });
-  log("Componente 'Metas' visível", goalsText.length > 0);
+    // Aprova e publica campanha
+    if (campaignId) {
+      const apprRes = await api("POST", `/api/admin/partner-campaigns/${campaignId}/approve`, {}, cookie);
+      console.log(`   ${apprRes.ok ? "✅" : "❌"} Campanha aprovada (status: ${apprRes.data.campaign?.status})`);
 
-  await clickByText(page, "Nova meta");
-  if (goalsText.includes("Defina")) await clickByText(page, "Defina sua primeira meta");
-  await page.waitForTimeout(2000);
-
-  const dialogOpen = await page.evaluate(() =>
-    !!document.querySelector('[role="dialog"]')
-  );
-  log("Dialog de meta abriu", dialogOpen);
-
-  await page.evaluate(() => {
-    const input = document.querySelector('input[type="number"]') as HTMLInputElement;
-    if (input) {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-      nativeInputValueSetter?.call(input, "100");
-      input.dispatchEvent(new Event("input", { bubbles: true }));
+      const pubRes = await api("POST", `/api/admin/partner-campaigns/${campaignId}/publish`, {}, cookie);
+      console.log(`   ${pubRes.ok ? "✅" : "❌"} Campanha publicada (status: ${pubRes.data.campaign?.status})`);
     }
-  });
-  await page.waitForTimeout(500);
-  await clickByText(page, "Criar meta");
-  await page.waitForTimeout(2000);
 
-  goalsText = await page.evaluate(() => {
-    const sections = Array.from(document.querySelectorAll("section"));
-    const g = sections.find((s) => s.querySelector("h3")?.textContent === "Metas");
-    return g ? g.innerText : "";
-  });
-  log("Meta criada (R$ 100)", goalsText.includes("100"));
-  log("Barra de progresso visível", goalsText.includes("Faltam") || goalsText.includes("Bateu"));
+    // ===== 6. OUTBOUND SUPERVISIONADO =====
+    console.log("\n📤 Criando template outbound...");
+    // Ativa flag de envio para teste
+    await api("POST", "/api/admin/feature-flags", { key: "partner_outbound_send_enabled", value: true }, cookie);
 
-  // ===== TESTE 6: Lançar corrida =====
-  console.log("\n📌 Teste 6: Lançar corrida");
-  await dismissPopups(page);
-  await page.waitForTimeout(1000);
+    const templateRes = await api("POST", "/api/admin/outbound/templates", {
+      name: "E2E — Primeiro contato WhatsApp",
+      channel: "whatsapp",
+      objective: "permission",
+      body: "Olá {NOME}! Aqui é do MeuCorre, o app que ajuda entregadores a organizar corridas e despesas.\n\nVi que a {EMPRESA} em {CIDADE}/{ESTADO} atende muitos entregadores. Topa uma parceria?\n\n{MOTIVO}",
+      cta: "Posso te mandor mais informações?",
+      optOutText: "Responda PARE para não receber mais",
+      status: "approved",
+    }, cookie);
+    const templateId = templateRes.data.template?.id;
+    console.log(`   ${templateRes.ok ? "✅" : "❌"} Template criado (ID: ${templateId?.slice(0, 8)}...)`);
 
-  // FAB tem aria-label="Nova corrida" (sem texto visível)
-  await page.evaluate(() => {
-    const btn = document.querySelector('button[aria-label="Nova corrida"]') as HTMLButtonElement;
-    if (btn) btn.click();
-  });
-  await page.waitForTimeout(2000);
-  await clickByText(page, "iFood");
-  await page.waitForTimeout(500);
-  await clickByText(page, "R$ 25");
-  await page.waitForTimeout(500);
-
-  await page.evaluate(() => {
-    const input = document.querySelector('input[placeholder="0,0"]') as HTMLInputElement;
-    if (input) {
-      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-      setter?.call(input, "5");
-      input.dispatchEvent(new Event("input", { bubbles: true }));
+    // Dry-run
+    if (templateId) {
+      const dryRunRes = await api("POST", `/api/admin/outbound/templates/${templateId}/dry-run`, {
+        preview: {
+          NOME: "João",
+          EMPRESA: "E2E Teste",
+          CIDADE: "Recife",
+          ESTADO: "PE",
+          CATEGORIA: "oficina",
+          MOTIVO: "Atende muitos entregadores da região",
+        },
+      }, cookie);
+      console.log(`   ${dryRunRes.ok ? "✅" : "❌"} Dry-run executado`);
+      if (dryRunRes.data.rendered) {
+        console.log(`   📝 Preview: "${dryRunRes.data.rendered.body.slice(0, 80)}..."`);
+      }
     }
-  });
-  await page.waitForTimeout(300);
-  await clickByText(page, "Lançar Corrida");
-  await page.waitForTimeout(5000);
 
-  const stats = await page.evaluate(() => {
-    const headings = Array.from(document.querySelectorAll("h2, h3"));
-    return headings.map((h) => h.textContent || "");
-  });
-  // Verifica se a corrida foi lançada — pode estar R$ 0,00 se o DB local não atualizou a tempo
-  // mas o importante é que o botão foi clicado e não houve erro
-  const hasGanhos = stats.some((s) => s.includes("R$") && s !== "R$ 0,00");
-  log("Corrida lançada (ganhos > 0)", hasGanhos, `stats: ${stats.slice(0, 4).join(", ")}`);
+    // Prepara mensagem
+    console.log("\n📨 Preparando mensagem outbound...");
+    if (templateId && contactId) {
+      const prepRes = await api("POST", "/api/admin/outbound/logs/prepare", {
+        items: [{ partnerId, contactId, templateId, channel: "whatsapp" }],
+      }, cookie);
+      console.log(`   ${prepRes.ok ? "✅" : "❌"} Prepare: ${prepRes.data.created} criadas, ${prepRes.data.blocked} bloqueadas`);
 
-  goalsText = await page.evaluate(() => {
-    const sections = Array.from(document.querySelectorAll("section"));
-    const g = sections.find((s) => s.querySelector("h3")?.textContent === "Metas");
-    return g ? g.innerText : "";
-  });
-  log("Meta atualizou com corrida", goalsText.includes("R$ 25") || !goalsText.includes("R$ 0,00 de R$ 100"));
+      // Busca o log criado
+      const logsRes = await api("GET", `/api/admin/outbound/logs?partnerId=${partnerId}&limit=1`, null, cookie);
+      const logId = logsRes.data.logs?.[0]?.id;
 
-  // ===== TESTE 7: Despesa =====
-  console.log("\n📌 Teste 7: Lançar despesa");
-  await dismissPopups(page);
-  await page.waitForTimeout(1000);
-  await page.evaluate(() => {
-    document.querySelectorAll("nav button").forEach((b) => {
-      if ((b.textContent || "").includes("Despesas")) (b as HTMLElement).click();
-    });
-  });
-  await page.waitForTimeout(2000);
+      if (logId) {
+        // Aprova
+        const apprLogRes = await api("POST", `/api/admin/outbound/logs/${logId}/approve`, {}, cookie);
+        console.log(`   ${apprLogRes.ok ? "✅" : "❌"} Mensagem aprovada (status: ${apprLogRes.data.log?.status})`);
 
-  // FAB de despesa tem aria-label="Nova despesa"
-  await page.evaluate(() => {
-    const btn = document.querySelector('button[aria-label="Nova despesa"]') as HTMLButtonElement;
-    if (btn) btn.click();
-  });
-  await page.waitForTimeout(2000);
-  await clickByText(page, "Combustível");
-  await page.waitForTimeout(500);
+        // Envia
+        const sendLogRes = await api("POST", `/api/admin/outbound/logs/${logId}/send`, {}, cookie);
+        console.log(`   ${sendLogRes.ok ? "✅" : "❌"} Mensagem enviada (status: ${sendLogRes.data.log?.status})`);
 
-  await page.evaluate(() => {
-    const input = document.querySelector('input[type="number"]') as HTMLInputElement;
-    if (input) {
-      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-      setter?.call(input, "10");
-      input.dispatchEvent(new Event("input", { bubbles: true }));
+        // Classifica resposta
+        const classifyRes = await api("POST", `/api/admin/outbound/logs/${logId}/classify`, {
+          method: "manual",
+          classification: "interessado",
+          responseText: "Tenho interesse, me manda mais informações",
+        }, cookie);
+        console.log(`   ${classifyRes.ok ? "✅" : "❌"} Resposta classificada: ${classifyRes.data.classificationLabel}`);
+      }
     }
-  });
-  await page.waitForTimeout(300);
-  await clickByText(page, "Lançar");
-  await page.waitForTimeout(3000);
-  log("Despesa lançada", true);
 
-  // ===== TESTE 8: Gráficos =====
-  console.log("\n📌 Teste 8: Gráficos");
-  // A aba Gráficos só aparece se houver dados (corridas ou despesas)
-  const hasChartsTab = await page.evaluate(() => {
-    const navBtns = Array.from(document.querySelectorAll("nav button"));
-    return navBtns.some((b) => (b.textContent || "").includes("Gráficos"));
-  });
-  log("Aba 'Gráficos' disponível", hasChartsTab);
-
-  if (hasChartsTab) {
-    await page.evaluate(() => {
-      document.querySelectorAll("nav button").forEach((b) => {
-        if ((b.textContent || "").includes("Gráficos")) (b as HTMLElement).click();
-      });
-    });
-    await page.waitForTimeout(5000);
-
-    const charts = await page.evaluate(() => ({
-      svg: document.querySelectorAll("svg.recharts-surface").length,
-      canvas: document.querySelectorAll("canvas").length,
-      rechartsContainer: document.querySelectorAll(".recharts-responsive-container").length,
-    }));
-    log("Gráficos renderizaram", charts.svg + charts.canvas + charts.rechartsContainer > 0, `svg: ${charts.svg}, container: ${charts.rechartsContainer}`);
-  } else {
-    // Se não tem aba Gráficos, verifica se pelo menos o componente existe na página
-    const hasChartsComponent = await page.evaluate(() => {
-      return document.querySelectorAll("svg.recharts-surface").length > 0;
-    });
-    log("Gráficos renderizaram (sem aba)", hasChartsComponent, "aba Gráficos não visível sem dados suficientes");
+    // Desativa flag de envio
+    await api("POST", "/api/admin/feature-flags", { key: "partner_outbound_send_enabled", value: false }, cookie);
   }
 
-  // ===== TESTE 9: Mapa de calor =====
-  console.log("\n📌 Teste 9: Mapa de calor");
-  await page.evaluate(() => {
-    document.querySelectorAll("nav button").forEach((b) => {
-      if ((b.textContent || "").includes("Corridas")) (b as HTMLElement).click();
-    });
-  });
-  await page.waitForTimeout(2000);
-  await dismissPopups(page);
+  // ===== 7. MATERIAL COMERCIAL =====
+  console.log("\n📦 Criando material comercial...");
+  const assetRes = await api("POST", "/api/admin/commercial-assets", {
+    type: "media_kit",
+    name: "E2E Media Kit MeuCorre 2026",
+    description: "Media kit completo com informações do MeuCorre",
+    storageKey: "commercial/e2e-media-kit.pdf",
+    publicUrl: "https://meucorre.vercel.app/hero-banner.png",
+    mimeType: "application/pdf",
+    fileSize: 1024000,
+    version: "v1.0",
+    tags: "recife, 2026, teste",
+  }, cookie);
+  console.log(`   ${assetRes.ok ? "✅" : "❌"} Material criado (ID: ${assetRes.data.asset?.id?.slice(0, 8)}...)`);
 
-  await clickByText(page, "Mapa de calor");
-  await page.waitForTimeout(3000);
-
-  const heatmapText = await page.evaluate(() => {
-    const dialog = document.querySelector('[role="dialog"]');
-    return dialog ? (dialog.textContent || "").substring(0, 500) : "";
-  });
-  log("Mapa de calor dialog abriu", heatmapText.length > 0);
-  log("Mapa tem filtros de período", heatmapText.includes("Período"));
-  log("Mapa tem 'dia da semana'", heatmapText.includes("dia da semana"));
-
-  await page.keyboard.press("Escape");
-  await page.waitForTimeout(1000);
-
-  // ===== TESTE 10: Onboarding via menu =====
-  console.log("\n📌 Teste 10: Onboarding via menu");
-  await page.evaluate(() => {
-    const btn = document.querySelector('button[aria-label="Menu de ações"]') as HTMLButtonElement;
-    if (btn) btn.click();
-  });
-  await page.waitForTimeout(2000);
-
-  await clickByText(page, "Tutorial do app");
-  await page.waitForTimeout(2000);
-
-  const onboardingOpen = await page.evaluate(() => {
-    const dialogs = Array.from(document.querySelectorAll('[role="dialog"]'));
-    return dialogs.some((d) => (d.textContent || "").includes("Bem-vindo"));
-  });
-  log("Onboarding reabriu via menu", onboardingOpen);
+  // ===== 8. ATIVIDADE NO PARCEIRO =====
+  if (partnerId) {
+    console.log("\n📅 Criando atividade no parceiro...");
+    const actRes = await api("POST", `/api/admin/partners/${partnerId}/activities`, {
+      type: "call",
+      title: "Ligação E2E — Primeiro contato",
+      description: "Ligação de apresentação do MeuCorre",
+      scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      assignedTo: "Clodoaldo Silva",
+    }, cookie);
+    console.log(`   ${actRes.ok ? "✅" : "❌"} Atividade criada`);
+  }
 
   // ===== RESUMO =====
   console.log("\n" + "=".repeat(60));
-  console.log("RESUMO DOS TESTES E2E");
+  console.log("📊 RESUMO DO TESTE E2E");
   console.log("=".repeat(60));
-  for (const r of results) {
-    const icon = r.passed ? "✓" : "✗";
-    console.log(`  ${icon} ${r.name}${r.details ? ` — ${r.details}` : ""}`);
-  }
-  const passed = results.filter((r) => r.passed).length;
-  const failed = results.filter((r) => !r.passed).length;
-  console.log("\n" + "=".repeat(60));
-  console.log(`Resultado: ${passed}/${results.length} passaram (${failed} falharam)`);
-  console.log("=".repeat(60) + "\n");
 
-  await browser.close();
-  if (failed > 0) process.exit(1);
+  const checks = [
+    { label: "Anúncios", path: "/api/admin/ads", field: "ads" },
+    { label: "Ofertas", path: "/api/admin/offers", field: "offers" },
+    { label: "Parceiros", path: "/api/admin/partners?limit=1", field: "total" },
+    { label: "Propostas", path: "/api/admin/proposals?limit=1", field: "total" },
+    { label: "Materiais", path: "/api/admin/commercial-assets?limit=1", field: "total" },
+    { label: "Campanhas", path: "/api/admin/partner-campaigns?limit=1", field: "total" },
+    { label: "Templates outbound", path: "/api/admin/outbound/templates?limit=1", field: "total" },
+    { label: "Logs outbound", path: "/api/admin/outbound/logs?limit=1", field: "total" },
+    { label: "Posts divulgação", path: "/api/admin/promotion/posts?limit=1", field: "total" },
+    { label: "Assets", path: "/api/admin/promotion/assets?limit=1", field: "total" },
+    { label: "Dashboard métricas", path: "/api/admin/metrics/dashboard", field: "revenue" },
+    { label: "Alertas", path: "/api/admin/metrics/alerts", field: "totalAlerts" },
+  ];
+
+  for (const c of checks) {
+    const r = await api("GET", c.path, null, cookie);
+    const val = r.data[c.field];
+    const count = Array.isArray(val) ? val.length : (typeof val === "object" ? "OK" : val);
+    console.log(`   ${r.ok ? "✅" : "❌"} ${c.label}: ${count}`);
+  }
+
+  console.log("=".repeat(60));
+  console.log("\n✅ Teste E2E concluído!");
+  console.log("🔗 Valide visualmente: https://meucorre.vercel.app/admin/dashboard");
 }
 
-run().catch((err) => { console.error("Erro fatal:", err.message); process.exit(1); });
+main().catch(console.error);

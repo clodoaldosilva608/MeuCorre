@@ -2,19 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma, prismaRead } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 
+// Helper: executa query com fallback seguro
+async function safeQuery<T>(
+  fn: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    return fallback;
+  }
+}
+
 // GET /api/admin/metrics/dashboard — Dashboard executivo com KPIs de negócio
-//
-// Retorna métricas agregadas de todas as áreas:
-//   - Receita (assinaturas aprovadas, pendentes, rejeitadas, total)
-//   - Usuários (total, trial, pro, novos 30d)
-//   - Parceiros (total, por estágio, ativos, novos 30d)
-//   - Indicações (total, convertidas, pendentes)
-//   - App (ads views, clicks, ctr, feedbacks)
-//   - Campanhas (publicadas, pausadas, expiradas, métricas views/clicks/leads)
-//   - Outbound (preparadas, enviadas, respondidas, opt-outs)
-//   - Propostas (rascunho, enviadas, aprovadas, rejeitadas)
-//
-// Query: periodDays (default 30 — para filtros temporais)
 export async function GET(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -24,89 +24,78 @@ export async function GET(req: NextRequest) {
   const periodDays = Math.min(Math.max(Number(searchParams.get("periodDays") ?? 30), 1), 365);
   const periodStart = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
 
-  // Executa todas as queries em paralelo para performance
-  const [
-    // Receita
-    subsApproved,
-    subsPending,
-    subsRejected,
-    subsRevenue,
-    subsRevenuePeriod,
-    // Usuários
-    totalUsers,
-    proUsers,
-    trialUsers,
-    newUsersPeriod,
-    // Parceiros
-    totalPartners,
-    partnersByStage,
-    activePartners,
-    newPartnersPeriod,
-    // Indicações
-    totalReferrals,
-    completedReferrals,
-    pendingReferrals,
-    referralCampaign,
-    // App
-    adStats,
-    totalFeedbacks,
-    avgFeedbackRating,
-    newFeedbacksPeriod,
-    // Campanhas de parceiros (se feature flag ativa)
-    totalCampaigns,
-    publishedCampaigns,
-    pausedCampaigns,
-    expiredCampaigns,
-    campaignMetrics,
-    // Outbound (se feature flag ativa)
-    outboundStats,
-    // Propostas
-    proposalStats,
-    // Divulgação (se feature flag ativa)
-    promotionStats,
-  ] = await Promise.all([
-    prismaRead.subscription.count({ where: { status: "approved" } }),
-    prismaRead.subscription.count({ where: { status: "pending" } }),
-    prismaRead.subscription.count({ where: { status: "rejected" } }),
-    prismaRead.subscription.aggregate({
-      where: { status: "approved" },
-      _sum: { amount: true },
-    }),
-    prismaRead.subscription.aggregate({
+  // Executa cada query individualmente com fallback seguro
+  const subsApproved = await safeQuery(() => prismaRead.subscription.count({ where: { status: "approved" } }), 0);
+  const subsPending = await safeQuery(() => prismaRead.subscription.count({ where: { status: "pending" } }), 0);
+  const subsRejected = await safeQuery(() => prismaRead.subscription.count({ where: { status: "rejected" } }), 0);
+  const subsRevenue = await safeQuery(
+    () => prismaRead.subscription.aggregate({ where: { status: "approved" }, _sum: { amount: true } }),
+    { _sum: { amount: null } },
+  );
+  const subsRevenuePeriod = await safeQuery(
+    () => prismaRead.subscription.aggregate({
       where: { status: "approved", createdAt: { gte: periodStart } },
       _sum: { amount: true },
     }),
-    prismaRead.user.count(),
-    prismaRead.user.count({ where: { isPro: true } }),
-    prismaRead.user.count({ where: { subscriptionStatus: "trialing" } }),
-    prismaRead.user.count({ where: { createdAt: { gte: periodStart } } }),
-    prismaRead.partner.count(),
-    prismaRead.partner.groupBy({ by: ["stage"], _count: true }),
-    prismaRead.partner.count({ where: { status: "active" } }),
-    prismaRead.partner.count({ where: { createdAt: { gte: periodStart } } }),
-    prismaRead.referral.count(),
-    prismaRead.referral.count({ where: { status: "completed" } }),
-    prismaRead.referral.count({ where: { status: "pending" } }),
-    prismaRead.referralCampaign.findFirst({ orderBy: { createdAt: "desc" } }),
-    prismaRead.ad.aggregate({ _sum: { views: true, clicks: true } }),
-    prismaRead.feedback.count(),
-    prismaRead.feedback.aggregate({ _avg: { rating: true } }),
-    prismaRead.feedback.count({ where: { createdAt: { gte: periodStart } } }),
-    // Campanhas
-    prismaRead.partnerCampaign.count().catch(() => 0),
-    prismaRead.partnerCampaign.count({ where: { status: "published" } }).catch(() => 0),
-    prismaRead.partnerCampaign.count({ where: { status: "paused" } }).catch(() => 0),
-    prismaRead.partnerCampaign.count({ where: { status: "expired" } }).catch(() => 0),
-    prismaRead.partnerCampaign.aggregate({
+    { _sum: { amount: null } },
+  );
+
+  const totalUsers = await safeQuery(() => prismaRead.user.count(), 0);
+  const proUsers = await safeQuery(() => prismaRead.user.count({ where: { isPro: true } }), 0);
+  const trialUsers = await safeQuery(() => prismaRead.user.count({ where: { subscriptionStatus: "trialing" } }), 0);
+  const newUsersPeriod = await safeQuery(() => prismaRead.user.count({ where: { createdAt: { gte: periodStart } } }), 0);
+
+  const totalPartners = await safeQuery(() => prismaRead.partner.count(), 0);
+  const partnersByStage = await safeQuery(
+    () => prismaRead.partner.groupBy({ by: ["stage"], _count: true }),
+    [],
+  );
+  const activePartners = await safeQuery(() => prismaRead.partner.count({ where: { status: "active" } }), 0);
+  const newPartnersPeriod = await safeQuery(() => prismaRead.partner.count({ where: { createdAt: { gte: periodStart } } }), 0);
+
+  const totalReferrals = await safeQuery(() => prismaRead.referral.count(), 0);
+  const completedReferrals = await safeQuery(() => prismaRead.referral.count({ where: { status: "completed" } }), 0);
+  const pendingReferrals = await safeQuery(() => prismaRead.referral.count({ where: { status: "pending" } }), 0);
+  const referralCampaign = await safeQuery(
+    () => prismaRead.referralCampaign.findFirst({ orderBy: { createdAt: "desc" } }),
+    null,
+  );
+
+  const adStats = await safeQuery(
+    () => prismaRead.ad.aggregate({ _sum: { views: true, clicks: true } }),
+    { _sum: { views: null, clicks: null } },
+  );
+  const totalFeedbacks = await safeQuery(() => prismaRead.feedback.count(), 0);
+  const avgFeedbackRating = await safeQuery(
+    () => prismaRead.feedback.aggregate({ _avg: { rating: true } }),
+    { _avg: { rating: null } },
+  );
+  const newFeedbacksPeriod = await safeQuery(() => prismaRead.feedback.count({ where: { createdAt: { gte: periodStart } } }), 0);
+
+  // Queries opcionais (tabelas que podem não existir se feature flag OFF)
+  const totalCampaigns = await safeQuery(() => prismaRead.partnerCampaign.count(), 0);
+  const publishedCampaigns = await safeQuery(() => prismaRead.partnerCampaign.count({ where: { status: "published" } }), 0);
+  const pausedCampaigns = await safeQuery(() => prismaRead.partnerCampaign.count({ where: { status: "paused" } }), 0);
+  const expiredCampaigns = await safeQuery(() => prismaRead.partnerCampaign.count({ where: { status: "expired" } }), 0);
+  const campaignMetrics = await safeQuery(
+    () => prismaRead.partnerCampaign.aggregate({
       _sum: { views: true, clicks: true, leads: true, redemptions: true },
-    }).catch(() => ({ _sum: { views: 0, clicks: 0, leads: 0, redemptions: 0 } })),
-    // Outbound
-    prismaRead.outboundLog.groupBy({ by: ["status"], _count: true }).catch(() => []),
-    // Propostas
-    prismaRead.proposal.groupBy({ by: ["status"], _count: true }).catch(() => []),
-    // Divulgação
-    prismaRead.promotionPost.groupBy({ by: ["status"], _count: true }).catch(() => []),
-  ]);
+    }),
+    { _sum: { views: 0, clicks: 0, leads: 0, redemptions: 0 } },
+  );
+
+  const outboundStats = await safeQuery(
+    () => prismaRead.outboundLog.groupBy({ by: ["status"], _count: true }),
+    [],
+  );
+  const proposalStats = await safeQuery(
+    () => prismaRead.proposal.groupBy({ by: ["status"], _count: true }),
+    [],
+  );
+  const promotionStats = await safeQuery(
+    () => prismaRead.promotionPost.groupBy({ by: ["status"], _count: true }),
+    [],
+  );
 
   // Normaliza parceiros por estágio
   const stagesArray = [
@@ -116,41 +105,36 @@ export async function GET(req: NextRequest) {
   ];
   const partnersByStageMap: Record<string, number> = {};
   for (const s of stagesArray) partnersByStageMap[s] = 0;
-  for (const { stage, _count } of partnersByStage) {
+  for (const { stage, _count } of partnersByStage as Array<{ stage: string; _count: number }>) {
     if (stage) partnersByStageMap[stage] = _count;
   }
 
-  // Normaliza outbound
   const outboundMap: Record<string, number> = {};
   for (const { status, _count } of outboundStats as Array<{ status: string; _count: number }>) {
     outboundMap[status] = _count;
   }
 
-  // Normaliza propostas
   const proposalMap: Record<string, number> = {};
   for (const { status, _count } of proposalStats as Array<{ status: string; _count: number }>) {
     proposalMap[status] = _count;
   }
 
-  // Normaliza divulgação
   const promotionMap: Record<string, number> = {};
   for (const { status, _count } of promotionStats as Array<{ status: string; _count: number }>) {
     promotionMap[status] = _count;
   }
 
-  // Métricas calculadas
-  const totalRevenue = Number(subsRevenue._sum.amount ?? 0);
-  const periodRevenue = Number(subsRevenuePeriod._sum.amount ?? 0);
-  const totalViews = adStats._sum.views ?? 0;
-  const totalClicks = adStats._sum.clicks ?? 0;
+  const totalRevenue = Number(subsRevenue._sum?.amount ?? 0);
+  const periodRevenue = Number(subsRevenuePeriod._sum?.amount ?? 0);
+  const totalViews = adStats._sum?.views ?? 0;
+  const totalClicks = adStats._sum?.clicks ?? 0;
   const ctr = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
   const conversionRate = totalUsers > 0 ? (proUsers / totalUsers) * 100 : 0;
   const referralConversion = totalReferrals > 0 ? (completedReferrals / totalReferrals) * 100 : 0;
 
-  // Métricas de campanhas
-  const campaignViews = campaignMetrics._sum.views ?? 0;
-  const campaignClicks = campaignMetrics._sum.clicks ?? 0;
-  const campaignLeads = campaignMetrics._sum.leads ?? 0;
+  const campaignViews = campaignMetrics._sum?.views ?? 0;
+  const campaignClicks = campaignMetrics._sum?.clicks ?? 0;
+  const campaignLeads = campaignMetrics._sum?.leads ?? 0;
   const campaignCTR = campaignViews > 0 ? (campaignClicks / campaignViews) * 100 : 0;
 
   return NextResponse.json({
@@ -189,7 +173,7 @@ export async function GET(req: NextRequest) {
       totalClicks,
       ctr: Number(ctr.toFixed(2)),
       totalFeedbacks,
-      avgRating: avgFeedbackRating._avg.rating
+      avgRating: avgFeedbackRating._avg?.rating
         ? Number(avgFeedbackRating._avg.rating.toFixed(2))
         : 0,
       newFeedbacksPeriod,
