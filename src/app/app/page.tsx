@@ -36,6 +36,8 @@ import { PixKeyRegister } from "@/components/meucorre/pix-key-register";
 import { CorreDoDia } from "@/components/meucorre/corre-do-dia";
 import { GoalsProgress } from "@/components/meucorre/goals-progress";
 import { OnboardingPopup } from "@/components/meucorre/onboarding-popup";
+import { BlogPromoPopup } from "@/components/meucorre/blog-promo-popup";
+import { SocialFollowPopup } from "@/components/meucorre/social-follow-popup";
 import { HeatmapMap } from "@/components/meucorre/heatmap-map";
 import { useGoals } from "@/hooks/use-goals";
 import { useWorkSessions } from "@/hooks/use-work-sessions";
@@ -1065,6 +1067,16 @@ function HomeContent() {
         forceOpen={onboardingOpen || undefined}
         onForceClose={() => setOnboardingOpen(false)}
       />
+
+      {/* Pop-up "Confira o blog" — 1x por semana, 3.5s após abrir o app.
+          Chama o usuário pra ler os 90+ artigos do blog do MeuCorre.
+          Suprimido em modo demo. */}
+      {!isDemoMode && <BlogPromoPopup />}
+
+      {/* Pop-up "Siga nossas redes + compartilhe com amigos" — 1x por semana,
+          6.5s após abrir o app. Instagram, TikTok, YouTube + share buttons.
+          Suprimido em modo demo. */}
+      {!isDemoMode && <SocialFollowPopup />}
 
       {/* Mapa de calor — áreas quentes onde o entregador mais faz corridas.
           Aberto via botão "Mapa de calor" no Corre do dia.
