@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { featureFlagSchema, validateOrError } from "@/lib/zod-schemas";
 
 // ===== API de Feature Flags =====
 //
@@ -48,28 +49,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const body = (await req.json()) as { key?: string; value?: boolean };
+  const body = await req.json().catch(() => ({}));
 
-  if (!body.key || typeof body.value !== "boolean") {
+  // Validação com Zod
+  const validation = validateOrError(featureFlagSchema, body);
+  if (!validation.success) {
     return NextResponse.json(
-      { error: "key (string) e value (boolean) são obrigatórios" },
+      { error: validation.error },
       { status: 400 },
     );
   }
 
+  const { key, value } = validation.data;
+
   // Valida se a flag é conhecida
-  if (!(body.key in DEFAULT_FLAGS)) {
+  if (!(key in DEFAULT_FLAGS)) {
     return NextResponse.json(
-      { error: `Flag desconhecida: ${body.key}` },
+      { error: `Flag desconhecida: ${key}` },
       { status: 400 },
     );
   }
 
   await prisma.setting.upsert({
-    where: { key: body.key },
-    create: { key: body.key, value: String(body.value) },
-    update: { value: String(body.value) },
+    where: { key },
+    create: { key, value: String(value) },
+    update: { value: String(value) },
   });
 
-  return NextResponse.json({ ok: true, key: body.key, value: body.value });
+  return NextResponse.json({ ok: true, key, value });
 }

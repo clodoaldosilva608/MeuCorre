@@ -1,0 +1,65 @@
+# Configuração do Gitleaks — regras personalizadas para o MeuCorre
+# https://github.com/gitleaks/gitleaks
+
+title = "MeuCorre — Gitleaks Config"
+
+[extend]
+useDefault = true
+
+# ===== Regras customizadas =====
+
+[[rules]]
+id = "meucorre-jwt-secret"
+description = "JWT Secret do MeuCorre"
+regex = '''(ADMIN_JWT_SECRET|USER_JWT_SECRET)\s*=\s*["']([a-f0-9]{32,})["']'''
+tags = ["jwt", "secret", "meucorre"]
+
+[[rules]]
+id = "meucorre-admin-password"
+description = "Senha de admin hardcoded"
+regex = '''ADMIN_PASSWORD\s*=\s*["']([^"'\s]{8,})["']'''
+tags = ["password", "admin", "meucorre"]
+
+[[rules]]
+id = "meucorre-supabase-key"
+description = "Service Role Key do Supabase"
+regex = '''SUPABASE_SERVICE_ROLE_KEY\s*=\s*["'](eyJ[a-zA-Z0-9_\.-]+)["']'''
+tags = ["supabase", "service_role", "secret"]
+
+[[rules]]
+id = "meucorre-kiwify-webhook"
+description = "Webhook secret da Kiwify"
+regex = '''KIWIFY_WEBHOOK_SECRET\s*=\s*["']([^"'\s]{10,})["']'''
+tags = ["kiwify", "webhook", "secret"]
+
+[[rules]]
+id = "meucorre-resend-key"
+description = "API key do Resend"
+regex = '''RESEND_API_KEY\s*=\s*["'](re_[a-zA-Z0-9]{20,})["']'''
+tags = ["resend", "api_key", "secret"]
+
+[[rules]]
+id = "meucorre-blogger-token"
+description = "Blogger OAuth token"
+regex = '''BLOGGER_(ACCESS_TOKEN|REFRESH_TOKEN)\s*=\s*["']([^"'\s]{20,})["']'''
+tags = ["blogger", "oauth", "token"]
+
+[[rules]]
+id = "meucorre-upstash-redis"
+description = "Upstash Redis URL/Token"
+regex = '''UPSTASH_REDIS_(REST_URL|REST_TOKEN)\s*=\s*["']([^"'\s]{10,})["']'''
+tags = ["upstash", "redis", "secret"]
+
+# ===== Allowlist — arquivos que NÃO devem ser escaneados =====
+[allowlist]
+description = "Arquivos permitidos (não contêm secrets reais)"
+paths = [
+  '''node_modules/.*''',
+  '''.env.example''',
+  '''.env.template''',
+  '''docs/.*''',
+  '''tests/.*''',
+  '''skills/.*''',
+  '''research/.*''',
+  '''scripts/upload-pacote-visual.ps1''',
+]

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminToken, verifyAdminPassword } from "@/lib/admin-auth";
 import { logger } from "@/lib/logger";
+import { loginSchema, validateOrError } from "@/lib/zod-schemas";
 
 // POST /api/admin/login
 // Auth por email + senha. Suporta 2 modos:
@@ -50,9 +51,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { email?: string; password?: string };
+  let body: unknown;
   try {
-    body = (await req.json()) as { email?: string; password?: string };
+    body = await req.json();
   } catch {
     return NextResponse.json(
       { error: "JSON inválido" },
@@ -60,14 +61,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, password } = body;
-
-  if (!email?.trim() || !password) {
+  // Validação com Zod
+  const validation = validateOrError(loginSchema, body);
+  if (!validation.success) {
     return NextResponse.json(
-      { error: "Email e senha são obrigatórios" },
+      { error: validation.error },
       { status: 400 },
     );
   }
+
+  const { email, password } = validation.data;
 
   // Verifica credenciais (tenta AdminUser table primeiro, depois env vars)
   const result = await verifyAdminPassword(email.trim(), password);

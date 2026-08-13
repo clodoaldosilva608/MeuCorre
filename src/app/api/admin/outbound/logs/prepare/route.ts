@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { substituteVariables } from "@/lib/outbound-variables";
+import { outboundPrepareSchema, validateOrError } from "@/lib/zod-schemas";
 
 // POST /api/admin/outbound/logs/prepare
 // Prepara uma ou várias mensagens para envio supervisionado.
@@ -27,28 +28,18 @@ export async function POST(req: NextRequest) {
   }
 
   const adminEmail = await getAdminEmail();
-  const body = (await req.json()) as {
-    items?: Array<{
-      partnerId?: string;
-      contactId?: string;
-      templateId?: string;
-      channel?: string;
-    }>;
-  };
+  const rawBody = await req.json().catch(() => ({}));
 
-  if (!Array.isArray(body.items) || body.items.length === 0) {
+  // Validação com Zod
+  const validation = validateOrError(outboundPrepareSchema, rawBody);
+  if (!validation.success) {
     return NextResponse.json(
-      { error: "items deve ser um array não vazio" },
+      { error: validation.error },
       { status: 400 },
     );
   }
 
-  if (body.items.length > 100) {
-    return NextResponse.json(
-      { error: "Máximo 100 mensagens por lote (volume controlado)" },
-      { status: 400 },
-    );
-  }
+  const body = validation.data;
 
   const validChannels = new Set(["email", "whatsapp", "linkedin", "phone"]);
   let created = 0;

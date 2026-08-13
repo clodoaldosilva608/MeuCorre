@@ -8,8 +8,6 @@ on:
 
 jobs:
   # TypeCheck + ESLint com continue-on-error para não bloquear commits.
-  # O repositório é privado (GitHub Free) com limite de minutos de Actions.
-  # Este workflow valida mas não impede o push — apenas sinaliza problemas.
   quality:
     name: TypeCheck + ESLint
     runs-on: ubuntu-latest
@@ -35,4 +33,78 @@ jobs:
 
       - name: ESLint
         run: npx eslint src/ --max-warnings 0
+        continue-on-error: true
+
+  # ===== Scanner de segurança — npm audit =====
+  # Roda npm audit em cada push/PR. Não bloqueia (continue-on-error)
+  # mas sinaliza vulnerabilidades conhecidas nas dependências.
+  security-audit:
+    name: npm audit (dependências)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit (produção)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
+
+      - name: Run npm audit (desenvolvimento)
+        run: npm audit --audit-level=critical
+        continue-on-error: true
+
+  # ===== Gitleaks — caça segredos no código =====
+  # Escaneia o código em busca de API keys, tokens, senhas hardcoded.
+  # Não bloqueia mas sinaliza se encontrar segredos.
+  gitleaks:
+    name: Gitleaks (segredos no código)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # histórico completo para escanear commits antigos
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: true
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  # ===== Snyk — scanner de vulnerabilidades em dependências =====
+  # Requer SNYK_TOKEN configurado nas secrets do repo.
+  # Se não tiver token, o job pula (não falha).
+  snyk:
+    name: Snyk (vulnerabilidades)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --omit=dev
         continue-on-error: true
