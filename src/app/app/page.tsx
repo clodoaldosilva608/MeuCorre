@@ -263,11 +263,11 @@ function HomeContent() {
           const today = new Date().toISOString().slice(0, 10);
           const now = Date.now();
           await db.deliveries.bulkAdd([
-            { id: 1, app: "iFood", value: 25, km: 8.5, date: today, timestamp: now - 50000, notes: "Centro → Vila Nova" },
-            { id: 2, app: "99Food", value: 10, km: 3.2, date: today, timestamp: now - 40000, notes: "Centro → Jardim Europa" },
-            { id: 3, app: "Lalamove", value: 20, km: 12.0, date: today, timestamp: now - 30000, notes: "Industrial → Centro" },
-            { id: 4, app: "Rappi", value: 15, km: 5.5, date: today, timestamp: now - 20000, notes: "Vila Mariana → Centro" },
-            { id: 5, app: "iFood", value: 30, km: 10.0, date: today, timestamp: now - 10000, notes: "Centro → Pinheiros" },
+            { id: 1, app: "iFood", value: 25, km: 8.5, date: today, timestamp: now - 50000, notes: "Centro → Vila Nova", lat: -23.5505, lng: -46.6333 },
+            { id: 2, app: "99Food", value: 10, km: 3.2, date: today, timestamp: now - 40000, notes: "Centro → Jardim Europa", lat: -23.5580, lng: -46.6480 },
+            { id: 3, app: "Lalamove", value: 20, km: 12.0, date: today, timestamp: now - 30000, notes: "Industrial → Centro", lat: -23.5420, lng: -46.6200 },
+            { id: 4, app: "Rappi", value: 15, km: 5.5, date: today, timestamp: now - 20000, notes: "Vila Mariana → Centro", lat: -23.5870, lng: -46.6380 },
+            { id: 5, app: "iFood", value: 30, km: 10.0, date: today, timestamp: now - 10000, notes: "Centro → Pinheiros", lat: -23.5610, lng: -46.6900 },
           ]);
           await db.expenses.bulkAdd([
             { id: 1, category: "combustivel", value: 20, description: "Gasolina — 2L", date: today, timestamp: now - 45000 },
