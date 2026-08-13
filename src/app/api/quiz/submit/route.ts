@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
       result,
     });
   } catch (error) {
-    console.error("[quiz/submit] Erro ao salvar lead:", error);
+    console.error("[quiz/submit] Erro ao salvar lead");
     return NextResponse.json(
       { error: "Erro ao salvar lead. Tente novamente." },
       { status: 500 },

@@ -266,7 +266,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     // Se a transação falhar, retorna erro — NADA é salvo pela metade
-    console.error("[sync POST] Transação falhou:", error);
+    console.error("[sync POST] Transação falhou");
     return NextResponse.json(
       { error: "Falha na sincronização", ok: false },
       { status: 500 },

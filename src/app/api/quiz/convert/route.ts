@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sanitizeString } from "@/lib/validation";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 // ===== Marca Lead como convertido =====
 //
@@ -9,6 +10,15 @@ import { sanitizeString } from "@/lib/validation";
 // Não bloqueia o fluxo de registro se falhar (best-effort).
 
 export async function POST(req: NextRequest) {
+  // Rate limiting: 10 conversões por IP por hora
+  const limited = await applyRateLimit(req, { windowMs: 60 * 60 * 1000, maxRequests: 10 });
+  if (limited) {
+    return NextResponse.json(
+      { error: "Muitas requisições. Tente novamente mais tarde." },
+      { status: 429 },
+    );
+  }
+
   let body: { email?: string; userId?: string };
   try {
     body = (await req.json()) as typeof body;
@@ -46,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("[quiz/convert] Erro:", error);
+    console.error("[quiz/convert] Erro interno");
     // Não retorna erro — best-effort
     return NextResponse.json({ ok: true, error: "best-effort" });
   }

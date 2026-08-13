@@ -58,17 +58,17 @@ export async function POST(req: NextRequest) {
   if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
     try {
       await sendResetEmail(email, user.name, resetLink);
-      console.log(`[forgot-password] Email enviado para ${email}`);
+      // Log sem expor email completo (LGPD)
+      console.log('[forgot-password] Email enviado com sucesso');
       return genericResponse;
     } catch (err) {
-      console.error("[forgot-password] Erro ao enviar email:", err);
+      console.error('[forgot-password] Erro ao enviar email');
       // Fall through to return link in response
     }
   }
 
-  // Sem Resend configurado: loga o link e retorna na resposta
-  // (para desenvolvimento/teste — em produção, configurar RESEND_API_KEY)
-  console.log(`[forgot-password] Reset link para ${email}: ${resetLink}`);
+  // Sem Resend configurado: retorna link apenas em desenvolvimento
+  // NUNCA logar reset links em produção — risco de segurança
 
   // Retorna o link na resposta (apenas em desenvolvimento)
   // Em produção com Resend, o link não é retornado (só email)

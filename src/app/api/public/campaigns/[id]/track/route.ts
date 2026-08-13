@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 // POST /api/public/campaigns/:id/track
 // Endpoint público (sem admin auth) para registrar interações do usuário com a campanha.
 // Body: { event: "view" | "click" }
 //
-// Rate limiting simples: 1 evento por IP por campanha por hora (evita inflar métricas).
-// Em produção, usar Upstash Redis para rate limiting mais robusto.
+// Rate limiting: 60 eventos por IP por hora (evita inflar métricas).
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Rate limiting: 60 eventos por IP por hora
+  const limited = await applyRateLimit(req, { windowMs: 60 * 60 * 1000, maxRequests: 60 });
+  if (limited) {
+    return NextResponse.json(
+      { error: "Muitas requisições. Tente novamente mais tarde." },
+      { status: 429 },
+    );
+  }
+
   const { id } = await params;
   const body = (await req.json().catch(() => ({}))) as { event?: string };
 

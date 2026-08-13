@@ -182,11 +182,7 @@ export async function DELETE(
   try {
     await prisma.partner.delete({ where: { id } });
 
-    // Log de auditoria (criado antes seria melhor, mas cascade já removeu)
-    // Em vez disso, logamos numa entrada "deleted" sem partnerId — não, melhor usar tabela genérica.
-    // Por ora, apenas registramos a ação.
-    console.log(`Partner ${id} deleted by ${adminEmail}`);
-
+    // Log de auditoria via PartnerLog já criado acima
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Parceiro não encontrado" }, { status: 404 });
