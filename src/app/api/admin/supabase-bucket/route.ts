@@ -18,19 +18,16 @@ export async function POST() {
   const results: Array<{ step: string; status: string; error?: string }> = [];
 
   // 1. Verifica se o bucket já existe
+  let bucketExists = false;
   try {
     const existing = await prisma.$queryRaw<Array<{ id: string }>>`
       SELECT id FROM storage.buckets WHERE id = 'promotion-assets'
     `;
-    if (existing.length > 0) {
-      results.push({ step: "check_bucket", status: "already_exists" });
-      return NextResponse.json({
-        ok: true,
-        message: "Bucket já existe",
-        results,
-      });
-    }
-    results.push({ step: "check_bucket", status: "not_found" });
+    bucketExists = existing.length > 0;
+    results.push({
+      step: "check_bucket",
+      status: bucketExists ? "already_exists" : "not_found",
+    });
   } catch (e: unknown) {
     const err = e as Error;
     return NextResponse.json(
@@ -42,32 +39,34 @@ export async function POST() {
     );
   }
 
-  // 2. Cria o bucket
-  try {
-    await prisma.$executeRawUnsafe(`
-      INSERT INTO storage.buckets (id, name, public, allowed_mime_types, file_size_limit, created_at, updated_at)
-      VALUES (
-        'promotion-assets',
-        'promotion-assets',
-        true,
-        ARRAY['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
-        10485760,
-        NOW(),
-        NOW()
-      )
-    `);
-    results.push({ step: "create_bucket", status: "ok" });
-  } catch (e: unknown) {
-    const err = e as Error;
-    results.push({
-      step: "create_bucket",
-      status: "error",
-      error: err.message,
-    });
-    return NextResponse.json({ error: err.message, results }, { status: 500 });
+  // 2. Cria o bucket se não existir
+  if (!bucketExists) {
+    try {
+      await prisma.$executeRawUnsafe(`
+        INSERT INTO storage.buckets (id, name, public, allowed_mime_types, file_size_limit, created_at, updated_at)
+        VALUES (
+          'promotion-assets',
+          'promotion-assets',
+          true,
+          ARRAY['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
+          10485760,
+          NOW(),
+          NOW()
+        )
+      `);
+      results.push({ step: "create_bucket", status: "ok" });
+    } catch (e: unknown) {
+      const err = e as Error;
+      results.push({
+        step: "create_bucket",
+        status: "error",
+        error: err.message,
+      });
+      return NextResponse.json({ error: err.message, results }, { status: 500 });
+    }
   }
 
-  // 3. Cria políticas RLS (uma query por vez — Prisma não suporta múltiplos statements)
+  // 3. Cria políticas RLS (sempre — usa DROP IF EXISTS primeiro)
   try {
     await prisma.$executeRawUnsafe(
       `DROP POLICY IF EXISTS "Public read access promotion" ON storage.objects`,
