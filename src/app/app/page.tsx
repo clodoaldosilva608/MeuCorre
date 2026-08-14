@@ -103,11 +103,11 @@ function HomeContent() {
   const isDemoMode = searchParams?.get("demo") === "1";
 
   // Splash com logo oficial do MeuCorre (substitui Foguetinho)
-  // Dura 2s com barra de progresso animada + 4 cards de funcionalidades
+  // Dura 3.5s com barra de progresso animada + 4 cards + motociclista
   const [showSplash, setShowSplash] = useState(!isDemoMode);
   useEffect(() => {
     if (isDemoMode) return;
-    const t = setTimeout(() => setShowSplash(false), 2000);
+    const t = setTimeout(() => setShowSplash(false), 3500);
     return () => clearTimeout(t);
   }, [isDemoMode]);
 
@@ -628,7 +628,7 @@ function HomeContent() {
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
-      <AppLoadingLogo visible={showSplash} duration={2000}>
+      <AppLoadingLogo visible={showSplash} duration={3500}>
         {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
         {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
       </AppLoadingLogo>
