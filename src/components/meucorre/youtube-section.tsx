@@ -24,62 +24,54 @@ const itemUp: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-// Lista de vídeos curados — IDs reais do YouTube
-// Para adicionar novos vídeos, basta adicionar novos objetos aqui
+// Lista de vídeos REAIS do canal @meucorre-z4j
+// Dados obtidos via noembed API em 14/08/2026
+// Para adicionar novos vídeos, basta adicionar novos objetos aqui com o videoId
 const VIDEOS = [
   {
-    id: "1",
-    title: "Como Calcular o Lucro Real Como Entregador de App",
+    id: "AnE-3QNyxC8",
+    title: "Pare de perder dinheiro sem saber para onde ele vai! 🛑💸",
     description:
-      "Aprenda a diferença entre faturamento e lucro líquido, e descubra quanto você realmente ganha como entregador de aplicativo.",
-    thumbnail: "/blog-covers/capa-1.png",
-    href: `${CHANNEL_URL}`,
-    duration: "8:42",
+      "Descubra como o MeuCorre te ajuda a rastrear cada centavo: corridas, despesas e lucro real num só lugar.",
+    thumbnail: "https://i.ytimg.com/vi/AnE-3QNyxC8/hqdefault.jpg",
+    href: `https://www.youtube.com/watch?v=AnE-3QNyxC8`,
+    duration: "Short",
   },
   {
-    id: "2",
-    title: "Manutenção da Moto: Checklist Completo pra Entregador",
+    id: "t98X4NSAGEY",
+    title: "Sabe quanto você realmente lucrou essa semana? Descubra com o MeuCorre! 📊",
     description:
-      "Guia definitivo de manutenção preventiva pra não quebrar no meio da rua e perder dinheiro.",
-    thumbnail: "/blog-covers/capa-3.png",
-    href: `${CHANNEL_URL}`,
-    duration: "12:15",
+      "Veja como acompanhar seu desempenho em tempo real e visualizar seu lucro líquido de forma simples.",
+    thumbnail: "https://i.ytimg.com/vi/t98X4NSAGEY/hqdefault.jpg",
+    href: `https://www.youtube.com/watch?v=t98X4NSAGEY`,
+    duration: "Short",
   },
   {
-    id: "3",
-    title: "Melhores Horários e Zonas para Entregar",
+    id: "CSZccZXAlXI",
+    title: "O seu corre com muito mais liberdade e autonomia!",
     description:
-      "Descubra os melhores horários e regiões pra maximizar seus ganhos no iFood, 99Food, Lalamove e Rappi.",
-    thumbnail: "/blog-covers/capa-5.png",
-    href: `${CHANNEL_URL}`,
-    duration: "9:30",
+      "Conheça o MeuCorre — o app que organiza suas corridas e te dá controle total da sua rotina de entregador.",
+    thumbnail: "https://i.ytimg.com/vi/CSZccZXAlXI/hqdefault.jpg",
+    href: `https://www.youtube.com/watch?v=CSZccZXAlXI`,
+    duration: "Short",
   },
   {
-    id: "4",
-    title: "Como Economizar Combustível Sendo Entregador",
+    id: "MqfqmR_BS90",
+    title: "Mais entregas, mais ganhos e muito mais liberdade no corre! 🚀🛵",
     description:
-      "7 técnicas comprovadas pra reduzir o gasto de gasolina e aumentar seu lucro líquido.",
-    thumbnail: "/blog-covers/capa-4.png",
-    href: `${CHANNEL_URL}`,
-    duration: "6:18",
+      "Aprenda a maximizar seus ganhos com o MeuCorre — ferramenta essencial pra quem corre de app.",
+    thumbnail: "https://i.ytimg.com/vi/MqfqmR_BS90/hqdefault.jpg",
+    href: `https://www.youtube.com/watch?v=MqfqmR_BS90`,
+    duration: "Short",
   },
   {
-    id: "5",
-    title: "Qual App de Entrega Dá Mais Dinheiro? Comparativo 2026",
+    id: "4g3xumie-G8",
+    title: "Mais entregas, mais lucros: veja o seu esforço virar resultado! 🚀",
     description:
-      "Comparativo completo entre iFood, 99Food, Lalamove e Rappi. Descubra qual paga mais por km.",
-    thumbnail: "/blog-covers/capa-9.png",
-    href: `${CHANNEL_URL}`,
-    duration: "10:05",
-  },
-  {
-    id: "6",
-    title: "Como se Tornar um Entregador 5 Estrelas",
-    description:
-      "Dicas práticas pra conseguir avaliações máximas, fidelizar clientes e ganhar prioridade nos apps.",
-    thumbnail: "/blog-covers/capa-10.png",
-    href: `${CHANNEL_URL}`,
-    duration: "9:50",
+      "Acompanhe seu desempenho em tempo real e veja seu lucro líquido de forma simples com o MeuCorre.",
+    thumbnail: "https://i.ytimg.com/vi/4g3xumie-G8/hqdefault.jpg",
+    href: `https://www.youtube.com/watch?v=4g3xumie-G8`,
+    duration: "Short",
   },
 ];
 
@@ -137,6 +129,13 @@ export function YouTubeSection() {
                   alt={video.title}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   loading="lazy"
+                  onError={(e) => {
+                    // Fallback pra hqdefault se maxresdefault não existir
+                    const img = e.target as HTMLImageElement;
+                    if (!img.src.includes("hqdefault")) {
+                      img.src = `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`;
+                    }
+                  }}
                 />
                 {/* Overlay escuro */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
