@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Megaphone, Loader2, Calendar, List, Radio, Image as ImageIcon, FolderKanban, Users } from "lucide-react";
-import { type PromotionPost } from "@/lib/promotion-types";
+import { Megaphone, Loader2, Calendar, List, Radio, Image as ImageIcon, FolderKanban, Users, Plus, Pencil } from "lucide-react";
+import { type PromotionPost, type Campaign } from "@/lib/promotion-types";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CalendarView } from "@/components/admin/divulgacao/calendar-view";
 import { ListView } from "@/components/admin/divulgacao/list-view";
@@ -11,6 +12,7 @@ import { AssetsView } from "@/components/admin/divulgacao/assets-view";
 import { CampaignsView } from "@/components/admin/divulgacao/campaigns-view";
 import { GroupsView } from "@/components/admin/divulgacao/groups-view";
 import { PostDetailDrawer } from "@/components/admin/divulgacao/post-detail-drawer";
+import { PostEditDialog } from "@/components/admin/divulgacao/post-edit-dialog";
 
 export default function DivulgacaoPage() {
   const [flags, setFlags] = useState<Record<string, boolean> | null>(null);
@@ -19,6 +21,9 @@ export default function DivulgacaoPage() {
   const [selectedPost, setSelectedPost] = useState<PromotionPost | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<PromotionPost | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   useEffect(() => {
     fetch("/api/admin/feature-flags")
@@ -26,6 +31,12 @@ export default function DivulgacaoPage() {
       .then((data) => setFlags(data.flags ?? {}))
       .catch(() => setFlags({}))
       .finally(() => setLoadingFlags(false));
+
+    // Carrega campanhas pro dialog de criar/editar post
+    fetch("/api/admin/promotion/campaigns")
+      .then((r) => r.json())
+      .then((data) => setCampaigns(data.campaigns ?? []))
+      .catch(() => setCampaigns([]));
   }, []);
 
   const handleSelectPost = useCallback((post: PromotionPost) => {
@@ -36,6 +47,24 @@ export default function DivulgacaoPage() {
   const handlePostUpdated = useCallback(() => {
     setRefreshKey((k) => k + 1);
     setDrawerOpen(false);
+  }, []);
+
+  const handleNewPost = useCallback(() => {
+    setEditingPost(null);
+    setEditDialogOpen(true);
+  }, []);
+
+  const handleEditPost = useCallback(() => {
+    if (!selectedPost) return;
+    setEditingPost(selectedPost);
+    setDrawerOpen(false);
+    setEditDialogOpen(true);
+  }, [selectedPost]);
+
+  const handlePostSaved = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+    setEditDialogOpen(false);
+    setEditingPost(null);
   }, []);
 
   if (loadingFlags) {
@@ -78,14 +107,35 @@ export default function DivulgacaoPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-zinc-100">
-          <Megaphone className="h-6 w-6 text-emerald-400" />
-          Divulgação
-        </h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Central de divulgação — calendário editorial de 90 dias com 450 postagens.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-zinc-100">
+            <Megaphone className="h-6 w-6 text-emerald-400" />
+            Divulgação
+          </h1>
+          <p className="mt-1 text-sm text-zinc-400">
+            Central de divulgação — calendário editorial de 90 dias com 450 postagens.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {selectedPost && drawerOpen && (
+            <Button
+              onClick={handleEditPost}
+              variant="outline"
+              className="border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800"
+            >
+              <Pencil className="mr-1.5 h-4 w-4" />
+              Editar post
+            </Button>
+          )}
+          <Button
+            onClick={handleNewPost}
+            className="bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nova postagem
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="calendar" className="w-full">
@@ -160,6 +210,14 @@ export default function DivulgacaoPage() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         onPostUpdated={handlePostUpdated}
+      />
+
+      <PostEditDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        editing={editingPost}
+        campaigns={campaigns}
+        onSaved={handlePostSaved}
       />
     </div>
   );
