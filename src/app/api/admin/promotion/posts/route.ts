@@ -96,10 +96,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const validPlatforms = ["Instagram", "TikTok", "Facebook", "YouTube"];
+  const validPlatforms = ["Instagram", "TikTok", "Facebook", "YouTube", "WhatsApp", "Telegram"];
   if (!validPlatforms.includes(body.platform)) {
     return NextResponse.json(
-      { error: "Plataforma inválida (use Instagram, TikTok, Facebook ou YouTube)" },
+      { error: "Plataforma inválida (use Instagram, TikTok, Facebook, YouTube, WhatsApp ou Telegram)" },
       { status: 400 },
     );
   }

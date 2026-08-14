@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
     "tiktok",
     "youtube",
     "facebook",
+    "whatsapp",
+    "telegram",
     "app",
     "quiz",
   ];

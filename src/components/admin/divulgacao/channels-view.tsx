@@ -47,6 +47,8 @@ const VALID_PLATFORMS = [
   { value: "tiktok", label: "TikTok" },
   { value: "youtube", label: "YouTube" },
   { value: "facebook", label: "Facebook" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "telegram", label: "Telegram" },
   { value: "app", label: "Aplicação" },
   { value: "quiz", label: "Quiz" },
 ];

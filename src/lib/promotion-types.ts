@@ -43,7 +43,7 @@ export interface PromotionPost {
   sequenceNumber: number;
   publishAt: string;
   timezone: string;
-  platform: "Instagram" | "TikTok" | "Facebook" | "YouTube";
+  platform: "Instagram" | "TikTok" | "Facebook" | "YouTube" | "WhatsApp" | "Telegram";
   format: string | null;
   pillar: string | null;
   title: string;
@@ -101,12 +101,14 @@ export interface PromotionReminder {
 }
 
 // Helpers
-export const PLATFORMS = ["Instagram", "TikTok", "Facebook", "YouTube"] as const;
+export const PLATFORMS = ["Instagram", "TikTok", "Facebook", "YouTube", "WhatsApp", "Telegram"] as const;
 export const PLATFORM_COLORS: Record<string, string> = {
   Instagram: "#E1306C",
   TikTok: "#00F2EA",
   Facebook: "#1877F2",
   YouTube: "#FF0000",
+  WhatsApp: "#25D366",
+  Telegram: "#0088CC",
 };
 export const STATUS_COLORS: Record<string, string> = {
   pending: "#a1a1aa",

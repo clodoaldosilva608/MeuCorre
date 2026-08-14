@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { ShareButtons } from "./share-buttons";
 
 interface Props {
   post: PromotionPost | null;
@@ -402,6 +403,9 @@ export function PostDetailDrawer({ post, open, onOpenChange, onPostUpdated }: Pr
               </>
             )}
           </Button>
+
+          {/* Botões de compartilhar direto nas redes sociais */}
+          <ShareButtons post={post} />
 
           {/* Notas */}
           <div>
