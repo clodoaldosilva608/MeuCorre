@@ -35,12 +35,10 @@ import {
   ANNUAL_PRICE,
   MONTHLY_PRICE,
   ORIGINAL_PRICE,
-  COMMERCIAL_CTAS,
   getFreeDownloadHref,
   buildKiwifyCheckoutUrl,
   extractUtmParams,
   getKiwifySlug,
-  isKiwifyConfigured,
 } from "@/lib/commercial-cta";
 
 // ===== Animações framer-motion reutilizáveis =====
