@@ -102,12 +102,12 @@ function HomeContent() {
   // A landing page usa isso para mostrar o app rodando dentro do iPhone mockup.
   const isDemoMode = searchParams?.get("demo") === "1";
 
-  // Splash com logo oficial do MeuCorre (substitui Foguetinho)
-  // Dura 3.5s com barra de progresso animada + 4 cards + motociclista
+  // Splash com VÍDEO REAL do MeuCorre (idêntico ao vídeo enviado)
+  // Dura 10s (duração do vídeo)
   const [showSplash, setShowSplash] = useState(!isDemoMode);
   useEffect(() => {
     if (isDemoMode) return;
-    const t = setTimeout(() => setShowSplash(false), 3500);
+    const t = setTimeout(() => setShowSplash(false), 10000);
     return () => clearTimeout(t);
   }, [isDemoMode]);
 
@@ -628,7 +628,7 @@ function HomeContent() {
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
-      <AppLoadingLogo visible={showSplash} duration={3500}>
+      <AppLoadingLogo visible={showSplash} duration={10000}>
         {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
         {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
       </AppLoadingLogo>

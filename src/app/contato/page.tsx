@@ -15,7 +15,7 @@ export default function ContatoPage() {
 
       <div className="mt-8 space-y-4">
         <a
-          href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20MeuCorre"
+          href="https://wa.me/5581920051068?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20MeuCorre"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-4 rounded-xl border border-zinc-200 bg-white p-5 transition-all hover:border-emerald-300 hover:shadow-md"
@@ -26,7 +26,7 @@ export default function ContatoPage() {
           <div>
             <p className="text-sm font-bold text-zinc-900">WhatsApp</p>
             <p className="text-xs text-zinc-500">
-              Resposta em até 24h (usuários PRO têm prioridade)
+              Toque para conversar conosco — resposta em até 24h
             </p>
           </div>
         </a>
