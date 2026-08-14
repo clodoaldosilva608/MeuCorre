@@ -38,7 +38,8 @@ import {
   getFreeDownloadHref,
   buildKiwifyCheckoutUrl,
   extractUtmParams,
-  getKiwifySlug,
+  getKiwifySlugForPlan,
+  SUPPORT_EMAIL,
 } from "@/lib/commercial-cta";
 
 // ===== Animações framer-motion reutilizáveis =====
@@ -1461,11 +1462,11 @@ function CheckoutDialog({
     e.preventDefault();
     if (!form.name || !form.email) return;
 
-    // Usa fonte centralizada (src/lib/commercial-cta.ts)
-    const slug = getKiwifySlug();
+    // Usa slug específico do plano selecionado (vitalício, mensal ou anual)
+    const slug = getKiwifySlugForPlan(selectedPlan);
     if (!slug) {
       toast.error("Produto Kiwify não configurado", {
-        description: "Contate o suporte.",
+        description: `Contate o suporte: ${SUPPORT_EMAIL}`,
       });
       return;
     }

@@ -32,7 +32,7 @@ export default function ContatoPage() {
         </a>
 
         <a
-          href="mailto:clodoaldo608@gmail.com"
+          href="mailto:suportemeucorre@gmail.com"
           className="flex items-center gap-4 rounded-xl border border-zinc-200 bg-white p-5 transition-all hover:border-emerald-300 hover:shadow-md"
         >
           <div className="grid h-12 w-12 place-items-center rounded-full bg-blue-100 text-2xl">
@@ -41,7 +41,7 @@ export default function ContatoPage() {
           <div>
             <p className="text-sm font-bold text-zinc-900">Email</p>
             <p className="text-xs text-zinc-500">
-              clodoaldo608@gmail.com — parcerias e suporte
+              suportemeucorre@gmail.com — parcerias e suporte
             </p>
           </div>
         </a>

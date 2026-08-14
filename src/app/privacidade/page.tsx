@@ -92,7 +92,7 @@ export default function PrivacidadePage() {
             <li>Revogar consentimento a qualquer momento</li>
           </ul>
           <p className="mt-2">
-            Para exercer esses direitos, envie um email para: clodoaldo608@gmail.com
+            Para exercer esses direitos, envie um email para: suportemeucorre@gmail.com
           </p>
         </section>
 

@@ -100,7 +100,7 @@ export default function TermosPage() {
         <section>
           <h2 className="text-lg font-bold text-zinc-900">9. Contato</h2>
           <p className="mt-2">
-            Dúvidas? Entre em contato pelo email: clodoaldo608@gmail.com
+            Dúvidas? Entre em contato pelo email: suportemeucorre@gmail.com
           </p>
         </section>
       </div>

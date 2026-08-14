@@ -26,12 +26,40 @@ export const ORIGINAL_PRICE = 97;
 
 export const KIWIFY_CHECKOUT_BASE = "https://pay.kiwify.com.br";
 
+// Slug do plano vitalício (pagamento único)
 export function getKiwifySlug(): string {
   return process.env.NEXT_PUBLIC_KIWIFY_PRODUCT_SLUG ?? "";
 }
 
+// Slug do plano mensal (assinatura recorrente)
+export function getKiwifySlugMonthly(): string {
+  return process.env.KIWIFY_SLUG_MONTHLY ?? "";
+}
+
+// Slug do plano anual (assinatura recorrente)
+export function getKiwifySlugAnnual(): string {
+  return process.env.KIWIFY_SLUG_ANNUAL ?? "";
+}
+
+// Retorna o slug correto baseado no plano selecionado
+export function getKiwifySlugForPlan(plan: "monthly" | "annual" | "lifetime"): string {
+  switch (plan) {
+    case "monthly":
+      return getKiwifySlugMonthly();
+    case "annual":
+      return getKiwifySlugAnnual();
+    case "lifetime":
+    default:
+      return getKiwifySlug();
+  }
+}
+
 export function isKiwifyConfigured(): boolean {
   return !!getKiwifySlug();
+}
+
+export function isKiwifyPlanConfigured(plan: "monthly" | "annual" | "lifetime"): boolean {
+  return !!getKiwifySlugForPlan(plan);
 }
 
 export function getFreeDownloadHref(isAuthenticated: boolean): string {
@@ -70,3 +98,6 @@ export function extractUtmParams(
   }
   return result;
 }
+
+// Email de contato/suporte oficial
+export const SUPPORT_EMAIL = "suportemeucorre@gmail.com";
