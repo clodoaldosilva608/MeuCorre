@@ -23,7 +23,7 @@ const Charts = lazy(() =>
 import { OffersList } from "@/components/meucorre/offers-list";
 import { Fab } from "@/components/meucorre/fab";
 import { BottomNav, type Tab } from "@/components/meucorre/bottom-nav";
-import { SplashScreen } from "@/components/meucorre/splash-screen";
+import { AppLoadingLogo } from "@/components/meucorre/app-loading-logo";
 import { AdBanner } from "@/components/meucorre/ad-banner";
 import { AdCard } from "@/components/meucorre/ad-card";
 import { SponsoredSplash } from "@/components/meucorre/sponsored-splash";
@@ -102,11 +102,12 @@ function HomeContent() {
   // A landing page usa isso para mostrar o app rodando dentro do iPhone mockup.
   const isDemoMode = searchParams?.get("demo") === "1";
 
-  // Splash some por ~1.4s no primeiro carregamento (0ms em demo mode)
+  // Splash com logo oficial do MeuCorre (substitui Foguetinho)
+  // Dura 2s com barra de progresso animada + 4 cards de funcionalidades
   const [showSplash, setShowSplash] = useState(!isDemoMode);
   useEffect(() => {
     if (isDemoMode) return;
-    const t = setTimeout(() => setShowSplash(false), 1400);
+    const t = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(t);
   }, [isDemoMode]);
 
@@ -627,10 +628,10 @@ function HomeContent() {
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
-      <SplashScreen visible={showSplash}>
+      <AppLoadingLogo visible={showSplash} duration={2000}>
         {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
         {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
-      </SplashScreen>
+      </AppLoadingLogo>
 
       <Header
         isPro={isPro}
