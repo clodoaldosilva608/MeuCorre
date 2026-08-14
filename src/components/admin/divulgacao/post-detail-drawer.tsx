@@ -39,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ShareButtons } from "./share-buttons";
 import { ShareToGroups } from "./share-to-groups";
+import { PublishTelegramButton } from "./publish-telegram-button";
 
 interface Props {
   post: PromotionPost | null;
@@ -367,6 +368,9 @@ export function PostDetailDrawer({ post, open, onOpenChange, onPostUpdated }: Pr
 
           {/* Compartilhar em grupos (WhatsApp, Telegram, etc.) */}
           <ShareToGroups post={post} />
+
+          {/* Publicar no Telegram automaticamente (Bot API) */}
+          <PublishTelegramButton post={post} />
 
           {/* Notas */}
           <div>
