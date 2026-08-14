@@ -42,7 +42,7 @@ interface Props {
 }
 
 const FORMATS = [
-  { value: "", label: "—" },
+  { value: "none", label: "—" },
   { value: "Reels", label: "Reels" },
   { value: "Carrossel", label: "Carrossel" },
   { value: "Short", label: "Short" },
@@ -51,7 +51,7 @@ const FORMATS = [
 ];
 
 const PILLARS = [
-  { value: "", label: "—" },
+  { value: "none", label: "—" },
   { value: "Lucro real", label: "Lucro real" },
   { value: "Despesas", label: "Despesas" },
   { value: "Comunidade", label: "Comunidade" },
@@ -447,8 +447,10 @@ export function PostEditDialog({
                 Formato
               </Label>
               <Select
-                value={form.format}
-                onValueChange={(v) => setForm({ ...form, format: v })}
+                value={form.format || "none"}
+                onValueChange={(v) =>
+                  setForm({ ...form, format: v === "none" ? "" : v })
+                }
               >
                 <SelectTrigger className="border-zinc-700 bg-zinc-950 text-zinc-100">
                   <SelectValue />
@@ -467,8 +469,10 @@ export function PostEditDialog({
                 Pilar
               </Label>
               <Select
-                value={form.pillar}
-                onValueChange={(v) => setForm({ ...form, pillar: v })}
+                value={form.pillar || "none"}
+                onValueChange={(v) =>
+                  setForm({ ...form, pillar: v === "none" ? "" : v })
+                }
               >
                 <SelectTrigger className="border-zinc-700 bg-zinc-950 text-zinc-100">
                   <SelectValue />

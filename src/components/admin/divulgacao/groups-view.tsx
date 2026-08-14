@@ -266,12 +266,12 @@ export function GroupsView() {
             className="pl-9 border-zinc-700 bg-zinc-900 text-zinc-100"
           />
         </div>
-        <Select value={filterPlatform} onValueChange={setFilterPlatform}>
+        <Select value={filterPlatform || "all"} onValueChange={(v) => setFilterPlatform(v === "all" ? "" : v)}>
           <SelectTrigger className="w-[140px] border-zinc-700 bg-zinc-900 text-zinc-100">
             <SelectValue placeholder="Plataforma" />
           </SelectTrigger>
           <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             {PLATFORMS.map((p) => (
               <SelectItem key={p.value} value={p.value}>
                 {p.label}
@@ -279,12 +279,12 @@ export function GroupsView() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterCategory} onValueChange={setFilterCategory}>
+        <Select value={filterCategory || "all"} onValueChange={(v) => setFilterCategory(v === "all" ? "" : v)}>
           <SelectTrigger className="w-[140px] border-zinc-700 bg-zinc-900 text-zinc-100">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             {CATEGORIES.map((c) => (
               <SelectItem key={c.value} value={c.value}>
                 {c.label}
@@ -292,12 +292,12 @@ export function GroupsView() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterActive} onValueChange={setFilterActive}>
+        <Select value={filterActive || "all"} onValueChange={(v) => setFilterActive(v === "all" ? "" : v)}>
           <SelectTrigger className="w-[120px] border-zinc-700 bg-zinc-900 text-zinc-100">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="true">Ativos</SelectItem>
             <SelectItem value="false">Inativos</SelectItem>
           </SelectContent>
@@ -647,14 +647,16 @@ function GroupDialog({
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-400">Categoria</Label>
               <Select
-                value={form.category}
-                onValueChange={(v) => setForm({ ...form, category: v })}
+                value={form.category || "none"}
+                onValueChange={(v) =>
+                  setForm({ ...form, category: v === "none" ? "" : v })
+                }
               >
                 <SelectTrigger className="border-zinc-700 bg-zinc-950 text-zinc-100">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-100">
-                  <SelectItem value="">—</SelectItem>
+                  <SelectItem value="none">—</SelectItem>
                   {CATEGORIES.map((c) => (
                     <SelectItem key={c.value} value={c.value}>
                       {c.label}
