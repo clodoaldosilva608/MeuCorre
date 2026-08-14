@@ -70,13 +70,13 @@ export function AppLoadingLogo({
   }, []);
 
   const shouldShow = visible && internalShow;
-  // Cards aparecem após 40% (no vídeo aparecem cedo)
-  const showCards = progress >= 40;
+  // Cards aparecem após 20% (no vídeo aparecem cedo)
+  const showCards = progress >= 20;
 
   if (!shouldShow) return null;
 
   // Notas de dinheiro — grandes, reconhecíveis, caindo ao redor da barra
-  const moneyNotes = Array.from({ length: 15 }, (_, i) => ({
+  const moneyNotes = Array.from({ length: 25 }, (_, i) => ({
     id: i,
     x: 5 + Math.random() * 90,
     delay: Math.random() * 2,
@@ -164,7 +164,7 @@ export function AppLoadingLogo({
               <img
                 src="/logo-meucorre.png"
                 alt="MeuCorre"
-                className="h-28 w-28 rounded-3xl md:h-32 md:w-32"
+                className="h-36 w-36 rounded-3xl md:h-44 md:w-44"
               />
             </motion.div>
 
@@ -287,7 +287,7 @@ export function AppLoadingLogo({
           {/* 7. MOTOCICLISTA DE COSTAS com caixa de entrega */}
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
+            animate={{ opacity: 0.7 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="relative z-10 flex justify-center pb-6"
           >
