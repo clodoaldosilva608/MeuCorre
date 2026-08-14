@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Megaphone, Loader2, Calendar, List, Radio, Image as ImageIcon, FolderKanban } from "lucide-react";
+import { Megaphone, Loader2, Calendar, List, Radio, Image as ImageIcon, FolderKanban, Users } from "lucide-react";
 import { type PromotionPost } from "@/lib/promotion-types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CalendarView } from "@/components/admin/divulgacao/calendar-view";
@@ -9,6 +9,7 @@ import { ListView } from "@/components/admin/divulgacao/list-view";
 import { ChannelsView } from "@/components/admin/divulgacao/channels-view";
 import { AssetsView } from "@/components/admin/divulgacao/assets-view";
 import { CampaignsView } from "@/components/admin/divulgacao/campaigns-view";
+import { GroupsView } from "@/components/admin/divulgacao/groups-view";
 import { PostDetailDrawer } from "@/components/admin/divulgacao/post-detail-drawer";
 
 export default function DivulgacaoPage() {
@@ -88,7 +89,7 @@ export default function DivulgacaoPage() {
       </div>
 
       <Tabs defaultValue="calendar" className="w-full">
-        <TabsList className="flex w-full overflow-x-auto sm:grid sm:grid-cols-5 sm:w-auto sm:overflow-visible">
+        <TabsList className="flex w-full overflow-x-auto sm:grid sm:grid-cols-6 sm:w-auto sm:overflow-visible">
           <TabsTrigger value="calendar" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <Calendar className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Calendário</span>
@@ -102,6 +103,11 @@ export default function DivulgacaoPage() {
             <FolderKanban className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Campanhas</span>
             <span className="sm:hidden">Camp</span>
+          </TabsTrigger>
+          <TabsTrigger value="groups" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
+            <Users className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Grupos</span>
+            <span className="sm:hidden">Grp</span>
           </TabsTrigger>
           <TabsTrigger value="channels" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <Radio className="h-3.5 w-3.5" />
@@ -134,6 +140,10 @@ export default function DivulgacaoPage() {
             selectedCampaignId={selectedCampaignId}
             onSelectCampaign={setSelectedCampaignId}
           />
+        </TabsContent>
+
+        <TabsContent value="groups" className="mt-4">
+          <GroupsView />
         </TabsContent>
 
         <TabsContent value="channels" className="mt-4">

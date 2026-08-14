@@ -460,7 +460,8 @@ model PromotionPost {
   sequenceNumber  Int      // 1-5 (sequência do dia)
   publishAt       DateTime // horário programado (com timezone)
   timezone        String   @default("America/Sao_Paulo")
-  platform        String   // Instagram | TikTok | Facebook | YouTube
+  platform        String   // Instagram | TikTok | Facebook | YouTube | WhatsApp | Telegram
+  platforms       String?  // CSV: "Instagram,TikTok,WhatsApp" (multi-rede, Fase 2)
   format          String?  // Reels | Carrossel | Short | Feed | Story
   pillar          String?  // Lucro real | Despesas | Comunidade | etc.
   title           String
@@ -476,7 +477,7 @@ model PromotionPost {
   publishedAt     DateTime?
   notes           String?
   utmQuery        String?  // ?utm_source=...&utm_campaign=...
-  assetId         String?  // referência ao PromotionAsset
+  assetId         String?  // referência ao PromotionAsset (mantido para compat)
   createdBy       String?
   updatedBy       String?
   createdAt       DateTime @default(now())
@@ -485,12 +486,30 @@ model PromotionPost {
   campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   asset           PromotionAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
   reminders       PromotionReminder[]
+  postAssets      PromotionPostAsset[]
 
   @@unique([campaignId, editorialDay, sequenceNumber, platform])
   @@index([campaignId, editorialDay])
   @@index([platform, status])
   @@index([publishAt])
   @@index([status])
+}
+
+// Multi-mídia (Fase 2) — relação N:N entre posts e assets
+// Permite que um post tenha várias imagens (carrossel) ou vídeos
+model PromotionPostAsset {
+  id        String   @id @default(cuid())
+  postId    String
+  assetId   String
+  sortOrder Int      @default(0) // ordem de exibição no carrossel
+  createdAt DateTime @default(now())
+
+  post      PromotionPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  asset     PromotionAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, assetId])
+  @@index([postId, sortOrder])
+  @@index([assetId])
 }
 
 // Asset visual (imagem, vídeo) vinculado a uma ou mais postagens
@@ -512,6 +531,7 @@ model PromotionAsset {
   updatedAt     DateTime @updatedAt
 
   posts         PromotionPost[]
+  postAssets    PromotionPostAsset[]
 
   @@index([name])
   @@index([baseAssetName])
@@ -534,6 +554,30 @@ model SocialChannel {
 
   @@index([platform, active])
   @@index([sortOrder])
+}
+
+// Grupo de rede social (Fase 2) — grupos de WhatsApp, Telegram, Facebook, etc.
+// onde o MeuCorre tem acesso para divulgação.
+// Permite listar, filtrar e compartilhar publicações diretamente nos grupos.
+model SocialGroup {
+  id          String   @id @default(cuid())
+  name        String   // nome do grupo: "Galera do iFood SP"
+  platform    String   // whatsapp | telegram | facebook | instagram | tiktok | youtube
+  inviteUrl   String   // link de convite ou URL do grupo
+  memberCount Int?     // número de membros (manual ou sync)
+  category    String?  // categoria: "entregadores" | "moto" | "finanças" | "cidade-sp" | etc.
+  city        String?  // cidade (opcional, pra filtro regional)
+  notes       String?  // anotações internas
+  active      Boolean  @default(true)
+  lastPostedAt DateTime? // última vez que um post foi compartilhado neste grupo
+  createdBy   String?  // adminId que cadastrou
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([platform, active])
+  @@index([category, active])
+  @@index([city])
+  @@index([active, createdAt])
 }
 
 // Lembrete de postagem (Notification API + fallback)
