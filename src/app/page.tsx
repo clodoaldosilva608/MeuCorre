@@ -29,10 +29,19 @@ import {
   Fuel,
 } from "lucide-react";
 
-const PLAN_PRICE = 18.9; // Preço vitalício (oferta promocional limitada)
-const ANNUAL_PRICE = 97; // Preço do plano anual
-const MONTHLY_PRICE = 14.9; // Preço do plano mensal
-const ORIGINAL_PRICE = 97; // Mantido para compat (era o preço do vitalício antes, agora é o anual)
+// Preços centralizados em src/lib/commercial-cta.ts (fonte única de verdade)
+import {
+  PLAN_PRICE,
+  ANNUAL_PRICE,
+  MONTHLY_PRICE,
+  ORIGINAL_PRICE,
+  COMMERCIAL_CTAS,
+  getFreeDownloadHref,
+  buildKiwifyCheckoutUrl,
+  extractUtmParams,
+  getKiwifySlug,
+  isKiwifyConfigured,
+} from "@/lib/commercial-cta";
 
 // ===== Animações framer-motion reutilizáveis =====
 const fadeUp: Variants = {
@@ -192,9 +201,23 @@ export default function LandingPage() {
     }
   }, []);
 
+  // ===== Detecta se usuário está autenticado =====
+  // Se sim, "Baixar grátis" leva direto pro /app (não força quiz/cadastro)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.user?.id) setIsAuthenticated(true);
+      })
+      .catch(() => {
+        // Não autenticado ou erro — mantém false
+      });
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-ink text-white">
-      <Header onCheckout={openCheckout} />
+      <Header onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
 
       {/* ===== 1. HERO — fundo limpo com glow neon (pronto para animação futura) ===== */}
       <section className="relative overflow-hidden bg-ink">
@@ -283,14 +306,17 @@ export default function LandingPage() {
               <a
                 href="/quiz"
                 className="btn-neon inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
+                data-cta-origin="hero_quiz"
               >
                 <Zap className="h-4 w-4" />
                 Descubra quanto você está perdendo
                 <ArrowRight className="h-4 w-4" />
               </a>
               <a
-                href="/app"
+                href={getFreeDownloadHref(isAuthenticated)}
                 className="btn-neon-outline inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
+                data-cta-origin="hero_free_download"
+                aria-label="Baixar grátis — descobrir quanto você está perdendo"
               >
                 Baixar grátis
               </a>
@@ -298,6 +324,7 @@ export default function LandingPage() {
                 type="button"
                 onClick={openCheckout}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
+                data-cta-origin="hero_offer"
               >
                 <CreditCard className="h-4 w-4" />
                 Quero PRO
@@ -305,8 +332,10 @@ export default function LandingPage() {
               <a
                 href="/login"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
+                data-cta-origin="hero_existing_user"
+                aria-label="Já sou do Corre — entrar na minha conta"
               >
-                Entrar
+                Já sou do Corre
               </a>
             </motion.div>
 
@@ -710,8 +739,9 @@ export default function LandingPage() {
                 </p>
               </div>
               <a
-                href="/app"
+                href="/quiz"
                 className="inline-flex shrink-0 items-center gap-2 rounded-xl border-2 border-emerald-500 bg-white px-6 py-3 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-50"
+                data-cta-origin="plans_comecar_gratis"
               >
                 Começar grátis
               </a>
@@ -1221,7 +1251,7 @@ export default function LandingPage() {
 
 // ===== Subcomponentes =====
 
-function Header({ onCheckout }: { onCheckout: () => void }) {
+function Header({ onCheckout, isAuthenticated }: { onCheckout: () => void; isAuthenticated: boolean }) {
   return (
     <header className="sticky top-0 z-50 border-b border-neon/10 bg-ink/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
@@ -1236,12 +1266,14 @@ function Header({ onCheckout }: { onCheckout: () => void }) {
             type="button"
             onClick={onCheckout}
             className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-neon sm:inline-block"
+            data-cta-origin="header_planos"
           >
             Planos
           </button>
           <a
-            href="/app"
+            href={getFreeDownloadHref(isAuthenticated)}
             className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-neon sm:inline-block"
+            data-cta-origin="header_app_gratis"
           >
             App grátis
           </a>
@@ -1249,6 +1281,7 @@ function Header({ onCheckout }: { onCheckout: () => void }) {
             type="button"
             onClick={onCheckout}
             className="btn-neon inline-flex items-center gap-1.5 px-4 py-2 text-xs"
+            data-cta-origin="header_comprar"
           >
             <Zap className="h-3 w-3" />
             Comprar
@@ -1256,8 +1289,10 @@ function Header({ onCheckout }: { onCheckout: () => void }) {
           <a
             href="/login"
             className="inline-flex items-center gap-1.5 rounded-lg border border-neon/30 bg-transparent px-4 py-2 text-xs font-bold text-neon transition-all hover:bg-neon/10"
+            data-cta-origin="header_existing_user"
+            aria-label="Já sou do Corre — entrar na minha conta"
           >
-            Entrar
+            Já sou do Corre
           </a>
         </nav>
       </div>
@@ -1428,8 +1463,9 @@ function CheckoutDialog({
     e.preventDefault();
     if (!form.name || !form.email) return;
 
-    const productId = process.env.NEXT_PUBLIC_KIWIFY_PRODUCT_SLUG ?? "";
-    if (!productId) {
+    // Usa fonte centralizada (src/lib/commercial-cta.ts)
+    const slug = getKiwifySlug();
+    if (!slug) {
       toast.error("Produto Kiwify não configurado", {
         description: "Contate o suporte.",
       });
@@ -1450,20 +1486,33 @@ function CheckoutDialog({
       // Mesmo se falhar, segue pro checkout (Kiwify cuida do resto)
     }
 
-    // 2. Redireciona pra Kiwify
+    // 2. Redireciona pra Kiwify com UTMs e ref preservados
     //    NOTA: o plano selecionado (monthly/annual/lifetime) é passado como
     //    parâmetro para o webhook /api/webhooks/kiwify processar e gravar no
     //    User.subscriptionPlan. O Kiwify pode ter diferentes produtos para
     //    cada plano; aqui usamos o mesmo productId e o webhook decide com
     //    base no parâmetro plan.
-    const params = new URLSearchParams({
+    //
+    //    UTMs e referral code são propagados via query string (acessível e rápido).
+    //    O campo `sck` do Kiwify captura o referral code no webhook.
+    let utmParams: Record<string, string> = {};
+    let referralCode: string | undefined;
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      utmParams = extractUtmParams(searchParams);
+      referralCode = localStorage.getItem("meucorre_referral_code") ?? undefined;
+    }
+
+    const checkoutUrl = buildKiwifyCheckoutUrl({
+      slug,
       email: form.email,
       name: form.name,
+      phone: form.phone || undefined,
       plan: selectedPlan,
+      utmParams: Object.keys(utmParams).length > 0 ? utmParams : undefined,
+      referralCode,
     });
-    if (form.phone) params.set("phone", form.phone);
 
-    const checkoutUrl = `https://pay.kiwify.com.br/${productId}?${params.toString()}`;
     window.location.href = checkoutUrl;
   };
 
