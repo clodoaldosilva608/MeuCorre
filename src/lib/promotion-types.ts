@@ -44,6 +44,7 @@ export interface PromotionPost {
   publishAt: string;
   timezone: string;
   platform: "Instagram" | "TikTok" | "Facebook" | "YouTube" | "WhatsApp" | "Telegram";
+  platforms: string | null; // CSV multi-rede: "Instagram,TikTok,WhatsApp"
   format: string | null;
   pillar: string | null;
   title: string;
@@ -65,9 +66,30 @@ export interface PromotionPost {
   createdAt: string;
   updatedAt: string;
   asset?: PromotionAsset | null;
+  postAssets?: Array<{
+    id: string;
+    sortOrder: number;
+    asset: PromotionAsset;
+  }>;
   campaign?: Pick<Campaign, "id" | "name" | "color"> | null;
   reminders?: PromotionReminder[];
-  _count?: { reminders: number };
+  _count?: { reminders: number; postAssets?: number };
+}
+
+// Interface para SocialGroup (usada no ShareToGroups)
+export interface SocialGroup {
+  id: string;
+  name: string;
+  platform: string;
+  inviteUrl: string;
+  memberCount: number | null;
+  category: string | null;
+  city: string | null;
+  notes: string | null;
+  active: boolean;
+  lastPostedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SocialChannel {

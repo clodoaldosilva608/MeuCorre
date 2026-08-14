@@ -22,6 +22,7 @@ export async function PATCH(
     ["publishAt", (v) => (typeof v === "string" ? new Date(v) : undefined)],
     ["timezone", (v) => (typeof v === "string" ? v : undefined)],
     ["platform", (v) => (typeof v === "string" ? v : undefined)],
+    ["platforms", (v) => (typeof v === "string" ? v : v === null ? null : undefined)],
     ["format", (v) => (typeof v === "string" ? sanitizeString(v, 100) || null : undefined)],
     ["pillar", (v) => (typeof v === "string" ? sanitizeString(v, 100) || null : undefined)],
     ["title", (v) => (typeof v === "string" ? sanitizeString(v, 200) : undefined)],
@@ -51,7 +52,11 @@ export async function PATCH(
     const post = await prisma.promotionPost.update({
       where: { id },
       data,
-      include: { asset: true },
+      include: {
+        asset: true,
+        postAssets: { include: { asset: true }, orderBy: { sortOrder: "asc" } },
+        campaign: { select: { id: true, name: true, color: true } },
+      },
     });
     return NextResponse.json({ post });
   } catch {

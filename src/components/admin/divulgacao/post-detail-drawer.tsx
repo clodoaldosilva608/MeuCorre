@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   X,
   Copy,
@@ -16,6 +16,8 @@ import {
   Image as ImageIcon,
   Sparkles,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   PLATFORM_COLORS,
@@ -36,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ShareButtons } from "./share-buttons";
+import { ShareToGroups } from "./share-to-groups";
 
 interface Props {
   post: PromotionPost | null;
@@ -267,53 +270,8 @@ export function PostDetailDrawer({ post, open, onOpenChange, onPostUpdated }: Pr
             )}
           </div>
 
-          {/* Imagem */}
-          {post.asset && (
-            <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-              {post.asset.publicUrl ? (
-                <img
-                  src={post.asset.publicUrl}
-                  alt={post.asset.altText ?? post.title}
-                  className="w-full"
-                />
-              ) : (
-                <div className="flex aspect-video flex-col items-center justify-center text-zinc-600">
-                  <ImageIcon className="mb-2 h-8 w-8" />
-                  <p className="text-xs">Imagem ainda não enviada</p>
-                  <p className="mt-1 text-[10px] text-zinc-700">
-                    {post.asset.name}
-                  </p>
-                </div>
-              )}
-              <div className="flex items-center justify-between border-t border-zinc-800 p-2">
-                <span className="truncate text-[10px] text-zinc-500" title={post.asset.name}>
-                  {post.asset.name}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleOpenImage}
-                    disabled={!post.asset.publicUrl}
-                    className="h-7 gap-1 text-[10px]"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Abrir
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleDownloadImage}
-                    disabled={!post.asset.publicUrl}
-                    className="h-7 gap-1 text-[10px]"
-                  >
-                    <Download className="h-3 w-3" />
-                    Baixar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Mídias — carrossel de múltiplas imagens (multi-midia Fase 2) */}
+          <MediaCarousel post={post} onOpenImage={handleOpenImage} onDownloadImage={handleDownloadImage} />
 
           {/* Campos com botão de copiar */}
           <CopyableField
@@ -406,6 +364,9 @@ export function PostDetailDrawer({ post, open, onOpenChange, onPostUpdated }: Pr
 
           {/* Botões de compartilhar direto nas redes sociais */}
           <ShareButtons post={post} />
+
+          {/* Compartilhar em grupos (WhatsApp, Telegram, etc.) */}
+          <ShareToGroups post={post} />
 
           {/* Notas */}
           <div>
@@ -566,6 +527,177 @@ function CopyableField({
       ) : (
         <p className="text-xs text-zinc-300">{value}</p>
       )}
+    </div>
+  );
+}
+
+// ===== Carrossel de Mídias (multi-midia Fase 2) =====
+// Mostra a mídia principal (asset) + todas as mídias extras (postAssets)
+// num carrossel navegável com setas.
+function MediaCarousel({
+  post,
+  onOpenImage,
+  onDownloadImage,
+}: {
+  post: PromotionPost;
+  onOpenImage: () => void;
+  onDownloadImage: () => void;
+}) {
+  const [currentIdx, setCurrentIdx] = useState(0);
+
+  // Consolida todas as mídias (asset principal + postAssets, sem duplicatas)
+  const allMedias = useMemo(() => {
+    const medias: Array<{
+      id: string;
+      publicUrl: string | null;
+      name: string;
+      altText: string | null;
+    }> = [];
+
+    if (post.asset) {
+      medias.push({
+        id: post.asset.id,
+        publicUrl: post.asset.publicUrl,
+        name: post.asset.name,
+        altText: post.asset.altText,
+      });
+    }
+
+    if (post.postAssets) {
+      for (const pa of post.postAssets) {
+        // Evita duplicar o asset principal
+        if (pa.asset.id !== post.asset?.id) {
+          medias.push({
+            id: pa.asset.id,
+            publicUrl: pa.asset.publicUrl,
+            name: pa.asset.name,
+            altText: pa.asset.altText,
+          });
+        }
+      }
+    }
+
+    return medias;
+  }, [post.asset, post.postAssets]);
+
+  if (allMedias.length === 0) return null;
+
+  const current = allMedias[currentIdx];
+  const hasMultiple = allMedias.length > 1;
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+      {/* Container da imagem com navegação */}
+      <div className="relative">
+        {current.publicUrl ? (
+          <img
+            src={current.publicUrl}
+            alt={current.altText ?? post.title}
+            className="aspect-video w-full object-cover"
+          />
+        ) : (
+          <div className="flex aspect-video flex-col items-center justify-center text-zinc-600">
+            <ImageIcon className="mb-2 h-8 w-8" />
+            <p className="text-xs">Imagem ainda não enviada</p>
+            <p className="mt-1 text-[10px] text-zinc-700">{current.name}</p>
+          </div>
+        )}
+
+        {/* Setas de navegação (só se tiver múltiplas) */}
+        {hasMultiple && (
+          <>
+            <button
+              onClick={() =>
+                setCurrentIdx((i) => (i - 1 + allMedias.length) % allMedias.length)
+              }
+              className="absolute left-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() =>
+                setCurrentIdx((i) => (i + 1) % allMedias.length)
+              }
+              className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+              aria-label="Próxima"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+
+            {/* Indicador */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-medium text-white">
+              {currentIdx + 1} / {allMedias.length}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Thumbs (só se múltiplas) */}
+      {hasMultiple && (
+        <div className="flex gap-1 overflow-x-auto border-t border-zinc-800 p-2">
+          {allMedias.map((m, i) => (
+            <button
+              key={m.id}
+              onClick={() => setCurrentIdx(i)}
+              className={`relative h-12 w-16 shrink-0 overflow-hidden rounded border-2 transition ${
+                i === currentIdx
+                  ? "border-emerald-500"
+                  : "border-transparent opacity-60 hover:opacity-100"
+              }`}
+            >
+              {m.publicUrl ? (
+                <img
+                  src={m.publicUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center bg-zinc-800">
+                  <ImageIcon className="h-3 w-3 text-zinc-600" />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Barra de ações */}
+      <div className="flex items-center justify-between border-t border-zinc-800 p-2">
+        <span
+          className="truncate text-[10px] text-zinc-500"
+          title={current.name}
+        >
+          {current.name}
+          {hasMultiple && (
+            <span className="ml-1 text-zinc-600">
+              ({currentIdx + 1}/{allMedias.length})
+            </span>
+          )}
+        </span>
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onOpenImage}
+            disabled={!current.publicUrl}
+            className="h-7 gap-1 text-[10px]"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Abrir
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onDownloadImage}
+            disabled={!current.publicUrl}
+            className="h-7 gap-1 text-[10px]"
+          >
+            <Download className="h-3 w-3" />
+            Baixar
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

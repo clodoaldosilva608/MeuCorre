@@ -41,8 +41,12 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         asset: true,
+        postAssets: {
+          include: { asset: true },
+          orderBy: { sortOrder: "asc" },
+        },
         campaign: { select: { id: true, name: true, color: true } },
-        _count: { select: { reminders: true } },
+        _count: { select: { reminders: true, postAssets: true } },
       },
       orderBy: [{ editorialDay: "asc" }, { sequenceNumber: "asc" }],
       take: limit,
@@ -67,6 +71,7 @@ export async function POST(req: NextRequest) {
     publishAt?: string;
     timezone?: string;
     platform?: string;
+    platforms?: string; // CSV multi-rede
     format?: string;
     pillar?: string;
     title?: string;
@@ -104,6 +109,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Valida platforms (multi-rede CSV) se fornecido
+  if (body.platforms) {
+    const platformsList = body.platforms.split(",").map((p) => p.trim()).filter(Boolean);
+    const invalid = platformsList.filter((p) => !validPlatforms.includes(p));
+    if (invalid.length > 0) {
+      return NextResponse.json(
+        { error: `Plataformas inválidas em 'platforms': ${invalid.join(", ")}` },
+        { status: 400 },
+      );
+    }
+  }
+
   const editorialDay = body.editorialDay ?? 1;
   const sequenceNumber = body.sequenceNumber ?? 1;
   if (editorialDay < 1 || editorialDay > 90) {
@@ -133,6 +150,7 @@ export async function POST(req: NextRequest) {
         publishAt: body.publishAt ? new Date(body.publishAt) : new Date(),
         timezone: body.timezone || "America/Sao_Paulo",
         platform: body.platform,
+        platforms: body.platforms || null,
         format: sanitizeString(body.format, 100) || null,
         pillar: sanitizeString(body.pillar, 100) || null,
         title: sanitizeString(body.title, 200),
@@ -148,6 +166,11 @@ export async function POST(req: NextRequest) {
         notes: sanitizeString(body.notes, 500) || null,
         utmQuery: sanitizeString(body.utmQuery, 500) || null,
         assetId: body.assetId || null,
+      },
+      include: {
+        asset: true,
+        postAssets: { include: { asset: true }, orderBy: { sortOrder: "asc" } },
+        campaign: { select: { id: true, name: true, color: true } },
       },
     });
     return NextResponse.json({ post }, { status: 201 });
