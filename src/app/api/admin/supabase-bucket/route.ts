@@ -67,14 +67,14 @@ export async function POST() {
     return NextResponse.json({ error: err.message, results }, { status: 500 });
   }
 
-  // 3. Cria políticas RLS
+  // 3. Cria políticas RLS (uma query por vez — Prisma não suporta múltiplos statements)
   try {
-    await prisma.$executeRawUnsafe(`
-      DROP POLICY IF EXISTS "Public read access promotion" ON storage.objects;
-      CREATE POLICY "Public read access promotion" ON storage.objects
-      FOR SELECT TO anon, authenticated
-      USING (bucket_id = 'promotion-assets');
-    `);
+    await prisma.$executeRawUnsafe(
+      `DROP POLICY IF EXISTS "Public read access promotion" ON storage.objects`,
+    );
+    await prisma.$executeRawUnsafe(
+      `CREATE POLICY "Public read access promotion" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'promotion-assets')`,
+    );
     results.push({ step: "create_read_policy", status: "ok" });
   } catch (e: unknown) {
     const err = e as Error;
@@ -86,13 +86,12 @@ export async function POST() {
   }
 
   try {
-    await prisma.$executeRawUnsafe(`
-      DROP POLICY IF EXISTS "Authenticated write access promotion" ON storage.objects;
-      CREATE POLICY "Authenticated write access promotion" ON storage.objects
-      FOR ALL TO authenticated, service_role
-      USING (bucket_id = 'promotion-assets')
-      WITH CHECK (bucket_id = 'promotion-assets');
-    `);
+    await prisma.$executeRawUnsafe(
+      `DROP POLICY IF EXISTS "Authenticated write access promotion" ON storage.objects`,
+    );
+    await prisma.$executeRawUnsafe(
+      `CREATE POLICY "Authenticated write access promotion" ON storage.objects FOR ALL TO authenticated, service_role USING (bucket_id = 'promotion-assets') WITH CHECK (bucket_id = 'promotion-assets')`,
+    );
     results.push({ step: "create_write_policy", status: "ok" });
   } catch (e: unknown) {
     const err = e as Error;
