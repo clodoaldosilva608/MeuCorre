@@ -128,7 +128,28 @@ export function RodaCarroIcon({ className = "", size = 20 }: IconProps) {
 // Mapa de redes sociais com imagem do capacete F1 + label + URL
 // As imagens são capacetes 4D com fundo transparente (PNG alpha)
 // bounceDelay: delay da animação de pulo (cada capacete pula em momento diferente)
+//
+// WhatsApp e Telegram funcionam como FUNIL de captação de leads:
+// entregadores entram nos grupos, recebem dicas/promoções e convertem em PRO.
 export const SOCIAL_LINKS = [
+  {
+    name: "WhatsApp",
+    href: "https://chat.whatsapp.com/CKxQ8wYp3DJ48vLp1mRqYw",
+    Icon: RodaMotoIcon,
+    helmetImage: "/social-helmet-instagram.png",
+    glowColor: "rgba(37, 211, 102, 0.5)",
+    brandColor: "#25D366",
+    label: "Grupo WhatsApp — Funil de captação",
+  },
+  {
+    name: "Telegram",
+    href: "https://t.me/meucorre",
+    Icon: RodaCarroIcon,
+    helmetImage: "/social-helmet-tiktok.png",
+    glowColor: "rgba(0, 136, 204, 0.5)",
+    brandColor: "#0088CC",
+    label: "Grupo Telegram — Funil de captação",
+  },
   {
     name: "YouTube",
     href: "https://youtube.com/@meucorre-z4j",

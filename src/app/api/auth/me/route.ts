@@ -10,6 +10,9 @@ const TRIAL_DAYS = 14;
 // TRIAL SERVER-SIDE: O cálculo de trialDaysLeft e isTrialExpired é feito
 // AQUI no servidor (não no client). O client usa estes valores como fonte
 // de verdade, impedindo burla via localStorage.
+//
+// GRACEFUL DEGRADATION: se o banco estiver indisponível, retorna { user: null }
+// em vez de 500. O app funciona em modo anônimo (dados só locais via Dexie).
 export async function GET() {
   const session = await getUserSession();
   if (!session) {
@@ -17,22 +20,29 @@ export async function GET() {
   }
 
   // Busca dados atualizados no DB (status PRO pode ter mudado)
-  const user = await prisma.user.findUnique({
-    where: { id: session.sub },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      isPro: true,
-      licenseKey: true,
-      phone: true,
-      city: true,
-      active: true,
-      trialExtendedUntil: true,
-      lastLoginAt: true,
-      createdAt: true,
-    },
-  });
+  let user;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: session.sub },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isPro: true,
+        licenseKey: true,
+        phone: true,
+        city: true,
+        active: true,
+        trialExtendedUntil: true,
+        lastLoginAt: true,
+        createdAt: true,
+      },
+    });
+  } catch (err) {
+    // DB indisponível — retorna null para o app continuar em modo anônimo
+    console.warn("[/api/auth/me] DB indisponível:", err instanceof Error ? err.message : err);
+    return NextResponse.json({ user: null });
+  }
 
   if (!user) {
     return NextResponse.json({ user: null });

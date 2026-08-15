@@ -1176,6 +1176,8 @@ export default function LandingPage() {
                 Siga-nos
               </p>
               <ul className="mt-4 space-y-2 text-xs">
+                <li><a href="https://chat.whatsapp.com/CKxQ8wYp3DJ48vLp1mRqYw" target="_blank" rel="noopener noreferrer" className="hover:text-neon font-semibold text-emerald-400">Grupo WhatsApp</a></li>
+                <li><a href="https://t.me/meucorre" target="_blank" rel="noopener noreferrer" className="hover:text-neon font-semibold text-sky-400">Grupo Telegram</a></li>
                 <li><a href="https://youtube.com/@meucorre-z4j" target="_blank" rel="noopener noreferrer" className="hover:text-neon">YouTube</a></li>
                 <li><a href="https://www.instagram.com/meucorr" target="_blank" rel="noopener noreferrer" className="hover:text-neon">Instagram</a></li>
                 <li><a href="https://www.tiktok.com/@meucorr" target="_blank" rel="noopener noreferrer" className="hover:text-neon">TikTok</a></li>

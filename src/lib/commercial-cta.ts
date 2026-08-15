@@ -32,13 +32,14 @@ export function getKiwifySlug(): string {
 }
 
 // Slug do plano mensal (assinatura recorrente)
+// NEXT_PUBLIC_ prefix para estar disponível no client (landing page é client component)
 export function getKiwifySlugMonthly(): string {
-  return process.env.KIWIFY_SLUG_MONTHLY ?? "";
+  return process.env.NEXT_PUBLIC_KIWIFY_SLUG_MONTHLY ?? process.env.KIWIFY_SLUG_MONTHLY ?? "";
 }
 
 // Slug do plano anual (assinatura recorrente)
 export function getKiwifySlugAnnual(): string {
-  return process.env.KIWIFY_SLUG_ANNUAL ?? "";
+  return process.env.NEXT_PUBLIC_KIWIFY_SLUG_ANNUAL ?? process.env.KIWIFY_SLUG_ANNUAL ?? "";
 }
 
 // Retorna o slug correto baseado no plano selecionado

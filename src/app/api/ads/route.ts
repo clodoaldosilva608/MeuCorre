@@ -42,6 +42,10 @@ export function invalidateAdsCache(): void {
 // GET /api/ads?placement=banner_top
 // Lista anúncios ativos e vigentes para exibir no app do entregador.
 // Pública — não requer auth (mas o app pode ocultar anúncios se for PRO).
+//
+// GRACEFUL DEGRADATION: se o banco estiver indisponível (ex: DATABASE_URL
+// não configurada em dev), retorna { ads: [] } em vez de 500. O app
+// funciona normalmente, apenas sem anúncios.
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const placement = searchParams.get("placement") ?? "all";
@@ -53,36 +57,44 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(cached);
   }
 
-  // 2. Busca no Postgres
-  const now = new Date();
-  const where = {
-    active: true,
-    startsAt: { lte: now },
-    OR: [{ endsAt: null }, { endsAt: { gte: now } }],
-    ...(placement !== "all" && { placement }),
-  };
+  // 2. Busca no Postgres (com try/catch para graceful degradation)
+  try {
+    const now = new Date();
+    const where = {
+      active: true,
+      startsAt: { lte: now },
+      OR: [{ endsAt: null }, { endsAt: { gte: now } }],
+      ...(placement !== "all" && { placement }),
+    };
 
-  const ads = await prisma.ad.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 10,
-  });
+    const ads = await prisma.ad.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
 
-  const response = { ads };
+    const response = { ads };
 
-  // 3. Salva no cache
-  setCached(cacheKey, response);
+    // 3. Salva no cache
+    setCached(cacheKey, response);
 
-  // 4. Incrementa views em background (fire-and-forget)
-  //    Não bloqueia resposta. Em escala, migrar pra Redis incr.
-  if (ads.length > 0) {
-    prisma.ad
-      .updateMany({
-        where: { id: { in: ads.map((a) => a.id) } },
-        data: { views: { increment: 1 } },
-      })
-      .catch(() => {});
+    // 4. Incrementa views em background (fire-and-forget)
+    //    Não bloqueia resposta. Em escala, migrar pra Redis incr.
+    if (ads.length > 0) {
+      prisma.ad
+        .updateMany({
+          where: { id: { in: ads.map((a) => a.id) } },
+          data: { views: { increment: 1 } },
+        })
+        .catch(() => {});
+    }
+
+    return NextResponse.json(response);
+  } catch (err) {
+    // DB indisponível — retorna vazio para o app continuar funcionando
+    console.warn("[/api/ads] DB indisponível, retornando ads vazias:", err instanceof Error ? err.message : err);
+    const fallback = { ads: [] };
+    setCached(cacheKey, fallback);
+    return NextResponse.json(fallback);
   }
-
-  return NextResponse.json(response);
 }
