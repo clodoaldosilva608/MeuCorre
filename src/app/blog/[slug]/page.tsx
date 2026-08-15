@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { AdSense } from "@/components/adsense";
 import BlogPostContent from "./blog-post-content";
 
 // ===== Página dinâmica de post do blog =====
@@ -127,6 +128,15 @@ export default async function BlogPostPage({
       {/* Conteúdo (markdown) */}
       <div className="mt-8">
         <BlogPostContent content={post.content} />
+      </div>
+
+      {/* AdSense — banner após o conteúdo do post */}
+      <div className="mt-8">
+        <AdSense
+          slot="3333333333"
+          format="horizontal"
+          className="min-h-[120px] rounded-xl"
+        />
       </div>
 
       {/* Tags */}

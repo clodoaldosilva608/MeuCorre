@@ -9,6 +9,7 @@ import { AdSense } from "@/components/adsense";
 import { SOCIAL_LINKS } from "@/components/social-icons";
 import { PhoneShowcase } from "@/components/meucorre/phone-showcase";
 import { BlogCarousel } from "@/components/meucorre/blog-carousel";
+import { TestimonialsCarousel } from "@/components/meucorre/testimonials-carousel";
 import { YouTubeSection } from "@/components/meucorre/youtube-section";
 import {
   Dialog,
@@ -634,6 +635,35 @@ export default function LandingPage() {
           />
         </div>
       </div>
+
+      {/* ===== CARROSSEL DE DEPOIMENTOS (direita → esquerda) ===== */}
+      <section className="bg-ink py-16 text-white md:py-20">
+        <div className="mx-auto max-w-5xl px-4">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="mb-8 text-center"
+          >
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+              Quem usa, recomenda
+            </p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
+              Histórias de quem corre com o MeuCorre
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-base text-zinc-400">
+              22 entregadores de todo o Brasil compartilharam como o app mudou
+              a forma de trabalhar e de cuidar do dinheiro.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Carrossel rolando da direita para esquerda */}
+        <div className="mx-auto max-w-5xl">
+          <TestimonialsCarousel />
+        </div>
+      </section>
 
       {/* ===== BLOG CARROSSEL (direita → esquerda) ===== */}
       <section className="bg-white py-16 text-zinc-900 md:py-20">

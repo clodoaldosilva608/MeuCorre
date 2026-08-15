@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdSense } from "@/components/adsense";
 
 export const metadata: Metadata = {
   title: "Blog MeuCorre — Dicas para Entregadores de App",
@@ -129,6 +130,15 @@ export default async function BlogPage() {
           })}
         </div>
       )}
+
+      {/* AdSense — banner após a lista de posts */}
+      <div className="mt-12">
+        <AdSense
+          slot="4444444444"
+          format="horizontal"
+          className="min-h-[120px] rounded-xl"
+        />
+      </div>
 
       <div className="mt-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-8 text-center text-white">
         <h2 className="text-xl font-black">Baixe o MeuCorre grátis</h2>
