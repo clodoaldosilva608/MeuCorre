@@ -48,7 +48,9 @@ function buildMessageText(
   },
   customText?: string,
 ): string {
-  if (customText) return customText;
+  // Se texto customizado fornecido, escapa caracteres especiais do MarkdownV2
+  // (senão o Telegram rejeita com "can't parse entities")
+  if (customText) return escapeMarkdown(customText);
 
   const parts: string[] = [];
   parts.push(`*${escapeMarkdown(post.title)}*`);
@@ -57,7 +59,8 @@ function buildMessageText(
 
   if (post.hashtags) {
     parts.push("");
-    parts.push(post.hashtags); // hashtags não precisam escape
+    // Hashtags também precisam escape (o # é reservado no MarkdownV2)
+    parts.push(escapeMarkdown(post.hashtags));
   }
 
   if (post.engagementText) {
@@ -72,6 +75,7 @@ function buildMessageText(
 
   if (post.destinationUrl) {
     parts.push("");
+    // URL como link Markdown: [texto](url) — o texto precisa escape, a URL não
     parts.push(`[${escapeMarkdown(post.destinationUrl)}](${post.destinationUrl})`);
   }
 
@@ -86,9 +90,13 @@ function escapeMarkdown(text: string): string {
 // Extrai o chat_id de um inviteUrl do Telegram
 // Formatos suportados:
 // - https://t.me/c/1234567890/123 (supergrupo)
-// - https://t.me/+abc123 (link de convite — não dá pra enviar direto)
+// - https://t.me/+abc123 (link de convite — bot precisa ser admin do grupo)
 // - -1001234567890 (chat ID numérico direto)
-function extractChatId(inviteUrl: string): string | null {
+//
+// Para links de convite privado (t.me/+hash), o chat_id NÃO pode ser extraído
+// da URL. Nesse caso, tentamos ler do campo `notes` do grupo (formato:
+// "chat_id=-1001234567890") ou do campo `inviteUrl` se for um ID numérico.
+function extractChatId(inviteUrl: string, notes?: string | null): string | null {
   // Chat ID numérico direto
   if (/^-?\d+$/.test(inviteUrl)) return inviteUrl;
 
@@ -96,6 +104,15 @@ function extractChatId(inviteUrl: string): string | null {
   const superGroupMatch = inviteUrl.match(/t\.me\/c\/(\d+)/);
   if (superGroupMatch) {
     return `-100${superGroupMatch[1]}`;
+  }
+
+  // Link de convite privado (t.me/+hash): tenta extrair chat_id das notes
+  // Formato esperado nas notes: "chat_id=-1001234567890"
+  if (notes) {
+    const notesMatch = notes.match(/chat_id=(-?\d+)/);
+    if (notesMatch) {
+      return notesMatch[1];
+    }
   }
 
   // Link de convite (não dá pra enviar direto — bot precisa ser membro)
@@ -228,7 +245,7 @@ export async function POST(req: NextRequest) {
       },
     });
     for (const g of groups) {
-      const chatId = extractChatId(g.inviteUrl);
+      const chatId = extractChatId(g.inviteUrl, g.notes);
       if (chatId) {
         targets.push({ chatId, groupId: g.id, groupName: g.name });
       }
@@ -241,7 +258,7 @@ export async function POST(req: NextRequest) {
       where: { platform: "telegram", active: true },
     });
     for (const g of allTelegramGroups) {
-      const chatId = extractChatId(g.inviteUrl);
+      const chatId = extractChatId(g.inviteUrl, g.notes);
       if (chatId) {
         targets.push({ chatId, groupId: g.id, groupName: g.name });
       }
