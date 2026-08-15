@@ -1209,7 +1209,7 @@ export default function LandingPage() {
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
               {/* Card Grupo WhatsApp */}
               <a
-                href="https://chat.whatsapp.com/CKxQ8wYp3DJ48vLp1mRqYw"
+                href="https://chat.whatsapp.com/FOH9IYGwee19NIYOSEVe3z?s=cl&p=a&ilr=0"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center gap-4 rounded-2xl border-2 border-emerald-500/30 bg-emerald-500/5 p-4 transition-all hover:border-emerald-500/60 hover:bg-emerald-500/10 active:scale-[0.98]"
@@ -1226,7 +1226,7 @@ export default function LandingPage() {
 
               {/* Card Grupo Telegram */}
               <a
-                href="https://t.me/meucorre"
+                href="https://t.me/+64wV1Cpx9BA4OWQx"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center gap-4 rounded-2xl border-2 border-sky-500/30 bg-sky-500/5 p-4 transition-all hover:border-sky-500/60 hover:bg-sky-500/10 active:scale-[0.98]"
