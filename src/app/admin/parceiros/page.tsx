@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Handshake, Loader2, LayoutDashboard, Building2, Trello, Upload } from "lucide-react";
+import { Handshake, Loader2, LayoutDashboard, Building2, Trello, Upload, Search } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DashboardView } from "@/components/admin/parceiros/dashboard-view";
 import { PartnersListView } from "@/components/admin/parceiros/partners-list-view";
 import { KanbanView } from "@/components/admin/parceiros/kanban-view";
 import { PartnerDetailDrawer } from "@/components/admin/parceiros/partner-detail-drawer";
 import { ImportView } from "@/components/admin/parceiros/import-view";
+import { ProspectView } from "@/components/admin/parceiros/prospect-view";
 
 export default function ParceirosPage() {
   const [flags, setFlags] = useState<Record<string, boolean> | null>(null);
@@ -82,8 +83,12 @@ export default function ParceirosPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="flex w-full overflow-x-auto sm:grid sm:grid-cols-5 sm:w-auto sm:overflow-visible">
+      <Tabs defaultValue="prospect" className="w-full">
+        <TabsList className="flex w-full overflow-x-auto sm:grid sm:grid-cols-6 sm:w-auto sm:overflow-visible">
+          <TabsTrigger value="prospect" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
+            <Search className="h-3.5 w-3.5" />
+            Prospecção
+          </TabsTrigger>
           <TabsTrigger value="dashboard" className="gap-1.5 text-xs whitespace-nowrap shrink-0">
             <LayoutDashboard className="h-3.5 w-3.5" />
             Dashboard
@@ -101,6 +106,10 @@ export default function ParceirosPage() {
             Importar
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="prospect" className="mt-4">
+          <ProspectView />
+        </TabsContent>
 
         <TabsContent value="dashboard" className="mt-4">
           <DashboardView onSelectPartner={handleSelectPartner} />

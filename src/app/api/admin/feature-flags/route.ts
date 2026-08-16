@@ -14,16 +14,16 @@ import { z } from "zod";
 // Padrão: todas as flags novas começam como "false" (OFF).
 
 export const DEFAULT_FLAGS: Record<string, boolean> = {
-  admin_marketing_hub_enabled: false,
-  admin_partner_crm_enabled: false,
-  partner_campaigns_enabled: false,
-  partner_outbound_preview_enabled: false,
-  partner_outbound_send_enabled: false,
-  partner_portal_enabled: false,
-  app_radar_enabled: false,
-  app_score_enabled: false,
-  app_challenge_enabled: false,
-  admin_teams_enabled: false,
+  admin_marketing_hub_enabled: true,
+  admin_partner_crm_enabled: true,
+  partner_campaigns_enabled: true,
+  partner_outbound_preview_enabled: true,
+  partner_outbound_send_enabled: true,
+  partner_portal_enabled: true,
+  app_radar_enabled: true,
+  app_score_enabled: true,
+  app_challenge_enabled: true,
+  admin_teams_enabled: true,
 };
 
 export async function GET() {
