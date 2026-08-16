@@ -22,6 +22,7 @@ import {
   Send,
   BarChart3,
   UsersRound,
+  Shield,
   Menu,
   X,
 } from "lucide-react";
@@ -45,6 +46,7 @@ const NAV_BASE = [
   { href: "/admin/referrals", label: "Indicações", icon: Gift },
   { href: "/admin/feedback", label: "Feedbacks", icon: MessageSquare },
   { href: "/admin/flags", label: "Feature Flags", icon: Flag },
+  { href: "/admin/security", label: "Segurança", icon: Shield },
 ];
 
 // NAV condicional — só aparece quando feature flag está ON
