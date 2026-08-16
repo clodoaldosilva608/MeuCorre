@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 // ===== Anúncios (admin cadastra, app do entregador exibe) =====
@@ -45,7 +44,7 @@ model Subscription {
   buyerCity    String?
   // Pagamento
   pixKey       String   @default("meucorre@pix.com")
-  amount       Decimal  @default(18.90) @db.Decimal(10, 2) // R$ — Decimal evita perda de precisão
+  amount       Float  @default(18.90)  // R$ — Float evita perda de precisão
   paymentMethod String  @default("pix_manual") // pix_manual | kiwify
   // Comprovante (apenas pix_manual)
   receiptUrl   String?
@@ -141,9 +140,9 @@ model Offer {
   title         String
   description   String
   // Preço com desconto (ex: R$ 89,90)
-  price         Decimal  @db.Decimal(10, 2)
+  price         Float  
   // Preço original (ex: R$ 149,90) — usado para calcular % desconto
-  originalPrice Decimal? @db.Decimal(10, 2)
+  originalPrice Float? 
   // URL externa da imagem (hot-linked) OU data URL base64 (upload)
   imageUrl      String
   // URL de vídeo do produto (YouTube/Vimeo) — opcional
@@ -186,7 +185,7 @@ model SyncedGoal {
   userId      String
   localId     Int
   type        String   // "daily" | "weekly" | "monthly"
-  targetValue Decimal  @db.Decimal(10, 2)
+  targetValue Float  
   label       String?
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -206,7 +205,7 @@ model SyncedWorkSession {
   startTime   BigInt
   endTime     BigInt?
   durationMs  BigInt   @default(0)
-  distanceKm  Decimal  @db.Decimal(10, 2) @default(0)
+  distanceKm  Float   @default(0)
   pointCount  Int      @default(0)
   notes       String?
   createdAt   DateTime @default(now())
@@ -227,8 +226,8 @@ model SyncedDelivery {
   userId      String
   localId     Int      // ID no IndexedDB do dispositivo de origem
   app         String
-  value       Decimal  @db.Decimal(10, 2)
-  km          Decimal  @db.Decimal(10, 2) @default(0)
+  value       Float  
+  km          Float   @default(0)
   date        String   // YYYY-MM-DD
   timestamp   BigInt
   notes       String?
@@ -245,7 +244,7 @@ model SyncedExpense {
   userId      String
   localId     Int
   category    String
-  value       Decimal  @db.Decimal(10, 2)
+  value       Float  
   description String?
   date        String
   timestamp   BigInt
@@ -365,7 +364,7 @@ model Referral {
   status        String    @default("pending") // pending | converted | paid | rejected
   convertedAt   DateTime? // quando o indicado virou PRO
   paidAt        DateTime? // quando admin pagou o PIX
-  payoutAmount  Decimal   @default(5) @db.Decimal(10, 2)
+  payoutAmount  Float   @default(5) 
   payoutPixKey  String?   // chave PIX do referrer (para pagamento)
   adminNotes    String?   // notas do admin
   createdAt     DateTime  @default(now())
@@ -381,7 +380,7 @@ model ReferralCampaign {
   id           String    @id @default(cuid())
   name         String    @default("Indique e Ganhe")
   active       Boolean   @default(false) // admin liga/desliga
-  rewardAmount Decimal   @default(5) @db.Decimal(10, 2)
+  rewardAmount Float   @default(5) 
   maxReferrals Int       @default(0) // 0 = ilimitado
   startsAt     DateTime?
   endsAt       DateTime?
@@ -640,7 +639,7 @@ model Partner {
   // Tags livres (vírgula separada)
   tags            String?
   // Valores
-  potentialValue  Decimal? @db.Decimal(10, 2) // valor potencial mensal
+  potentialValue  Float?  // valor potencial mensal
   notes           String?
   // Timestamps
   createdAt       DateTime @default(now())
@@ -702,7 +701,7 @@ model Opportunity {
   // Estágio (espelha Partner.stage mas permite múltiplas oportunidades por empresa)
   stage           String   @default("novo_lead")
   // Valor
-  potentialValue  Decimal? @db.Decimal(10, 2)
+  potentialValue  Float? 
   // Datas
   expectedCloseAt DateTime?
   wonAt           DateTime?
@@ -798,8 +797,8 @@ model Proposal {
   summary         String?  // resumo executivo
   // Modelo de cobrança (decisão #7)
   billingModel    String?  // campaign | lead | both
-  campaignPrice   Decimal? @db.Decimal(10, 2) // preço por campanha (mensal)
-  leadPrice       Decimal? @db.Decimal(10, 2) // preço por lead
+  campaignPrice   Float?  // preço por campanha (mensal)
+  leadPrice       Float?  // preço por lead
   // Vigência
   validUntil      DateTime? // prazo de validade
   sentAt          DateTime?
@@ -901,8 +900,8 @@ model PartnerCampaign {
   endsAt          DateTime? // null = sem expiração
   // Modelo de cobrança (decisão #7)
   billingModel    String   @default("campaign") // campaign | lead | both
-  campaignPrice   Decimal? @db.Decimal(10, 2) // preço mensal da campanha
-  leadPrice       Decimal? @db.Decimal(10, 2) // preço por lead gerado
+  campaignPrice   Float?  // preço mensal da campanha
+  leadPrice       Float?  // preço por lead gerado
   // Status
   status          String   @default("draft") // draft | pending_approval | approved | published | paused | expired | rejected | canceled
   approvedAt      DateTime?
