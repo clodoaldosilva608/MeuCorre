@@ -1,20 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ===== Componente AdSense =====
 //
 // Renderiza um ad unit do Google AdSense. Só funciona se:
 //   1. NEXT_PUBLIC_ADSENSE_CLIENT estiver configurado (ca-pub-XXXXXXXXXXXXXXXX)
 //   2. O site foi aprovado no Google AdSense
-//   3. O ad slot ID estiver configurado no componente
+//   3. O ad slot ID estiver configurado no componente (slot real, não placeholder)
 //
 // Uso:
 //   <AdSense slot="1234567890" format="auto" />
 //
-// Se AdSense não estiver configurado, o componente renderiza nada (null).
-// Isso permite que o código esteja pronto para quando o admin aprovar
-// o AdSense — basta configurar a env var e os anúncios aparecem.
+// Se AdSense não estiver configurado ou slot for placeholder, renderiza nada.
+// Isso evita o erro "no_div" do script adsbygoogle.js quando slots não existem.
 
 interface AdSenseProps {
   slot: string;
@@ -30,6 +29,21 @@ declare global {
   }
 }
 
+// Placeholder slots que NÃO devem disparar o script AdSense
+// (são IDs fake usados durante desenvolvimento)
+const PLACEHOLDER_SLOTS = new Set([
+  "1111111111",
+  "2222222222",
+  "3333333333",
+  "4444444444",
+  "5555555555",
+  "6666666666",
+  "7777777777",
+  "8888888888",
+  "9999999999",
+  "0000000000",
+]);
+
 export function AdSense({
   slot,
   format = "auto",
@@ -38,28 +52,38 @@ export function AdSense({
   style,
 }: AdSenseProps) {
   const adRef = useRef<HTMLModElement>(null);
+  const [adLoaded, setAdLoaded] = useState(false);
 
   useEffect(() => {
-    // Só tenta carregar o anúncio se o AdSense estiver configurado
     const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
-    if (!client) return;
+    // Não tenta carregar se:
+    // - Client não configurado
+    // - Slot é placeholder (não existe na conta AdSense)
+    // - Slot é vazio
+    if (!client || !slot || PLACEHOLDER_SLOTS.has(slot)) return;
+
+    // Aguarda o script do AdSense estar carregado
+    if (typeof window === "undefined") return;
 
     try {
       // Push para a fila do AdSense
       (window.adsbygoogle = window.adsbygoogle || []).push({});
+      setAdLoaded(true);
     } catch {
       // Erro silencioso — AdSense pode falhar se o script ainda não carregou
     }
-  }, []);
+  }, [slot]);
 
-  // Se AdSense não estiver configurado, não renderiza nada
+  // Se AdSense não estiver configurado OU slot for placeholder, não renderiza nada
+  // Isso evita o erro "no_div" que aparecia no console de todas as páginas
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
-  if (!client) return null;
+  if (!client || !slot || PLACEHOLDER_SLOTS.has(slot)) return null;
 
   return (
     <div
       className={`adsense-container overflow-hidden ${className}`}
       style={style}
+      data-ad-loaded={adLoaded}
     >
       <ins
         ref={adRef}
