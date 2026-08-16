@@ -587,7 +587,7 @@ function ScheduleTab({ schedule, onSave, onReload }: {
             <Bell className="h-4 w-4" />
             Notificar no Telegram
           </button>
-          <p className="text-xs text-zinc-500">Recebe alerta no bot @meucorre_div_bot se score &lt; 70</p>
+          <p className="text-xs text-zinc-500">Relatório enviado direto no seu chat privado (não no grupo público)</p>
         </div>
 
         <div className="mt-6 flex gap-2">
@@ -627,9 +627,9 @@ function ScheduleTab({ schedule, onSave, onReload }: {
         </div>
       )}
 
-      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-amber-200">
-        <AlertTriangle className="mb-1 h-4 w-4" />
-        <strong>Nota:</strong> O agendamento usa cron job da Vercel (cron route). Configure em <code className="rounded bg-black/30 px-1">vercel.json</code> para ativar.
+      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-200">
+        <CheckCircle2 className="mb-1 h-4 w-4" />
+        <strong>Configurado:</strong> Cron job ativo em <code className="rounded bg-black/30 px-1">vercel.json</code> — roda diariamente às 03:00 BRT. O scan só executa no dia/hora configurado acima. O relatório vai direto pro seu chat privado no Telegram.
       </div>
     </div>
   );
