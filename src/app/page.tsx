@@ -14,6 +14,7 @@ import { FounderMessage } from "@/components/meucorre/founder-message";
 import { YouTubeSection } from "@/components/meucorre/youtube-section";
 import { AnimatedCounter } from "@/components/meucorre/animated-counter";
 import { StickyCTA } from "@/components/meucorre/sticky-cta";
+import { DownloadButton } from "@/components/meucorre/download-button";
 import {
   Dialog,
   DialogContent,
@@ -336,14 +337,12 @@ export default function LandingPage() {
                 Descubra quanto você está perdendo
                 <ArrowRight className="h-4 w-4" />
               </a>
-              <a
-                href={getFreeDownloadHref(isAuthenticated)}
+              <DownloadButton
                 className="btn-neon-outline inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
-                data-cta-origin="hero_free_download"
-                aria-label="Baixar grátis — descobrir quanto você está perdendo"
+                ctaOrigin="hero_free_download"
               >
                 Baixar grátis
-              </a>
+              </DownloadButton>
               <button
                 type="button"
                 onClick={openCheckout}
@@ -1385,7 +1384,7 @@ function Header({ onCheckout, isAuthenticated }: { onCheckout: () => void; isAut
             Planos
           </button>
           <a
-            href={getFreeDownloadHref(isAuthenticated)}
+            href="/quiz"
             className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-zinc-300 transition-colors hover:text-neon sm:inline-block"
             data-cta-origin="header_app_gratis"
           >
