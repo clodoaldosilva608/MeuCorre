@@ -48,7 +48,7 @@ export async function GET() {
     const profiles = await prisma.socialProfile.findMany({
       orderBy: [{ active: "desc" }, { platform: "asc" }],
       include: {
-        _count: { select: { SocialMetric: true } },
+        _count: { select: { metrics: true } },
       },
     });
     return NextResponse.json({ profiles });

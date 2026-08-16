@@ -1302,6 +1302,8 @@ model SocialProfile {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   lastSyncAt      DateTime?
+  // Relação com métricas históricas
+  metrics         SocialMetric[]
 
   @@index([platform, active])
 }
@@ -1326,6 +1328,8 @@ model SocialMetric {
   // Origem da medição (manual | api | analytics)
   source          String   @default("manual")
   createdAt       DateTime @default(now())
+  // Relação com SocialProfile
+  profile         SocialProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId, measuredAt])
 }
