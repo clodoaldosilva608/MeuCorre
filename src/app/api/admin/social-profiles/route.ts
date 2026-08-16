@@ -53,8 +53,13 @@ export async function GET() {
     });
     return NextResponse.json({ profiles });
   } catch (err) {
+    const error = err as { message?: string; code?: string };
     console.error("[admin/social-profiles] GET falhou:", err);
-    return NextResponse.json({ error: "Erro ao carregar perfis" }, { status: 500 });
+    return NextResponse.json({
+      error: "Erro ao carregar perfis",
+      details: error.message ?? "Erro desconhecido",
+      code: error.code,
+    }, { status: 500 });
   }
 }
 
