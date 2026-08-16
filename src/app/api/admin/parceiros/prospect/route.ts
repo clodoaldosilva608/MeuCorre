@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { z } from "zod";
+import { canSearch, incrementSearchCount, incrementDetailsCount, checkAndNotifyTelegram, getQuota, getQuotaInfo } from "@/lib/google-maps-quota";
 
 // ===== API de Prospecção de Leads — Google Maps + OpenStreetMap =====
 //
@@ -301,12 +302,34 @@ export async function GET(req: NextRequest) {
     // 2. Busca leads: Google Maps primeiro, depois OSM, depois demo
     let leads: Lead[] = [];
     let source = "";
+    let quotaInfo: { searchCount: number; limitPerMonth: number; blocked: boolean } | null = null;
 
-    // Tentativa 1: Google Maps
-    leads = await searchGoogleMaps(parsed.data.city, parsed.data.category, lat, lng, parsed.data.limit);
-    if (leads.length > 0) source = "google_maps";
+    // Verifica cota do Google Maps antes de buscar
+    const quotaCheck = await canSearch();
 
-    // Tentativa 2: OpenStreetMap (se Google falhou ou não configurado)
+    if (quotaCheck.allowed) {
+      // Tentativa 1: Google Maps
+      leads = await searchGoogleMaps(parsed.data.city, parsed.data.category, lat, lng, parsed.data.limit);
+      if (leads.length > 0) {
+        source = "google_maps";
+        // Incrementa cota: 1 busca Nearby + N buscas Details
+        await incrementSearchCount(1);
+        await incrementDetailsCount(leads.length);
+        // Verifica se precisa avisar no Telegram
+        await checkAndNotifyTelegram();
+        const updatedQuota = await getQuota();
+        quotaInfo = {
+          searchCount: updatedQuota.searchCount,
+          limitPerMonth: getQuotaInfo().limitPerMonth,
+          blocked: updatedQuota.blocked,
+        };
+      }
+    } else {
+      // Cota bloqueada — usa OSM como fallback
+      console.warn("[prospect] Google Maps cota bloqueada:", quotaCheck.reason);
+    }
+
+    // Tentativa 2: OpenStreetMap (se Google falhou, bloqueado, ou não configurado)
     if (leads.length === 0) {
       leads = await searchOpenStreetMap(parsed.data.city, parsed.data.category, lat, lng, parsed.data.limit);
       if (leads.length > 0) source = "openstreetmap";
@@ -364,7 +387,9 @@ export async function GET(req: NextRequest) {
       totalFound: leads.length,
       savedNew: savedCount,
       leads,
-      warning: source === "demo" ? "Google Maps e OpenStreetMap indisponíveis. Mostrando leads de demonstração." : undefined,
+      quota: quotaInfo,
+      warning: source === "demo" ? "Google Maps e OpenStreetMap indisponíveis. Mostrando leads de demonstração." :
+              quotaCheck && !quotaCheck.allowed ? quotaCheck.reason : undefined,
     });
   } catch (err) {
     console.error("[prospect] Erro:", err);

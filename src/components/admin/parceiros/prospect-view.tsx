@@ -48,7 +48,7 @@ export function ProspectView() {
   const [category, setCategory] = useState("restaurant");
   const [loading, setLoading] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [stats, setStats] = useState<{ totalFound: number; savedNew: number } | null>(null);
+  const [stats, setStats] = useState<{ totalFound: number; savedNew: number; quota?: { searchCount: number; limitPerMonth: number; blocked: boolean } } | null>(null);
 
   const search = async () => {
     if (!city.trim()) {
@@ -69,7 +69,7 @@ export function ProspectView() {
       }
       const data = await res.json();
       setLeads(data.leads || []);
-      setStats({ totalFound: data.totalFound, savedNew: data.savedNew });
+      setStats({ totalFound: data.totalFound, savedNew: data.savedNew, quota: data.quota });
 
       if (data.totalFound > 0) {
         toast.success(`${data.totalFound} leads encontrados!`, {
@@ -148,21 +148,60 @@ export function ProspectView() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
-            <p className="text-xs text-zinc-500">Encontrados</p>
-            <p className="text-2xl font-bold text-emerald-400">{stats.totalFound}</p>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
+              <p className="text-xs text-zinc-500">Encontrados</p>
+              <p className="text-2xl font-bold text-emerald-400">{stats.totalFound}</p>
+            </div>
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
+              <p className="text-xs text-zinc-500">Novos no kanban</p>
+              <p className="text-2xl font-bold text-cyan-400">{stats.savedNew}</p>
+            </div>
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
+              <p className="text-xs text-zinc-500">Telegram</p>
+              <p className="text-2xl font-bold text-amber-400">
+                {stats.totalFound > 0 ? "✅ Avisado" : "—"}
+              </p>
+            </div>
           </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
-            <p className="text-xs text-zinc-500">Novos no kanban</p>
-            <p className="text-2xl font-bold text-cyan-400">{stats.savedNew}</p>
-          </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
-            <p className="text-xs text-zinc-500">Telegram</p>
-            <p className="text-2xl font-bold text-amber-400">
-              {stats.totalFound > 0 ? "✅ Avisado" : "—"}
-            </p>
-          </div>
+
+          {/* Barra de cota do Google Maps */}
+          {stats.quota && (
+            <div className={`rounded-xl border p-4 ${
+              stats.quota.blocked
+                ? "border-red-500/30 bg-red-500/5"
+                : stats.quota.searchCount >= 2500
+                  ? "border-amber-500/30 bg-amber-500/5"
+                  : "border-emerald-500/20 bg-emerald-500/5"
+            }`}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-zinc-400">
+                  Cota Google Maps (mês atual)
+                </p>
+                <span className={`text-xs font-bold ${
+                  stats.quota.blocked ? "text-red-400" :
+                  stats.quota.searchCount >= 2500 ? "text-amber-400" : "text-emerald-400"
+                }`}>
+                  {stats.quota.searchCount} / {stats.quota.limitPerMonth}
+                </span>
+              </div>
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    stats.quota.blocked ? "bg-red-500" :
+                    stats.quota.searchCount >= 2500 ? "bg-amber-500" : "bg-emerald-500"
+                  }`}
+                  style={{ width: `${Math.min(100, (stats.quota.searchCount / stats.quota.limitPerMonth) * 100)}%` }}
+                />
+              </div>
+              <p className="mt-1.5 text-[10px] text-zinc-500">
+                {stats.quota.blocked
+                  ? "🚫 Cota bloqueada. Usando OpenStreetMap (gratuito) como fallback. Reseta no dia 1º."
+                  : `$200 crédito grátis/mês • ${stats.quota.limitPerMonth - stats.quota.searchCount} buscas restantes • Custo: $0.032/busca`}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
