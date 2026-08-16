@@ -346,7 +346,10 @@ function HexMapContainer({
 
           for (const cell of cells) {
             // Obtém a borda do hexágono H3
-            const boundary = cellToBoundary(cell.h3Index, true) as [number, number][];
+            // IMPORTANTE: cellToBoundary retorna [lng, lat] (GeoJSON order)
+            // mas Leaflet espera [lat, lng]. Precisamos inverter!
+            const rawBoundary = cellToBoundary(cell.h3Index, true) as [number, number][];
+            const boundary: [number, number][] = rawBoundary.map(([lng, lat]) => [lat, lng]);
 
             if (boundary.length < 3) continue;
 
@@ -385,11 +388,9 @@ function HexMapContainer({
           // Ajusta zoom para mostrar todos os hexágonos
           if (allBounds.length > 1) {
             const bounds = L.latLngBounds(allBounds);
-            map.fitBounds(bounds, { padding: [40, 40] });
-            // Aumenta o zoom em 1 nível para os hexágonos ficarem maiores
-            map.zoomIn(1);
+            map.fitBounds(bounds, { padding: [50, 50] });
           } else if (allBounds.length === 1) {
-            map.setView(allBounds[0], 16);
+            map.setView(allBounds[0], 15);
           }
         }
 
