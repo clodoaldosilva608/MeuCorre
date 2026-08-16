@@ -20,6 +20,10 @@ import {
   Activity as ActivityIcon,
   History,
   Loader2,
+  Instagram,
+  Facebook,
+  Code2,
+  ExternalLink,
 } from "lucide-react";
 import {
   STAGE_LABELS,
@@ -354,8 +358,37 @@ function OverviewTab({ partner }: { partner: Partner }) {
     { label: "Risco", value: partner.riskScore, invert: true },
   ].filter((s) => s.value !== null);
 
+  // Extrai redes sociais das notes (salvas pela prospecção)
+  const notes = partner.notes || "";
+  const phoneMatch = notes.match(/Telefone: (.+)/);
+  const whatsappMatch = notes.match(/WhatsApp: (.+)/);
+  const websiteMatch = notes.match(/Website: (.+)/) || (partner.website ? [null, partner.website] : null);
+  const instagramMatch = notes.match(/Instagram: (.+?)$/m);
+  const facebookMatch = notes.match(/Facebook: (.+?)$/m);
+  const ratingMatch = notes.match(/Rating: (.+)/);
+  const fonteMatch = notes.match(/Fonte: (.+)/);
+
+  const phone = partner.phone || phoneMatch?.[1]?.trim() || null;
+  const whatsapp = whatsappMatch?.[1]?.trim() || (phone ? phone.replace(/\D/g, "") : null);
+  const website = websiteMatch?.[1]?.trim() || partner.website || null;
+  const instagram = instagramMatch?.[1]?.trim() || null;
+  const facebook = facebookMatch?.[1]?.trim() || null;
+  const rating = ratingMatch?.[1]?.trim() || null;
+  const fonte = fonteMatch?.[1]?.trim() || null;
+
+  // Endereço completo para o mapa
+  const fullAddress = [partner.address, partner.city, partner.state].filter(Boolean).join(", ");
+  const hasAddress = !!fullAddress;
+  const mapQuery = encodeURIComponent(`${partner.companyName} ${fullAddress}`);
+  const mapEmbedUrl = `https://www.google.com/maps?q=${mapQuery}&output=embed`;
+  const mapLinkUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+
+  const hasWebsite = !!website && !website.includes("instagram.com") && !website.includes("facebook.com");
+  const webDevOpportunity = !hasWebsite;
+
   return (
-    <div className="space-y-3 pt-2">
+    <div className="space-y-4 pt-2">
+      {/* Info básica */}
       <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
         <div className="rounded border border-zinc-800 bg-zinc-900 p-2">
           <p className="text-[10px] text-zinc-500">Criado em</p>
@@ -370,11 +403,89 @@ function OverviewTab({ partner }: { partner: Partner }) {
           <p className="text-zinc-300">{partner.origin ?? "manual"}</p>
         </div>
         <div className="rounded border border-zinc-800 bg-zinc-900 p-2">
-          <p className="text-[10px] text-zinc-500">Endereço</p>
-          <p className="truncate text-zinc-300">{partner.address ?? "—"}</p>
+          <p className="text-[10px] text-zinc-500">Categoria</p>
+          <p className="text-zinc-300">{partner.category ?? "—"}</p>
         </div>
       </div>
 
+      {/* Contatos e redes sociais */}
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
+        <p className="mb-2 text-xs font-bold text-zinc-400">CONTATOS E PRESENÇA DIGITAL</p>
+        <div className="flex flex-wrap gap-2">
+          {phone && (
+            <a href={`tel:${phone.replace(/\D/g, "")}`} className="flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-xs text-emerald-400 transition hover:bg-emerald-500/10">
+              <Phone className="h-3.5 w-3.5" /> {phone}
+            </a>
+          )}
+          {whatsapp && (
+            <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-green-500/20 bg-green-500/5 px-2.5 py-1.5 text-xs text-green-400 transition hover:bg-green-500/10">
+              <ExternalLink className="h-3.5 w-3.5" /> WhatsApp
+            </a>
+          )}
+          {partner.email && (
+            <a href={`mailto:${partner.email}`} className="flex items-center gap-1.5 rounded-lg border border-blue-500/20 bg-blue-500/5 px-2.5 py-1.5 text-xs text-blue-400 transition hover:bg-blue-500/10">
+              <Mail className="h-3.5 w-3.5" /> {partner.email}
+            </a>
+          )}
+          {hasWebsite && (
+            <a href={website!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-xs text-emerald-400 transition hover:bg-emerald-500/10">
+              <Globe className="h-3.5 w-3.5" /> Site
+            </a>
+          )}
+          {instagram && (
+            <a href={instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-pink-500/20 bg-pink-500/5 px-2.5 py-1.5 text-xs text-pink-400 transition hover:bg-pink-500/10">
+              <Instagram className="h-3.5 w-3.5" /> Instagram
+            </a>
+          )}
+          {facebook && (
+            <a href={facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-blue-500/20 bg-blue-500/5 px-2.5 py-1.5 text-xs text-blue-400 transition hover:bg-blue-500/10">
+              <Facebook className="h-3.5 w-3.5" /> Facebook
+            </a>
+          )}
+          {webDevOpportunity && (
+            <span className="flex items-center gap-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5 px-2.5 py-1.5 text-xs font-bold text-purple-400" title="Não tem site próprio — oportunidade de web dev">
+              <Code2 className="h-3.5 w-3.5" /> SEM SITE
+            </span>
+          )}
+          {rating && (
+            <span className="flex items-center gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 px-2.5 py-1.5 text-xs font-bold text-amber-400">
+              ⭐ {rating}
+            </span>
+          )}
+          {!phone && !partner.email && !hasWebsite && !instagram && !facebook && (
+            <p className="text-xs text-zinc-500">Nenhum contato cadastrado</p>
+          )}
+        </div>
+      </div>
+
+      {/* Mapa do Google Maps embed */}
+      {hasAddress && (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-bold text-zinc-400">ENDEREÇO E LOCALIZAÇÃO</p>
+            <a href={mapLinkUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 hover:underline">
+              <ExternalLink className="h-3 w-3" /> Abrir no Maps
+            </a>
+          </div>
+          <div className="mb-2 flex items-start gap-2 text-xs text-zinc-300">
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-500" />
+            <span>{fullAddress}</span>
+          </div>
+          <div className="overflow-hidden rounded-lg border border-zinc-800">
+            <iframe
+              src={mapEmbedUrl}
+              width="100%"
+              height="250"
+              style={{ border: 0 }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title={`Mapa de ${partner.companyName}`}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Scores de qualificação */}
       {scores.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-medium text-zinc-400">Scores de qualificação</p>
@@ -394,6 +505,14 @@ function OverviewTab({ partner }: { partner: Partner }) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Notas */}
+      {partner.notes && (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
+          <p className="mb-1 text-xs font-bold text-zinc-400">NOTAS</p>
+          <p className="whitespace-pre-wrap text-xs text-zinc-400">{partner.notes}</p>
         </div>
       )}
     </div>
