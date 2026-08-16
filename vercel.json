@@ -13,7 +13,7 @@
       "schedule": "0 6 * * *"
     }
   ],
-  "buildCommand": "prisma generate && next build",
+  "buildCommand": "rm -rf node_modules/.prisma && prisma generate && next build",
   "github": {
     "silent": false
   }
