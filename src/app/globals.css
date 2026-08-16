@@ -578,3 +578,74 @@
 }
 
 /* ===== Botão individual (legado — mantido para compatibilidade) ===== */
+
+/* ===== UPGRADE: Gradient mesh animado no hero ===== */
+@keyframes mesh-move {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.1); }
+  50% { transform: translate(-20px, 30px) scale(0.95); }
+  75% { transform: translate(20px, 20px) scale(1.05); }
+}
+
+.mesh-blob-1 {
+  animation: mesh-move 12s ease-in-out infinite;
+}
+.mesh-blob-2 {
+  animation: mesh-move 16s ease-in-out infinite reverse;
+}
+.mesh-blob-3 {
+  animation: mesh-move 20s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+/* ===== UPGRADE: Microinterações nos cards ===== */
+.card-hover {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(22, 217, 106, 0.15);
+}
+
+.feature-card {
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.feature-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(22, 217, 106, 0.4);
+  box-shadow: 0 8px 24px rgba(22, 217, 106, 0.1);
+}
+
+/* ===== UPGRADE: Badge flutuante "Grátis" ===== */
+@keyframes float-badge {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-6px) rotate(-1deg); }
+}
+.float-badge {
+  animation: float-badge 3s ease-in-out infinite;
+}
+
+/* ===== UPGRADE: Sticky CTA mobile ===== */
+@keyframes slide-up-cta {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.sticky-cta {
+  animation: slide-up-cta 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ===== UPGRADE: Contador animado ===== */
+.counter-glow {
+  text-shadow: 0 0 20px rgba(22, 217, 106, 0.5), 0 0 40px rgba(22, 217, 106, 0.2);
+}
+
+/* ===== UPGRADE: Scroll-triggered fade para seções ===== */
+.section-fade {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.section-fade.section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}

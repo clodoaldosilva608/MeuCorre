@@ -12,6 +12,8 @@ import { BlogCarousel } from "@/components/meucorre/blog-carousel";
 import { TestimonialsCarousel } from "@/components/meucorre/testimonials-carousel";
 import { FounderMessage } from "@/components/meucorre/founder-message";
 import { YouTubeSection } from "@/components/meucorre/youtube-section";
+import { AnimatedCounter } from "@/components/meucorre/animated-counter";
+import { StickyCTA } from "@/components/meucorre/sticky-cta";
 import {
   Dialog,
   DialogContent,
@@ -237,18 +239,14 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col bg-ink text-white">
       <Header onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
 
-      {/* ===== 1. HERO — fundo limpo com glow neon (pronto para animação futura) ===== */}
+      {/* ===== 1. HERO — gradient mesh animado + badge flutuante + contador ===== */}
       <section className="relative overflow-hidden bg-ink">
-        {/* Glow neon radial — substitui a imagem de fundo, deixa o hero limpo
-            para receber animação temática (entregador / fastfood / encomendas) */}
+        {/* Gradient mesh animado — blobs que se movem suavemente */}
         <div className="pointer-events-none absolute inset-0">
-          {/* Glow superior esquerdo */}
-          <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-neon/15 blur-3xl" />
-          {/* Glow inferior direito */}
-          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-neon/10 blur-3xl" />
-          {/* Glow central sutil */}
-          <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-neon/5 blur-3xl" />
-          {/* Grade sutil de fundo (grid pattern) */}
+          <div className="mesh-blob-1 absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-neon/15 blur-[100px]" />
+          <div className="mesh-blob-2 absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[100px]" />
+          <div className="mesh-blob-3 absolute left-1/4 top-1/3 h-[400px] w-[400px] rounded-full bg-cyan-500/5 blur-[80px]" />
+          {/* Grade sutil de fundo */}
           <div
             className="absolute inset-0 opacity-[0.03]"
             style={{
@@ -259,7 +257,15 @@ export default function LandingPage() {
           />
         </div>
 
-        {/* Conteúdo do hero (texto + CTAs) */}
+        {/* Badge flutuante "Grátis" */}
+        <div className="float-badge pointer-events-none absolute right-4 top-24 z-10 hidden rotate-[-3deg] sm:block">
+          <div className="flex items-center gap-1.5 rounded-full border-2 border-gold/50 bg-gradient-to-br from-amber-500/20 to-orange-500/10 px-4 py-2 backdrop-blur-md">
+            <span className="text-lg font-black text-gold">100%</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-200">Grátis</span>
+          </div>
+        </div>
+
+        {/* Conteúdo do hero */}
         <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col items-center justify-center px-4 py-16 text-center md:py-24">
           {/* Logo / brand */}
           <motion.div
@@ -375,6 +381,20 @@ export default function LandingPage() {
               </span>
               <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
                 Sem cadastro
+              </span>
+            </motion.div>
+
+            {/* Contador animado — "entregadores usando MeuCorre" */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="mt-6 flex items-center gap-2 text-sm text-zinc-400"
+            >
+              <span className="flex h-2 w-2 animate-pulse rounded-full bg-neon" />
+              <span>
+                <AnimatedCounter value={2847} className="counter-glow text-lg font-black text-neon" /> entregadores
+                usando MeuCorre agora
               </span>
             </motion.div>
 
@@ -538,7 +558,7 @@ export default function LandingPage() {
               <motion.div
                 key={i}
                 variants={itemUp}
-                className="rounded-2xl border border-zinc-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-neon hover:shadow-neon"
+                className="feature-card rounded-2xl border border-zinc-200 bg-white p-5"
               >
                 <div className="grid h-11 w-11 place-items-center rounded-xl bg-neon/10 text-2xl">
                   {f.emoji}
@@ -1329,14 +1349,16 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* Dialog de checkout — instância única compartilhada entre todos os
-          CTAs "Comprar plano vitalício" da landing page. */}
+      {/* Dialog de checkout */}
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
         selectedPlan={selectedPlan}
         onPlanChange={setSelectedPlan}
       />
+
+      {/* Sticky CTA no mobile — aparece ao rolar */}
+      <StickyCTA href={getFreeDownloadHref(isAuthenticated)} />
     </div>
   );
 }
