@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, ArrowLeft, Mail } from "lucide-react";
+import { Lock, ArrowLeft, Mail, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminLoginPage() {
@@ -13,6 +13,23 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  const runDiagnostics = async () => {
+    setChecking(true);
+    setDebugInfo(null);
+    try {
+      const res = await fetch("/api/admin/debug-auth");
+      const data = await res.json();
+      setDebugInfo(JSON.stringify(data, null, 2));
+      toast.success("Diagnóstico executado — veja abaixo");
+    } catch (err) {
+      toast.error("Falha ao rodar diagnóstico", { description: String(err) });
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +43,10 @@ export default function AdminLoginPage() {
       const data = await res.json();
       if (!res.ok) {
         toast.error("Erro ao entrar", { description: data.error });
+        // Se for erro 500 (configuração), sugere rodar diagnóstico
+        if (res.status === 500) {
+          setDebugInfo("Parece que há problema de configuração no servidor. Clique em \"Diagnosticar\" abaixo.");
+        }
         return;
       }
       toast.success("Bem-vindo, admin!");
@@ -98,6 +119,21 @@ export default function AdminLoginPage() {
           <ArrowLeft className="h-3 w-3" />
           Voltar ao app
         </button>
+
+        <button
+          onClick={runDiagnostics}
+          disabled={checking}
+          className="flex w-full items-center justify-center gap-1.5 text-xs text-amber-500 hover:text-amber-400 disabled:opacity-50"
+        >
+          <Stethoscope className="h-3 w-3" />
+          {checking ? "Diagnosticando..." : "Não consegue entrar? Diagnosticar"}
+        </button>
+
+        {debugInfo && (
+          <pre className="max-h-80 overflow-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-[10px] leading-tight text-zinc-400">
+            {debugInfo}
+          </pre>
+        )}
       </div>
     </div>
   );

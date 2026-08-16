@@ -74,11 +74,36 @@ export async function POST(req: NextRequest) {
 
   const { email, password } = validation.data;
 
+  // Verifica se env vars mínimas estão configuradas (diagnóstico rápido)
+  const hasJwtSecret = !!process.env.ADMIN_JWT_SECRET;
+  const hasAdminEmail = !!process.env.ADMIN_EMAIL;
+  const hasAdminPassword = !!process.env.ADMIN_PASSWORD;
+
+  if (!hasJwtSecret) {
+    logger.error("Admin login falhou — ADMIN_JWT_SECRET não configurado", { ip });
+    return NextResponse.json(
+      {
+        error: "Servidor mal configurado: ADMIN_JWT_SECRET ausente. Contate o administrador.",
+      },
+      { status: 500 },
+    );
+  }
+
+  if (!hasAdminEmail || !hasAdminPassword) {
+    logger.error("Admin login falhou — credenciais env não configuradas", { ip, hasAdminEmail, hasAdminPassword });
+    return NextResponse.json(
+      {
+        error: "Servidor mal configurado: ADMIN_EMAIL/ADMIN_PASSWORD ausentes. Contate o administrador.",
+      },
+      { status: 500 },
+    );
+  }
+
   // Verifica credenciais (tenta AdminUser table primeiro, depois env vars)
   const result = await verifyAdminPassword(email.trim(), password);
 
   if (!result.valid) {
-    logger.warn("Admin login falhou", { email, ip });
+    logger.warn("Admin login falhou — credenciais inválidas", { email, ip, remaining });
     return NextResponse.json(
       {
         error: `Email ou senha incorretos. ${remaining} tentativa(s) restante(s).`,
@@ -104,8 +129,8 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.json({ ok: true });
   res.cookies.set("meucorre_admin", token, {
     httpOnly: true,
-    sameSite: "strict",
-    secure: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7, // 7 dias
   });
