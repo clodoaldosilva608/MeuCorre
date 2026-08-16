@@ -39,7 +39,16 @@ export async function POST(req: NextRequest) {
   const email = parsed.data.email.trim().toLowerCase();
   const password = parsed.data.password;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  let user;
+  try {
+    user = await prisma.user.findUnique({ where: { email } });
+  } catch (err) {
+    console.error("[auth/login] prisma.user.findUnique falhou:", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "Serviço indisponível. Tente novamente em alguns instantes." },
+      { status: 503 },
+    );
+  }
   if (!user) {
     return NextResponse.json({ error: "Email ou senha incorretos" }, { status: 401 });
   }
@@ -49,11 +58,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email ou senha incorretos" }, { status: 401 });
   }
 
-  // Atualiza lastLoginAt
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { lastLoginAt: new Date() },
-  });
+  // Atualiza lastLoginAt (best-effort, não falha o login se não conseguir)
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+  } catch (err) {
+    console.warn("[auth/login] Não foi possível atualizar lastLoginAt:", err instanceof Error ? err.message : err);
+  }
 
   const token = await createUserToken({
     userId: user.id,
@@ -75,7 +88,7 @@ export async function POST(req: NextRequest) {
   res.cookies.set("meucorre_user", token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 30, // 30 dias
   });
