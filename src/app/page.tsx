@@ -10,6 +10,7 @@ import { SOCIAL_LINKS } from "@/components/social-icons";
 import { PhoneShowcase } from "@/components/meucorre/phone-showcase";
 import { BlogCarousel } from "@/components/meucorre/blog-carousel";
 import { TestimonialsCarousel } from "@/components/meucorre/testimonials-carousel";
+import { FounderMessage } from "@/components/meucorre/founder-message";
 import { YouTubeSection } from "@/components/meucorre/youtube-section";
 import {
   Dialog,
@@ -1172,6 +1173,9 @@ export default function LandingPage() {
           />
         </div>
       </div>
+
+      {/* ===== MENSAGEM DO FUNDADOR + COMENTÁRIOS + ROADMAP ===== */}
+      <FounderMessage />
 
       {/* ===== 9. FOOTER (completo com links e redes sociais) ===== */}
       <footer className="mt-auto bg-ink py-10 text-zinc-400">
