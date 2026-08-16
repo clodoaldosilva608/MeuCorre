@@ -29,6 +29,8 @@ interface Lead {
   lng: number;
   category: string;
   website: string | null;
+  rating: number | null;
+  reviews: number | null;
   source: string;
 }
 
@@ -179,7 +181,22 @@ export function ProspectView() {
                 <Store className="h-5 w-5 text-zinc-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-zinc-100">{lead.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-zinc-100">{lead.name}</p>
+                  {lead.rating && (
+                    <span className="flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">
+                      ⭐ {lead.rating}
+                      {lead.reviews && <span className="text-amber-600">({lead.reviews})</span>}
+                    </span>
+                  )}
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                    lead.source === "google_maps" ? "bg-blue-500/10 text-blue-400" :
+                    lead.source === "openstreetmap" ? "bg-emerald-500/10 text-emerald-400" :
+                    "bg-zinc-700 text-zinc-400"
+                  }`}>
+                    {lead.source === "google_maps" ? "Google" : lead.source === "openstreetmap" ? "OSM" : "Demo"}
+                  </span>
+                </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
                   {lead.phone && (
                     <span className="flex items-center gap-1">
