@@ -262,21 +262,37 @@ function HomeContent() {
         await db.open();
         const count = await db.deliveries.count();
         if (count === 0) {
-          // Dados de demo: 5 corridas de apps diferentes
+          // Dados de demo: 15 corridas com GPS agrupadas (para o mapa de calor)
           const today = new Date().toISOString().slice(0, 10);
           const now = Date.now();
-          await db.deliveries.bulkAdd([
-            { id: 1, app: "iFood", value: 25, km: 8.5, date: today, timestamp: now - 50000, notes: "Centro → Vila Nova", lat: -23.5505, lng: -46.6333 },
-            { id: 2, app: "99Food", value: 10, km: 3.2, date: today, timestamp: now - 40000, notes: "Centro → Jardim Europa", lat: -23.5580, lng: -46.6480 },
-            { id: 3, app: "Lalamove", value: 20, km: 12.0, date: today, timestamp: now - 30000, notes: "Industrial → Centro", lat: -23.5420, lng: -46.6200 },
-            { id: 4, app: "Rappi", value: 15, km: 5.5, date: today, timestamp: now - 20000, notes: "Vila Mariana → Centro", lat: -23.5870, lng: -46.6380 },
-            { id: 5, app: "iFood", value: 30, km: 10.0, date: today, timestamp: now - 10000, notes: "Centro → Pinheiros", lat: -23.5610, lng: -46.6900 },
-          ]);
+          // Coordenadas base: São Paulo centro, espalhadas em ~2km
+          const base = { lat: -23.5505, lng: -46.6333 };
+          const jit = () => (Math.random() - 0.5) * 0.015; // ~0.8 km de raio
+          const apps = ["iFood", "99Food", "Rappi", "Lalamove"];
+          const notes = ["Centro → Vila Nova", "Centro → Jardim Europa", "Industrial → Centro", "Vila Mariana → Centro", "Centro → Pinheiros", "Bela Vista → Liberdade", "Consolação → Higienópolis", "República → Santa Ifigênia"];
+
+          const demoDeliveries = [];
+          for (let i = 0; i < 15; i++) {
+            demoDeliveries.push({
+              id: i + 1,
+              app: apps[i % apps.length],
+              value: Math.round((10 + Math.random() * 35) * 100) / 100,
+              km: Math.round((2 + Math.random() * 10) * 10) / 10,
+              date: today,
+              timestamp: now - i * 1800000, // 30 min entre cada
+              notes: notes[i % notes.length],
+              lat: base.lat + jit(),
+              lng: base.lng + jit(),
+            });
+          }
+
+          await db.deliveries.bulkAdd(demoDeliveries);
           await db.expenses.bulkAdd([
-            { id: 1, category: "combustivel", value: 20, description: "Gasolina — 2L", date: today, timestamp: now - 45000 },
-            { id: 2, category: "alimentacao", value: 5, description: "Almoço express", date: today, timestamp: now - 35000 },
+            { id: 1, category: "combustivel", value: 25, description: "Gasolina — 3L", date: today, timestamp: now - 45000 },
+            { id: 2, category: "alimentacao", value: 12, description: "Almoço express", date: today, timestamp: now - 35000 },
+            { id: 3, category: "manutencao", value: 8, description: "Calibragem pneus", date: today, timestamp: now - 25000 },
           ]);
-          console.log("[demo] Dados de demonstração inseridos no IndexedDB");
+          console.log("[demo] 15 corridas com GPS + 3 despesas inseridas no IndexedDB");
         }
       } catch (err) {
         console.warn("[demo] Erro ao inserir dados demo:", err);
