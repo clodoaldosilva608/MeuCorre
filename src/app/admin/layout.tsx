@@ -26,6 +26,7 @@ import {
   Menu,
   X,
   Share2,
+  DollarSign,
 } from "lucide-react";
 import {
   Sheet,
@@ -47,6 +48,7 @@ const NAV_BASE = [
   { href: "/admin/referrals", label: "Indicações", icon: Gift },
   { href: "/admin/feedback", label: "Feedbacks", icon: MessageSquare },
   { href: "/admin/redes-sociais", label: "Redes Sociais", icon: Share2 },
+  { href: "/admin/monetizacao", label: "Monetização", icon: DollarSign },
   { href: "/admin/flags", label: "Feature Flags", icon: Flag },
   { href: "/admin/security", label: "Segurança", icon: Shield },
 ];
