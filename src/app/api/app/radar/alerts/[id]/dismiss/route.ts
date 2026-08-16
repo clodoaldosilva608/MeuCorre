@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
 import { sanitizeString } from "@/lib/validation";
+import { z } from "zod";
 
 // POST /api/app/radar/alerts/:id/dismiss
 // Usuário descarta alerta (desliga). Body: { reason? }

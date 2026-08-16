@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 // ===== Sincronização de dados entre dispositivos =====
 //
@@ -22,6 +23,7 @@ const PAGE_SIZE = 2000;
 const MAX_PUSH_BATCH = 500;
 
 // GET — baixa mudanças desde cursor composto (updatedAt, id)
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(req: NextRequest) {
   const session = await getUserSession();
   if (!session) {

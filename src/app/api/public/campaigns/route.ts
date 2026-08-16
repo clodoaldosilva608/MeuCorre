@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 //
 // NÃO requer admin auth — é o endpoint público que o app consome.
 // Retorna apenas campanhas published e dentro da vigência.
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category") ?? undefined;

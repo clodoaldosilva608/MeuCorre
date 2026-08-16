@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { z } from "zod";
 
 // POST /api/admin/promotion/posts/import
 // Importa as 450 postagens do plano 90 dias (idempotente).

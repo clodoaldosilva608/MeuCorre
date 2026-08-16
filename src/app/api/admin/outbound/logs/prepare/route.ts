@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { substituteVariables } from "@/lib/outbound-variables";
 import { outboundPrepareSchema, validateOrError } from "@/lib/zod-schemas";
+import { z } from "zod";
 
 // POST /api/admin/outbound/logs/prepare
 // Prepara uma ou várias mensagens para envio supervisionado.

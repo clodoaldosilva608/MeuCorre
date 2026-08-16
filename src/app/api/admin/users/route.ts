@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { hashPassword } from "@/lib/user-auth";
 import crypto from "crypto";
+import { z } from "zod";
 
 // GET /api/admin/users — lista todos os usuários
 export async function GET(req: NextRequest) {
@@ -39,23 +40,33 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/users — cria novo usuário (admin pode criar)
 // Body: { name, email, password, isPro?, phone?, city? }
+const bodySchema = z.object({
+  name: z.string().max(500).optional(),
+  email: z.string().max(500).optional(),
+  password: z.string().max(500).optional(),
+  isPro: z.string().max(500).optional(),
+  phone: z.string().max(500).optional(),
+  city: z.string().max(500).optional()
+});
+
 export async function POST(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  let body: {
-    name?: string;
-    email?: string;
-    password?: string;
-    isPro?: boolean;
-    phone?: string;
-    city?: string;
-  };
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
 
   const name = body.name?.trim();

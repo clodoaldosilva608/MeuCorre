@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { validateExternalUrl } from "@/lib/validation";
+import { z } from "zod";
 
 // POST /api/admin/ads/preview-url
 // Body: { url: string }

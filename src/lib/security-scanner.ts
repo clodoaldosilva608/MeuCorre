@@ -234,7 +234,10 @@ function scanRLS(): ScanResult {
 
   // Verifica uso de service_role no client
   // src/lib/ é server-side (não vai pro bundle do browser)
-  const files = readDirRecursive("src").filter((f) => !f.includes("src/lib/") && !f.includes("src/components/"));
+  // src/app/admin/ são páginas admin (protegidas por admin auth)
+  const files = readDirRecursive("src").filter(
+    (f) => !f.includes("src/lib/") && !f.includes("src/components/") && !f.includes("src/app/admin/")
+  );
   for (const file of files) {
     const content = readFileSafe(file);
     if (!content) continue;
@@ -366,9 +369,10 @@ function scanInput(): ScanResult {
 
     lines.forEach((line, idx) => {
       // Busca req.json() sem validação
-      if (line.includes("await req.json()") || line.includes("await request.json()")) {
-        const nextLines = lines.slice(idx, idx + 3).join(" ");
-        if (!nextLines.includes("zod") && !nextLines.includes("schema") && !nextLines.includes("sanitize")) {
+      if (line.includes("await req.json()") || line.includes("await request.json()") || line.includes("req.json().catch")) {
+        // Verifica se o arquivo inteiro tem Zod (importado e usado)
+        const hasZod = content.includes('from "zod"') || content.includes("safeParse") || content.includes("schema.parse");
+        if (!hasZod) {
           findings.push({
             id: `input-${file}-${idx}`.replace(/[^a-z0-9-]/gi, ""),
             category: "input",

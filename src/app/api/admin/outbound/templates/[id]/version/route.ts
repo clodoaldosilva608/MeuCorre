@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
+import { z } from "zod";
 
 const VALID_CHANNELS = new Set(["email", "whatsapp", "linkedin", "phone"]);
 const VALID_OBJECTIVES = new Set([

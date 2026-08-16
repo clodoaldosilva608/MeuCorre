@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 //
 // vercel.json:
 //   { "path": "/api/cron/backup", "schedule": "0 4 * * *" }
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (login/logout/cron usam auth própria)
 export async function GET(req: NextRequest) {
   // Verifica secret do cron
   const authHeader = req.headers.get("authorization");

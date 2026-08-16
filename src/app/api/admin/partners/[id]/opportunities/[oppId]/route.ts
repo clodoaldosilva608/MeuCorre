@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
+import { z } from "zod";
 
 const VALID_STAGES = new Set([
   "novo_lead", "qualificando", "contato_iniciado", "descoberta",

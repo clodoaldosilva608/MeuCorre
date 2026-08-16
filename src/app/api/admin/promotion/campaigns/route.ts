@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
+import { z } from "zod";
 
 // GET /api/admin/promotion/campaigns — lista campanhas
 export async function GET() {

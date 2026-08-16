@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 // GET /api/public/portal/:token — retorna dados do portal do parceiro
 // Sem admin auth — usa token único. Valida permissões e expiração.
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ token: string }> },

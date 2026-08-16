@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, createUserToken } from "@/lib/user-auth";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 // POST /api/auth/login
 // Login de usuário entregador
+const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(1, "Senha é obrigatória"),
+});
+
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   // Rate limit: 30 tentativas por IP por 15 min
   const limited = await applyRateLimit(req, {
@@ -13,19 +20,24 @@ export async function POST(req: NextRequest) {
   });
   if (limited) return limited;
 
-  let body: { email?: string; password?: string };
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  const email = body.email?.trim().toLowerCase();
-  const password = body.password;
-
-  if (!email || !password) {
-    return NextResponse.json({ error: "Email e senha são obrigatórios" }, { status: 400 });
+  // Validação Zod
+  const parsed = loginSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
+
+  const email = parsed.data.email.trim().toLowerCase();
+  const password = parsed.data.password;
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {

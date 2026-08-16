@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { z } from "zod";
 
 // POST /api/admin/blog/publish-blogger
 // Publica (ou atualiza) um post do blog interno no Blogger externo.

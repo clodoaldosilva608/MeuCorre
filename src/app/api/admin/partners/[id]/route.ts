@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
+import { z } from "zod";
 
 // GET /api/admin/partners/:id — ficha 360° (parceiro + contatos + oportunidades + atividades + logs)
 export async function GET(

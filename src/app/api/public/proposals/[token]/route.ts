@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 // GET /api/public/proposals/:token — acesso público à proposta via token
 // Não requer auth — o token é a "senha"
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ token: string }> },

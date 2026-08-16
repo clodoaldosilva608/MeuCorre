@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
+import { z } from "zod";
 
 // POST /api/admin/proposals/:id/reject
 // Marca proposta como rejeitada. Body: { "reason": "..." } (obrigatório)

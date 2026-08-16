@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { substituteVariables } from "@/lib/outbound-variables";
+import { z } from "zod";
 
 // POST /api/admin/outbound/templates/:id/dry-run
 // Gera preview da mensagem com variáveis substituídas — NÃO ENVIA NADA.

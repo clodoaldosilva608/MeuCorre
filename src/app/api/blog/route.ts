@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 // GET /api/blog — lista posts publicados
 // GET /api/blog?slug=xxx — busca post por slug
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const slug = searchParams.get("slug");

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { canExecute, recordSuccess, recordFailure } from "@/lib/circuit-breaker";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
 
 // ===== Webhook Kiwify — evento "compra_aprovada" =====
 //
@@ -109,6 +110,7 @@ function safeEqual(a: string, b: string): boolean {
   return crypto.timingSafeEqual(aBuf, bBuf);
 }
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   // ===== 0. Circuit breaker — falha rápido se DB estiver down =====
   // Previne thundering herd: se DB caiu, Kiwify retenta múltiplas vezes.

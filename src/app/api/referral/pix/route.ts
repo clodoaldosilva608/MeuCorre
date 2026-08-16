@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
+import { z } from "zod";
 
 // PATCH /api/referral/pix — cadastra/atualiza chave PIX do usuário
 // Salva no ReferralCode (sempre existe) e propaga para Referrals converted
 // Body: { pixKey: "email@exemplo.com" | "(11) 99999-9999" | "chave-aleatoria" }
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function PATCH(req: NextRequest) {
   const session = await getUserSession();
   if (!session) {

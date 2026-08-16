@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 // Esta página mostra o código e tenta enviar automaticamente para a aba admin
 // aberta (via window.opener / postMessage).
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");

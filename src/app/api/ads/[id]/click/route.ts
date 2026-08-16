@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 // POST /api/ads/[id]/click
 // Registra clique no anúncio e redireciona para a URL (se houver).
 // Usado pelo app quando o entregador toca em um anúncio.
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

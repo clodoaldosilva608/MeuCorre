@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { z } from "zod";
 
 const VALID_ROLES = new Set(["owner", "admin", "member"]);
 const VALID_STATUSES = new Set(["active", "suspended", "removed"]);

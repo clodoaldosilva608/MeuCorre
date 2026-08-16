@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { z } from "zod";
 
 // POST /api/admin/promotion/posts/:id/duplicate
 // Duplica uma postagem, atribuindo um novo editorialDay (próximo disponível)

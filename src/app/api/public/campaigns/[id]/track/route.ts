@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 // POST /api/public/campaigns/:id/track
 // Endpoint público (sem admin auth) para registrar interações do usuário com a campanha.
 // Body: { event: "view" | "click" }
 //
 // Rate limiting: 60 eventos por IP por hora (evita inflar métricas).
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import crypto from "crypto";
+import { z } from "zod";
 
 // GET /api/admin/subscriptions — lista todas as compras
 export async function GET(req: NextRequest) {

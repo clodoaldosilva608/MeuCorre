@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { z } from "zod";
 
 // POST /api/admin/partner-campaigns/:id/metrics
 // Incrementa counters de métricas. Body: { event: "view" | "click" | "lead" | "redemption" }

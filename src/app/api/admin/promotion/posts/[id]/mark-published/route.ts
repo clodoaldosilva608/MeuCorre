@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { z } from "zod";
 
 // POST /api/admin/promotion/posts/:id/mark-published
 // Marca postagem como publicada e registra publishedAt

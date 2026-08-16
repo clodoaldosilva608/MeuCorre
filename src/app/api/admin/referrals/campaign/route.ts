@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
 
 // GET /api/admin/referrals/campaign — retorna configuração da campanha
 export async function GET() {
@@ -35,22 +36,32 @@ export async function GET() {
 
 // PATCH /api/admin/referrals/campaign — atualiza configuração da campanha
 // Body: { active?, rewardAmount?, maxReferrals?, startsAt?, endsAt? }
+const bodySchema = z.object({
+  active: z.string().max(500).optional(),
+  rewardAmount: z.string().max(500).optional(),
+  maxReferrals: z.string().max(500).optional(),
+  startsAt: z.string().max(500).optional(),
+  endsAt: z.string().max(500).optional()
+});
+
 export async function PATCH(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  let body: {
-    active?: boolean;
-    rewardAmount?: number;
-    maxReferrals?: number;
-    startsAt?: string | null;
-    endsAt?: string | null;
-  };
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
 
   let campaign = await prisma.referralCampaign.findFirst({

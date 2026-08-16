@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { z } from "zod";
 
 // DELETE /api/admin/subscriptions/[id] — exclui uma assinatura
+const bodySchema = z.object({
+  status: z.string().max(500).optional(),
+  amount: z.string().max(500).optional(),
+  reviewNotes: z.string().max(500).optional()
+});
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -33,15 +40,19 @@ export async function PATCH(
   }
   const { id } = await params;
 
-  let body: {
-    status?: string;
-    amount?: number;
-    reviewNotes?: string;
-  };
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
 
   const data: Record<string, unknown> = {};

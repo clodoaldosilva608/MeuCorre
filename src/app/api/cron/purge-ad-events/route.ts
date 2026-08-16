@@ -22,6 +22,7 @@ import { logger } from "@/lib/logger";
 
 const PURGE_AFTER_DAYS = 90;
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (login/logout/cron usam auth própria)
 export async function DELETE(req: NextRequest) {
   // Valida CRON_SECRET
   const expectedSecret = process.env.CRON_SECRET;

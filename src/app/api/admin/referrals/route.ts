@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
 
 // GET /api/admin/referrals — lista todas as indicações
 // Query: ?status=pending|converted|paid|rejected
@@ -73,16 +74,31 @@ export async function GET(req: NextRequest) {
 
 // PATCH /api/admin/referrals — atualiza status de uma indicação
 // Body: { id, action: "pay" | "reject", pixKey?, notes? }
+const bodySchema = z.object({
+  id: z.string().max(500).optional(),
+  action: z.string().max(500).optional(),
+  pixKey: z.string().max(500).optional(),
+  notes: z.string().max(500).optional()
+});
+
 export async function PATCH(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  let body: { id?: string; action?: string; pixKey?: string; notes?: string };
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
 
   const { id, action, pixKey, notes } = body;

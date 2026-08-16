@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
 
 // GET /api/referral/stats — estatísticas detalhadas das indicações do usuário
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET() {
   const session = await getUserSession();
   if (!session) {

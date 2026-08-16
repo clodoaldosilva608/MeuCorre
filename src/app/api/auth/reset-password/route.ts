@@ -3,23 +3,46 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/user-auth";
 import { jwtVerify } from "jose";
 import crypto from "crypto";
+import { applyRateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 // POST /api/auth/reset-password
 // Reseta a senha usando token recebido por email
+// Rate limited: 5 tentativas por IP a cada 15 min (brute force protection)
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token é obrigatório"),
+  password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
+});
+
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
-  let body: { token?: string; password?: string };
+  // Rate limit: 5 tentativas por IP a cada 15 min
+  const limited = await applyRateLimit(
+    req,
+    { windowMs: 15 * 60 * 1000, maxRequests: 5 },
+    "reset-password",
+  );
+  if (limited) return limited;
+
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  const token = body.token;
-  const password = body.password;
-
-  if (!token || !password) {
-    return NextResponse.json({ error: "Token e nova senha são obrigatórios" }, { status: 400 });
+  // Validação Zod
+  const parsed = resetPasswordSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
+
+  const { token, password } = parsed.data;
+
   // Validação de senha com política forte
   const { validatePassword } = await import("@/lib/password-policy");
   const pwCheck = validatePassword(password);

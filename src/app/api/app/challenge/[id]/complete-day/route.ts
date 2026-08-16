@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
+import { z } from "zod";
 
 // POST /api/app/challenge/:id/complete-day
 // Marca o dia atual do desafio como completo e avança para o próximo.

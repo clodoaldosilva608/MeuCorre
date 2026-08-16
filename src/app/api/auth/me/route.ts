@@ -13,6 +13,7 @@ const TRIAL_DAYS = 14;
 //
 // GRACEFUL DEGRADATION: se o banco estiver indisponível, retorna { user: null }
 // em vez de 500. O app funciona em modo anônimo (dados só locais via Dexie).
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET() {
   const session = await getUserSession();
   if (!session) {

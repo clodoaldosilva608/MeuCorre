@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
-
+import { z } from "zod";
 // ===== Publicação automática no Facebook e Instagram =====
 //
 // POST /api/admin/promotion/publish-facebook

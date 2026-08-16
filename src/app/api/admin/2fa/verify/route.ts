@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { verifyTOTP } from "@/lib/totp";
+import { z } from "zod";
 
 // POST /api/admin/2fa/verify
 // Verifica o token TOTP de 6 dígitos e ativa o 2FA.

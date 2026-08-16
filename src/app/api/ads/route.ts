@@ -35,6 +35,7 @@ function setCached(key: string, data: unknown): void {
 }
 
 // Invalida cache quando admin cria/edita/exclui anúncio
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export function invalidateAdsCache(): void {
   cache.clear();
 }

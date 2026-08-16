@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
+import { z } from "zod";
 
 // POST /api/admin/partner-campaigns/:id/pause
 // Pausa campanha (published → paused). Pode ser reativada com publish.

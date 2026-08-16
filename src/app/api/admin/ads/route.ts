@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { invalidateAdsCache } from "@/app/api/ads/route";
-import {
-  validateImageUrl,
+import {  validateImageUrl,
   validateExternalUrl,
   sanitizeString,
 } from "@/lib/validation";
+import { z } from "zod";
 
 // GET /api/admin/ads — lista TODOS os anúncios (inclusive inativos)
 export async function GET() {

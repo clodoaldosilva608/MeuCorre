@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 // ===== Tipos =====
 
@@ -15,6 +16,7 @@ interface CreateSubscriptionBody {
 // POST /api/subscription
 // Cria uma nova compra do plano vitalício (status: pending).
 // Rate limit: 3 criações por IP por hora (anti-spam)
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   // Rate limit
   const limited = await applyRateLimit(req, {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
 import { partnerCreateSchema, validateOrError } from "@/lib/zod-schemas";
+import { z } from "zod";
 
 // GET /api/admin/partners — lista parceiros com filtros
 // Query: search, city, state, category, stage, status, assignedTo, priority, tag, limit, offset

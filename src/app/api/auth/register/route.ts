@@ -3,9 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, createUserToken } from "@/lib/user-auth";
 import { applyRateLimit } from "@/lib/rate-limit";
 import { validatePassword } from "@/lib/password-policy";
+import { z } from "zod";
 
 // POST /api/auth/register
 // Cadastro de novo usuário entregador
+const registerSchema = z.object({
+  name: z.string().min(2, "Nome muito curto").max(100, "Nome muito longo"),
+  email: z.string().email("Email inválido").max(254),
+  password: z.string().min(1, "Senha é obrigatória"),
+  phone: z.string().max(30).optional(),
+  city: z.string().max(100).optional(),
+  referralCode: z.string().max(50).optional(),
+});
+
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   // Rate limit: 3 cadastros por IP por hora
   const limited = await applyRateLimit(req, {
@@ -14,25 +25,26 @@ export async function POST(req: NextRequest) {
   });
   if (limited) return limited;
 
-  let body: { name?: string; email?: string; password?: string; phone?: string; city?: string; referralCode?: string };
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  const name = body.name?.trim();
-  const email = body.email?.trim().toLowerCase();
-  const password = body.password ?? "";
+  // Validação Zod
+  const parsed = registerSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
+  }
 
-  // Validações
-  if (!name || name.length < 2 || name.length > 100) {
-    return NextResponse.json({ error: "Nome inválido (2-100 caracteres)" }, { status: 400 });
-  }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email) || email.length > 254) {
-    return NextResponse.json({ error: "Email inválido" }, { status: 400 });
-  }
+  const name = parsed.data.name.trim();
+  const email = parsed.data.email.trim().toLowerCase();
+  const password = parsed.data.password;
+
   // Validação de senha com política forte
   const pwCheck = validatePassword(password);
   if (!pwCheck.valid) {
@@ -55,13 +67,13 @@ export async function POST(req: NextRequest) {
       name,
       email,
       passwordHash,
-      phone: body.phone?.trim().slice(0, 30) || null,
-      city: body.city?.trim().slice(0, 100) || null,
+      phone: parsed.data.phone?.trim().slice(0, 30) || null,
+      city: parsed.data.city?.trim().slice(0, 100) || null,
     },
   });
 
   // ===== Referral: se veio com código de indicação, registra =====
-  const referralCode = body.referralCode?.trim();
+  const referralCode = parsed.data.referralCode?.trim();
   if (referralCode) {
     try {
       await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "https://meucorre.vercel.app"}/api/referral/register`, {

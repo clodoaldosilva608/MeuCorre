@@ -11,6 +11,7 @@ import { getUserSession } from "@/lib/user-auth";
 //
 // Não requer autenticação (usuário em trial/guest também vê ofertas não-PRO).
 // Usuário PRO vê todas as ofertas (inclusive proOnly).
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category"); // opcional filtro

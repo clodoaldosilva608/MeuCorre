@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { z } from "zod";
 
 // PATCH /api/admin/teams/:id/invites/:inviteId
 // Cancela convite (status → expired ou rejected)

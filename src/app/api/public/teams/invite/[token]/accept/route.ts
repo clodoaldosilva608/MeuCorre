@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sanitizeString } from "@/lib/validation";
+import { z } from "zod";
 
 // POST /api/public/teams/invite/:token/accept — aceita convite
 // Body: { name, phone?, userId? }
 //
 // Cria TeamMember com status active e marca convite como accepted.
 // Se userId informado, linka TeamMember com User.
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> },

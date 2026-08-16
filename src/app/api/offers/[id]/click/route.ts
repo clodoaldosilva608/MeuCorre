@@ -17,6 +17,7 @@ import { getUserSession } from "@/lib/user-auth";
 // à URL do produto. Isso permite que parceiros reportem conversões atribuídas
 // ao MeuCorre e justifiquem comissões de afiliado.
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

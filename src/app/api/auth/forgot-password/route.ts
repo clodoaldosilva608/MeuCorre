@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createPasswordResetToken } from "@/lib/user-auth";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 import crypto from "crypto";
 
 // POST /api/auth/forgot-password
 // Gera token de reset e retorna o link de recuperação.
 // Em produção com RESEND_API_KEY configurado, envia email real.
 // Sem RESEND_API_KEY, retorna o link na resposta (para o frontend mostrar).
+
+const forgotSchema = z.object({
+  email: z.string().email("Email inválido"),
+});
+
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   const limited = await applyRateLimit(req, {
     windowMs: 60 * 60 * 1000,
@@ -15,17 +22,23 @@ export async function POST(req: NextRequest) {
   });
   if (limited) return limited;
 
-  let body: { email?: string };
+  let body: unknown;
   try {
-    body = (await req.json()) as { email?: string };
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  const email = body.email?.trim().toLowerCase();
-  if (!email) {
-    return NextResponse.json({ error: "Email é obrigatório" }, { status: 400 });
+  // Validação Zod
+  const parsed = forgotSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
+
+  const email = parsed.data.email.trim().toLowerCase();
 
   // Por segurança, sempre retorna sucesso (não revela se email existe)
   const genericResponse = NextResponse.json({

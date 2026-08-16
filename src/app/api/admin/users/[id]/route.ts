@@ -3,9 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { hashPassword } from "@/lib/user-auth";
 import crypto from "crypto";
+import { z } from "zod";
 
 // PATCH /api/admin/users/[id] — atualiza usuário
 // Body: { name?, password?, isPro?, phone?, city?, active?, trialExtendedUntil?, resetPassword? }
+const bodySchema = z.object({
+  name: z.string().max(500).optional(),
+  password: z.string().max(500).optional(),
+  isPro: z.string().max(500).optional(),
+  phone: z.string().max(500).optional(),
+  city: z.string().max(500).optional(),
+  active: z.string().max(500).optional(),
+  trialExtendedUntil: z.string().max(500).optional()
+});
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -15,19 +26,19 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  let body: {
-    name?: string;
-    password?: string;
-    isPro?: boolean;
-    phone?: string;
-    city?: string;
-    active?: boolean;
-    trialExtendedUntil?: string | null;
-  };
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
 
   const data: Record<string, unknown> = {};

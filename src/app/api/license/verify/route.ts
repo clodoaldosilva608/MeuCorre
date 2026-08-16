@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 // POST /api/license/verify
 // Verifica se uma licenseKey é válida (assinatura aprovada).
 // Usado pelo app do entregador para ativar recursos PRO.
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as { licenseKey?: string };
   const key = body.licenseKey?.trim();

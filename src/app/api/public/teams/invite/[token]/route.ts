@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 // GET /api/public/teams/invite/:token — retorna detalhes do convite (sem auth)
 // Usado para mostrar a tela de aceite antes de o usuário confirmar
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ token: string }> },

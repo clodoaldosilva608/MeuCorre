@@ -1,24 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { applyRateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 // POST /api/referral/register
 // Chamada durante o registro de usuário: vincula código de referral ao novo usuário.
 // Body: { userId, email, name, code }
 // Não requer auth (chamado pelo fluxo de registro).
+// Rate limited: 10 registros por IP a cada 15 min (anti-abuso)
+
+const registerSchema = z.object({
+  userId: z.string().min(1, "userId é obrigatório"),
+  email: z.string().email("Email inválido"),
+  name: z.string().max(100).optional(),
+  code: z.string().min(1, "Código é obrigatório").max(50, "Código muito longo"),
+});
+
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
-  let body: { userId?: string; email?: string; name?: string; code?: string };
+  // Rate limit: 10 por IP a cada 15 min
+  const limited = await applyRateLimit(
+    req,
+    { windowMs: 15 * 60 * 1000, maxRequests: 10 },
+    "referral-register",
+  );
+  if (limited) return limited;
+
+  let body: unknown;
   try {
-    body = (await req.json()) as typeof body;
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  const { userId, email, name, code } = body;
-
-  if (!userId || !email || !code) {
-    return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
+  // Validação Zod
+  const parsed = registerSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 },
+    );
   }
 
+  const { userId, email, name, code } = parsed.data;
   const normalizedCode = code.trim().toUpperCase();
 
   // Busca o código de referral

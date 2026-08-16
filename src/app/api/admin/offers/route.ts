@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
-import {
-  validateImageUrl,
+import {  validateImageUrl,
   validateExternalUrl,
   sanitizeString,
 } from "@/lib/validation";
+import { z } from "zod";
 
 // ===== Admin CRUD para Offers (Loja) =====
 //

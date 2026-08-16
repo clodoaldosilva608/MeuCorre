@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminToken, verifyAdminPassword } from "@/lib/admin-auth";
 import { logger } from "@/lib/logger";
 import { loginSchema, validateOrError } from "@/lib/zod-schemas";
+import { z } from "zod";
 
 // POST /api/admin/login
 // Auth por email + senha. Suporta 2 modos:
@@ -38,6 +39,7 @@ function getClientIp(req: NextRequest): string {
   );
 }
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (login/logout/cron usam auth própria)
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
   const { allowed, remaining } = checkRateLimit(ip);

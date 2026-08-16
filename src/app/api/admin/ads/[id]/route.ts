@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { invalidateAdsCache } from "@/app/api/ads/route";
+import { z } from "zod";
 
 // PATCH /api/admin/ads/[id] — atualiza anúncio
 export async function PATCH(

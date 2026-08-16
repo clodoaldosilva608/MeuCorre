@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
 import crypto from "crypto";
+import { z } from "zod";
 
 // GET /api/referral/code — retorna o código de referral do usuário logado
 // (cria automaticamente se não existir, para TODOS os usuários logados)
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET() {
   const session = await getUserSession();
   if (!session) {

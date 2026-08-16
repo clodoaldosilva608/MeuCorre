@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sanitizeString } from "@/lib/validation";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 // ===== API do Quiz de Captação de Leads =====
 //
@@ -86,6 +87,7 @@ function generateResult(score: number, answers: QuizSubmitBody["answers"]): {
   };
 }
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   const limited = await applyRateLimit(
     req,

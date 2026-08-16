@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
 import { randomBytes } from "node:crypto";
+import { z } from "zod";
 
 // GET /api/admin/proposals — lista propostas
 // Query: partnerId, opportunityId, status, search, limit, offset

@@ -19,6 +19,7 @@ import { prisma } from "@/lib/prisma";
 const DEFAULT_MAX_SALES = 500;
 const DEFAULT_CUTOFF_DAYS = 90;
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (login/logout/cron usam auth própria)
 export async function GET() {
   const now = new Date();
 

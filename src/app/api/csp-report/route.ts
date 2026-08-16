@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 // POST /api/csp-report
 // Recebe relatórios de violação de CSP do navegador.
 // Em produção, integrar com Sentry ou logger externo.
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

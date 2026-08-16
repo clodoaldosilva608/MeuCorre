@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 // Retorna 200 se tudo OK, 503 se algum componente falhar.
 // Não requer auth (público) — não expõe dados sensíveis.
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET() {
   const checks: Record<string, "ok" | "down" | "not_configured" | "configured"> = {};
   let allHealthy = true;

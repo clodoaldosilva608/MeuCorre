@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 // POST /api/subscription/[id]/receipt
 // Faz upload do comprovante Pix (base64 data URL).
 // Limite de 2MB para manter o DB enxuto.
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

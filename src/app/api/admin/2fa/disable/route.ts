@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { verifyTOTP } from "@/lib/totp";
+import { z } from "zod";
 
 // POST /api/admin/2fa/disable
 // Desativa 2FA. Body: { token: "123456" } (token atual para confirmar)

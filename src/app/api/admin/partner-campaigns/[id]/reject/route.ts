@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { sanitizeString } from "@/lib/validation";
+import { z } from "zod";
 
 // POST /api/admin/partner-campaigns/:id/reject
 // Rejeita campanha (draft/pending_approval → rejected). Body: { reason } obrigatório.

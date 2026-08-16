@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthed, getAdminEmail } from "@/lib/admin-auth";
 import { randomBytes } from "node:crypto";
+import { z } from "zod";
 
 // GET /api/admin/partner-portal/tokens — lista tokens de portal
 // Query: partnerId, active

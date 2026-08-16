@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtVerify, SignJWT } from "jose";
+import { z } from "zod";
 
 // ===== Sessão temporária de comprador =====
 //
@@ -23,6 +24,7 @@ interface CheckoutSession {
   exp: number;
 }
 
+// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(req: NextRequest) {
   // 1. Extrai sessão do cookie
   const cookieStore = req.cookies;
