@@ -21,6 +21,7 @@ import {
   PartyPopper,
   CreditCard,
 } from "lucide-react";
+import { InstallModal } from "@/components/meucorre/install-modal";
 
 // ===== Página /quiz — Quiz de captação de leads com criação de conta =====
 //
@@ -124,7 +125,26 @@ if (typeof window !== "undefined") {
   });
 }
 
-export default function QuizPage() {
+export default function QuizPageWrapper() {
+  const [installOpen, setInstallOpen] = useState(false);
+  const router = useRouter();
+
+  return (
+    <>
+      <QuizPage onInstallClick={() => setInstallOpen(true)} />
+      <InstallModal
+        open={installOpen}
+        onClose={() => setInstallOpen(false)}
+        onInstalled={() => {
+          setInstallOpen(false);
+          router.push("/login");
+        }}
+      />
+    </>
+  );
+}
+
+function QuizPage({ onInstallClick }: { onInstallClick: () => void }) {
   const router = useRouter();
   // Steps: 0-4 = perguntas, 5 = criação de conta, 6 = sucesso (conta criada)
   const [step, setStep] = useState(0);
@@ -373,22 +393,7 @@ export default function QuizPage() {
             {/* Opções no topo (login, PRO, instalar) */}
             <div className="mb-6 space-y-2.5">
               <button
-                onClick={() => {
-                  if (pwaDeferredPrompt) {
-                    pwaDeferredPrompt.prompt();
-                    pwaDeferredPrompt = null;
-                  } else {
-                    toast.info("Preparando download...", {
-                      description: "O instalador vai aparecer em instantes.",
-                    });
-                    // Tenta novamente capturar o evento
-                    window.addEventListener("beforeinstallprompt", (e: Event) => {
-                      e.preventDefault();
-                      const prompt = e as unknown as { prompt: () => Promise<void> };
-                      prompt.prompt();
-                    }, { once: true });
-                  }
-                }}
+                onClick={onInstallClick}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-zinc-300 transition-all hover:bg-white/10"
               >
                 <Sparkles className="h-4 w-4" />
@@ -630,5 +635,9 @@ export default function QuizPage() {
     );
   }
 
-  return null;
+  return (
+    <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
+      <p className="py-8 text-center text-sm text-zinc-500">Carregando...</p>
+    </div>
+  );
 }
