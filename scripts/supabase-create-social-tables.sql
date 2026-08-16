@@ -58,8 +58,19 @@ CREATE TABLE IF NOT EXISTS "SocialMetric" (
 CREATE INDEX IF NOT EXISTS "SocialMetric_profileId_measuredAt_idx" ON "SocialMetric"("profileId", "measuredAt");
 
 -- Foreign Key: SocialMetric → SocialProfile
-ALTER TABLE "SocialMetric" ADD CONSTRAINT IF NOT EXISTS "SocialMetric_profileId_fkey"
-  FOREIGN KEY ("profileId") REFERENCES "SocialProfile"("id") ON DELETE CASCADE;
+-- (PostgreSQL não suporta ADD CONSTRAINT IF NOT EXISTS, então usamos DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'SocialMetric_profileId_fkey'
+      AND conrelid = '"SocialMetric"'::regclass
+  ) THEN
+    ALTER TABLE "SocialMetric"
+      ADD CONSTRAINT "SocialMetric_profileId_fkey"
+      FOREIGN KEY ("profileId") REFERENCES "SocialProfile"("id") ON DELETE CASCADE;
+  END IF;
+END $$;
 
 -- =====================================================================
 -- Seed inicial: redes sociais existentes do MeuCorre
