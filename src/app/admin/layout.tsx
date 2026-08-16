@@ -67,7 +67,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/ads", { method: "GET" })
+    // Usa /api/admin/me para verificar auth — endpoint leve que só valida o JWT
+    // (não toca no banco). Antes usava /api/admin/ads que retorna 500 quando o
+    // banco está indisponível, fazendo o layout achar que não está authed.
+    fetch("/api/admin/me", { method: "GET" })
       .then((r) => {
         setAuthed(r.ok);
         if (r.ok) {

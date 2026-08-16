@@ -31,15 +31,21 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const settings = await prisma.setting.findMany({
-    where: {
-      key: { in: Object.keys(DEFAULT_FLAGS) },
-    },
-  });
-
+  // Começa com as flags default (todas true)
   const flags: Record<string, boolean> = { ...DEFAULT_FLAGS };
-  for (const s of settings) {
-    flags[s.key] = s.value === "true";
+
+  try {
+    const settings = await prisma.setting.findMany({
+      where: {
+        key: { in: Object.keys(DEFAULT_FLAGS) },
+      },
+    });
+    for (const s of settings) {
+      flags[s.key] = s.value === "true";
+    }
+  } catch (err) {
+    // Banco indisponível — retorna flags default
+    console.warn("[admin/feature-flags] Banco indisponível, usando defaults:", err instanceof Error ? err.message : err);
   }
 
   return NextResponse.json({ flags });
