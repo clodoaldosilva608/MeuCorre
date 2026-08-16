@@ -62,16 +62,51 @@ interface Lead {
 }
 
 // ===== Google Places API (Nearby Search) =====
+// Usa API Key se disponível, senão usa OAuth (Client ID + Secret)
+async function getGoogleAccessToken(): Promise<string | null> {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+
+  try {
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret,
+        scope: "https://www.googleapis.com/auth/places.business.readonly",
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
 async function searchGoogleMaps(city: string, category: string, lat: number, lng: number, limit: number): Promise<Lead[]> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return [];
-
   const googleType = GOOGLE_CATEGORIES[category] || "restaurant";
   const radius = 5000; // 5km
 
-  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${googleType}&language=pt-BR&key=${apiKey}`;
+  let url: string;
+  let headers: Record<string, string> = {};
 
-  const res = await fetch(url);
+  if (apiKey) {
+    // Método 1: API Key (mais simples)
+    url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${googleType}&language=pt-BR&key=${apiKey}`;
+  } else {
+    // Método 2: OAuth (Client ID + Secret)
+    const token = await getGoogleAccessToken();
+    if (!token) return []; // Sem credenciais Google
+    url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${googleType}&language=pt-BR`;
+    headers = { Authorization: `Bearer ${token}` };
+  }
+
+  const res = await fetch(url, { headers });
   if (!res.ok) return [];
 
   const data = await res.json();
@@ -87,8 +122,15 @@ async function searchGoogleMaps(city: string, category: string, lat: number, lng
 
     // Busca detalhes (phone + website) — 1 request por lugar
     try {
-      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website,international_phone_number&language=pt-BR&key=${apiKey}`;
-      const detailsRes = await fetch(detailsUrl);
+      let detailsUrl: string;
+      let detailsHeaders: Record<string, string> = {};
+      if (apiKey) {
+        detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website,international_phone_number&language=pt-BR&key=${apiKey}`;
+      } else {
+        detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website,international_phone_number&language=pt-BR`;
+        detailsHeaders = headers; // Reusa o header de Authorization
+      }
+      const detailsRes = await fetch(detailsUrl, { headers: detailsHeaders });
       if (detailsRes.ok) {
         const detailsData = await detailsRes.json();
         if (detailsData.status === "OK") {
