@@ -28,7 +28,7 @@ const REDIRECT_URI =
 
 const TOKEN_KEY = "blogger_oauth_token";
 
-// ===== GET: status do token =====
+// ===== GET: status do token (com refresh automático) =====
 export async function GET() {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -79,6 +79,49 @@ export async function GET() {
   const now = Date.now();
   const expired =
     !tokens.expiry_date || tokens.expiry_date < now + 5 * 60 * 1000;
+
+  // ===== REFRESH AUTOMÁTICO =====
+  // Se expirado e tem refresh_token, tenta renovar automaticamente
+  // antes de retornar "expirado" para a UI.
+  if (expired && tokens.refresh_token) {
+    try {
+      const refreshRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          refresh_token: tokens.refresh_token,
+          grant_type: "refresh_token",
+        }),
+      });
+
+      if (refreshRes.ok) {
+        const refreshed = await refreshRes.json();
+        const newTokens = {
+          ...tokens,
+          access_token: refreshed.access_token,
+          expiry_date: Date.now() + (refreshed.expires_in ?? 3600) * 1000,
+          // mantém refresh_token original (Google não retorna um novo)
+        };
+        await prisma.setting.update({
+          where: { key: TOKEN_KEY },
+          data: { value: JSON.stringify(newTokens) },
+        });
+        // Token renovado com sucesso — retorna não expirado
+        return NextResponse.json({
+          configured: true,
+          hasToken: true,
+          expired: false,
+          hasRefreshToken: !!newTokens.refresh_token,
+          refreshed: true, // sinaliza que fez refresh
+        });
+      }
+      // Refresh falhou — retorna expirado para o usuário reautorizar
+    } catch {
+      // erro de rede — retorna expirado
+    }
+  }
 
   return NextResponse.json({
     configured: true,

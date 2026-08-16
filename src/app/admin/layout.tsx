@@ -25,6 +25,7 @@ import {
   Shield,
   Menu,
   X,
+  Share2,
 } from "lucide-react";
 import {
   Sheet,
@@ -45,6 +46,7 @@ const NAV_BASE = [
   { href: "/admin/users", label: "Usuários", icon: Users },
   { href: "/admin/referrals", label: "Indicações", icon: Gift },
   { href: "/admin/feedback", label: "Feedbacks", icon: MessageSquare },
+  { href: "/admin/redes-sociais", label: "Redes Sociais", icon: Share2 },
   { href: "/admin/flags", label: "Feature Flags", icon: Flag },
   { href: "/admin/security", label: "Segurança", icon: Shield },
 ];

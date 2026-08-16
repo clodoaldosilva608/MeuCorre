@@ -1256,3 +1256,76 @@ model ChallengeParticipant {
   @@index([userId, status])
   @@index([status, expiresAt])
 }
+
+// ===== Redes Sociais do MeuCorre =====
+//
+// Gerencia presença em redes sociais (Instagram, TikTok, YouTube, etc.)
+// com bios/descrições, métricas e configurações de monetização.
+// Centraliza o que está hoje hardcoded em vários componentes (page.tsx,
+// social-follow-popup.tsx, youtube-section.tsx).
+
+model SocialProfile {
+  id              String   @id @default(cuid())
+  // Plataforma: instagram | tiktok | youtube | facebook | twitter | telegram | whatsapp | linkedin | kwai | threads
+  platform        String   @unique
+  // Identificador amigável (ex: @meucorr)
+  handle          String
+  // URL completa do perfil
+  url             String
+  // Nome de exibição (ex: "MeuCorre")
+  displayName     String   @default("MeuCorre")
+  // Bio curta (ex: 150 caracteres — limite do Instagram)
+  bio             String?
+  // Descrição longa para uso interno (objetivos, posicionamento)
+  description     String?
+  // Métricas (atualizadas manualmente ou via API)
+  followers       Int      @default(0)
+  following       Int      @default(0)
+  posts           Int      @default(0)
+  // Configurações de monetização
+  monetization    String?  // none | ads | affiliates | sponsorships | products
+  monetizationNotes String?
+  // Estratégia de conteúdo (ex: "Dicas de finanças para entregadores")
+  contentStrategy String?
+  // Posting frequency (ex: "2x/dia", "3x/semana")
+  postFrequency   String?
+  // Melhores horários (ex: "12h, 19h, 21h")
+  bestTimes       String?
+  // Status
+  active          Boolean  @default(true)
+  verified        Boolean  @default(false)
+  // Cores da marca para a plataforma (hex)
+  brandColor      String?
+  // Notas internas do admin
+  notes           String?
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  lastSyncAt      DateTime?
+
+  @@index([platform, active])
+}
+
+// ===== Métricas históricas de redes sociais =====
+//
+// Registra evolução de seguidores/engajamento ao longo do tempo
+// para análise de crescimento e ROI de monetização.
+
+model SocialMetric {
+  id              String   @id @default(cuid())
+  profileId       String
+  // Data da medição
+  measuredAt      DateTime @default(now())
+  // Métricas
+  followers       Int
+  engagement      Float?   // taxa de engajamento (0-100)
+  reach           Int?
+  impressions     Int?
+  // Receita gerada neste período (R$)
+  revenue         Float?
+  // Origem da medição (manual | api | analytics)
+  source          String   @default("manual")
+  createdAt       DateTime @default(now())
+
+  @@index([profileId, measuredAt])
+}
