@@ -385,12 +385,11 @@ function HexMapContainer({
             allBounds.push(...boundary);
           }
 
-          // Ajusta zoom para mostrar todos os hexágonos
-          if (allBounds.length > 1) {
-            const bounds = L.latLngBounds(allBounds);
-            map.fitBounds(bounds, { padding: [50, 50] });
-          } else if (allBounds.length === 1) {
-            map.setView(allBounds[0], 15);
+          // Centraliza no centro dos hexágonos com zoom alto para vê-los bem
+          if (cells.length > 0) {
+            const centerLat = cells.reduce((s, c) => s + c.lat, 0) / cells.length;
+            const centerLng = cells.reduce((s, c) => s + c.lng, 0) / cells.length;
+            map.setView([centerLat, centerLng], 15);
           }
         }
 

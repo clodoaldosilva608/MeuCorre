@@ -54,7 +54,7 @@ export interface UseHeatmapReturn {
   resolution: number;
 }
 
-// Resolução H3 padrão (8 = ~0.74 km² por hexágono)
+// Resolução H3 padrão (8 = ~0.74 km² por hexágono — bairros)
 const H3_RESOLUTION = 8;
 
 function isoDate(d: Date): string {
