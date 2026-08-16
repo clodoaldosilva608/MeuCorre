@@ -92,6 +92,7 @@ const PLATFORM_INFO: Record<string, {
   twitter: { label: "Twitter / X", icon: Twitter, color: "#000000", bioLimit: 160, monetizationTip: "X Premium + revenue sharing + afiliados" },
   telegram: { label: "Telegram", icon: Send, color: "#0088CC", bioLimit: 70, monetizationTip: "Canal pago + bots pagos + vendas diretas" },
   whatsapp: { label: "WhatsApp", icon: MessageCircle, color: "#25D366", bioLimit: 139, monetizationTip: "Comunidade paga + lista VIP + vendas diretas" },
+  whatsapp_vip: { label: "WhatsApp VIP", icon: MessageCircle, color: "#25D366", bioLimit: 139, monetizationTip: "Lista VIP paga (R$ 9,90/mês) → 100 assinantes = R$ 990/mês recorrente" },
   linkedin: { label: "LinkedIn", icon: Users, color: "#0A66C2", bioLimit: 2600, monetizationTip: "B2B parcerias + consultoria + cursos" },
   kwai: { label: "Kwai", icon: TikTokIcon, color: "#FF8000", bioLimit: 80, monetizationTip: "Creator program + lives + afiliados" },
   threads: { label: "Threads", icon: Instagram, color: "#000000", bioLimit: 500, monetizationTip: "Em breve monetização nativa + afiliados" },

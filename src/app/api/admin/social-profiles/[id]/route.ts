@@ -8,7 +8,7 @@ import { z } from "zod";
 
 const VALID_PLATFORMS = [
   "instagram", "tiktok", "youtube", "facebook",
-  "twitter", "telegram", "whatsapp", "linkedin",
+  "twitter", "telegram", "whatsapp", "whatsapp_vip", "linkedin",
   "kwai", "threads",
 ];
 
