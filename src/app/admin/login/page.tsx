@@ -50,8 +50,9 @@ export default function AdminLoginPage() {
         return;
       }
       toast.success("Bem-vindo, admin!");
-      router.push("/admin/dashboard");
-      router.refresh();
+      // Força navegação completa (em vez de router.push) para garantir que
+      // o layout recarregue e detecte o cookie de auth corretamente.
+      window.location.href = "/admin/dashboard";
     } catch {
       toast.error("Erro de conexão");
     } finally {
