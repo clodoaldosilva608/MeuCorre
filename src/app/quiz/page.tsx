@@ -115,6 +115,15 @@ interface Answers {
   q5?: string;
 }
 
+// Estado global para capturar o beforeinstallprompt (PWA)
+let pwaDeferredPrompt: { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> } | null = null;
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e: Event) => {
+    e.preventDefault();
+    pwaDeferredPrompt = e as unknown as { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
+  });
+}
+
 export default function QuizPage() {
   const router = useRouter();
   // Steps: 0-4 = perguntas, 5 = criação de conta, 6 = sucesso (conta criada)
@@ -361,6 +370,55 @@ export default function QuizPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
+            {/* Opções no topo (login, PRO, instalar) */}
+            <div className="mb-6 space-y-2.5">
+              <button
+                onClick={() => {
+                  if (pwaDeferredPrompt) {
+                    pwaDeferredPrompt.prompt();
+                    pwaDeferredPrompt = null;
+                  } else {
+                    toast.info("Preparando download...", {
+                      description: "O instalador vai aparecer em instantes.",
+                    });
+                    // Tenta novamente capturar o evento
+                    window.addEventListener("beforeinstallprompt", (e: Event) => {
+                      e.preventDefault();
+                      const prompt = e as unknown as { prompt: () => Promise<void> };
+                      prompt.prompt();
+                    }, { once: true });
+                  }
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-zinc-300 transition-all hover:bg-white/10"
+              >
+                <Sparkles className="h-4 w-4" />
+                Instalar no celular
+              </button>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <a
+                  href="/login"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-emerald-500/30 bg-emerald-500/5 py-3 text-xs font-bold text-emerald-400 transition-all hover:bg-emerald-500/10"
+                >
+                  Fazer login
+                </a>
+                <a
+                  href="/#planos"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-amber-500/30 bg-amber-500/5 py-3 text-xs font-bold text-amber-400 transition-all hover:bg-amber-500/10"
+                >
+                  <CreditCard className="h-3.5 w-3.5" />
+                  Quero PRO
+                </a>
+              </div>
+            </div>
+
+            {/* Separador */}
+            <div className="mb-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-zinc-800" />
+              <span className="text-[10px] font-medium text-zinc-600">ou crie sua conta</span>
+              <div className="h-px flex-1 bg-zinc-800" />
+            </div>
+
             <div className="mb-6 text-center">
               <div className="mb-4 flex justify-center">
                 <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30">
@@ -455,46 +513,6 @@ export default function QuizPage() {
                 <span>•</span>
                 <span>Cancele quando quiser</span>
               </div>
-
-              {/* Separador */}
-              <div className="my-2 flex items-center gap-3">
-                <div className="h-px flex-1 bg-zinc-800" />
-                <span className="text-[10px] font-medium text-zinc-600">ou</span>
-                <div className="h-px flex-1 bg-zinc-800" />
-              </div>
-
-              {/* Opções alternativas */}
-              <a
-                href="/login"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-emerald-500/30 bg-emerald-500/5 py-3.5 text-sm font-bold text-emerald-400 transition-all hover:bg-emerald-500/10"
-              >
-                Já tenho conta — fazer login
-              </a>
-
-              <a
-                href="/#planos"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500/30 bg-amber-500/5 py-3.5 text-sm font-bold text-amber-400 transition-all hover:bg-amber-500/10"
-              >
-                <CreditCard className="h-4 w-4" />
-                Quero ser PRO agora
-              </a>
-
-              <button
-                onClick={() => {
-                  const deferredPrompt = (window as unknown as { deferredPrompt?: { prompt: () => void } }).deferredPrompt;
-                  if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                  } else {
-                    toast.info("Para instalar:", {
-                      description: "Toque no menu do navegador (⋮) → 'Adicionar à tela inicial'",
-                    });
-                  }
-                }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-zinc-300 transition-all hover:bg-white/10"
-              >
-                <Sparkles className="h-4 w-4" />
-                Instalar no celular
-              </button>
             </div>
           </motion.div>
         </div>
