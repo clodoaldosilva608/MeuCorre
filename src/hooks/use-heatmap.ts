@@ -79,12 +79,12 @@ function startOfMonth(date: Date = new Date()): string {
 // Cor do hexágono baseada na intensidade (0-1)
 // Gradiente: azul (frio) → ciano → verde → amarelo → laranja → vermelho (quente)
 export function getHeatColor(intensity: number): { fill: string; stroke: string } {
-  if (intensity >= 0.8) return { fill: "rgba(239, 68, 68, 0.6)", stroke: "#ef4444" }; // vermelho
-  if (intensity >= 0.6) return { fill: "rgba(249, 115, 22, 0.55)", stroke: "#f97316" }; // laranja
-  if (intensity >= 0.4) return { fill: "rgba(234, 179, 8, 0.5)", stroke: "#eab308" }; // amarelo
-  if (intensity >= 0.2) return { fill: "rgba(34, 197, 94, 0.45)", stroke: "#22c55e" }; // verde
-  if (intensity > 0) return { fill: "rgba(59, 130, 246, 0.4)", stroke: "#3b82f6" }; // azul
-  return { fill: "rgba(100, 116, 139, 0.2)", stroke: "#64748b" }; // cinza (vazio)
+  if (intensity >= 0.8) return { fill: "rgba(239, 68, 68, 0.75)", stroke: "#ef4444" }; // vermelho
+  if (intensity >= 0.6) return { fill: "rgba(249, 115, 22, 0.7)", stroke: "#f97316" }; // laranja
+  if (intensity >= 0.4) return { fill: "rgba(234, 179, 8, 0.65)", stroke: "#eab308" }; // amarelo
+  if (intensity >= 0.2) return { fill: "rgba(34, 197, 94, 0.6)", stroke: "#22c55e" }; // verde
+  if (intensity > 0) return { fill: "rgba(59, 130, 246, 0.55)", stroke: "#3b82f6" }; // azul
+  return { fill: "rgba(100, 116, 139, 0.3)", stroke: "#64748b" }; // cinza (vazio)
 }
 
 export function useHeatmap(

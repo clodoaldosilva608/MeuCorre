@@ -365,10 +365,10 @@ function HexMapContainer({
 
             const polygon = L.polygon(boundary, {
               color: color.stroke,
-              weight: 1.5,
-              opacity: 0.8,
+              weight: 2.5,
+              opacity: 0.9,
               fillColor: color.fill,
-              fillOpacity: 0.6,
+              fillOpacity: 0.75,
             }).addTo(map);
 
             polygon.bindPopup(
@@ -385,7 +385,11 @@ function HexMapContainer({
           // Ajusta zoom para mostrar todos os hexágonos
           if (allBounds.length > 1) {
             const bounds = L.latLngBounds(allBounds);
-            map.fitBounds(bounds, { padding: [30, 30] });
+            map.fitBounds(bounds, { padding: [40, 40] });
+            // Aumenta o zoom em 1 nível para os hexágonos ficarem maiores
+            map.zoomIn(1);
+          } else if (allBounds.length === 1) {
+            map.setView(allBounds[0], 16);
           }
         }
 
