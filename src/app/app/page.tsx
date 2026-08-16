@@ -270,30 +270,28 @@ function HomeContent() {
     };
   }, [isDemoMode]);
 
-  // ===== Seed de dados de demonstração (sempre, não só em demo mode) =====
-  // Garante pelo menos 15 corridas com GPS para o mapa de calor funcionar
+  // ===== Seed de dados de demonstração (apenas no primeiro acesso, DB vazio) =====
+  // Mostra algumas corridas de exemplo para o usuário não ver tela vazia.
+  // Quando ele registrar sua primeira corrida real, os dados reais sobrepõem.
   useEffect(() => {
     (async () => {
       try {
         await db.open();
-        const allDeliveries = await db.deliveries.toArray();
-        const withGps = allDeliveries.filter(d => d.lat && d.lng);
-
-        if (withGps.length < 15) {
+        const count = await db.deliveries.count();
+        if (count === 0) {
           const today = new Date().toISOString().slice(0, 10);
           const now = Date.now();
           const base = { lat: -23.5505, lng: -46.6333 };
-          const jit = () => (Math.random() - 0.5) * 0.015;
+          const jit = () => (Math.random() - 0.5) * 0.012;
           const apps = ["iFood", "99Food", "Rappi", "Lalamove"];
-          const notes = ["Centro → Vila Nova", "Centro → Jardim Europa", "Industrial → Centro", "Vila Mariana → Centro", "Centro → Pinheiros", "Bela Vista → Liberdade", "Consolação → Higienópolis", "República → Santa Ifigênia"];
-          const needed = 15 - withGps.length;
+          const notes = ["Centro → Vila Nova", "Centro → Jardim Europa", "Industrial → Centro", "Vila Mariana → Centro", "Centro → Pinheiros"];
 
           const demoDeliveries = [];
-          for (let i = 0; i < needed; i++) {
+          for (let i = 0; i < 5; i++) {
             demoDeliveries.push({
               app: apps[i % apps.length],
-              value: Math.round((10 + Math.random() * 35) * 100) / 100,
-              km: Math.round((2 + Math.random() * 10) * 10) / 10,
+              value: Math.round((15 + Math.random() * 25) * 100) / 100,
+              km: Math.round((3 + Math.random() * 8) * 10) / 10,
               date: today,
               timestamp: now - i * 1800000,
               notes: notes[i % notes.length],
@@ -302,20 +300,12 @@ function HomeContent() {
             });
           }
 
-          if (demoDeliveries.length > 0) {
-            await db.deliveries.bulkAdd(demoDeliveries);
-          }
-
-          const expCount = await db.expenses.count();
-          if (expCount === 0) {
-            await db.expenses.bulkAdd([
-              { category: "combustivel", value: 25, description: "Gasolina — 3L", date: today, timestamp: now - 45000 },
-              { category: "alimentacao", value: 12, description: "Almoço express", date: today, timestamp: now - 35000 },
-              { category: "manutencao", value: 8, description: "Calibragem pneus", date: today, timestamp: now - 25000 },
-            ]);
-          }
-
-          console.log(`[seed] ${needed} corridas com GPS adicionadas (total: ${withGps.length + needed})`);
+          await db.deliveries.bulkAdd(demoDeliveries);
+          await db.expenses.bulkAdd([
+            { category: "combustivel", value: 20, description: "Gasolina", date: today, timestamp: now - 45000 },
+            { category: "alimentacao", value: 10, description: "Almoço", date: today, timestamp: now - 35000 },
+          ]);
+          console.log("[seed] 5 corridas demo inseridas (primeiro acesso)");
         }
       } catch (err) {
         console.warn("[seed] Erro:", err);
@@ -323,37 +313,60 @@ function HomeContent() {
     })();
   }, []);
 
-  // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
-  // Suprimido em modo demo para não interferir na apresentação.
+  // ===== Sistema de fila de pop-ups (1 por sessão, com prioridade) =====
+  // Regra: apenas 1 popup por sessão. Entre sessões, intervalo mínimo de 24h.
+  // Prioridade: Onboarding > Promo PRO > Share > Feedback > BlogPromo > SocialFollow
   useEffect(() => {
-    if (isDemoMode) return; // sem popups em demo
-    if (!showSplash && shouldShowPromoPopup(isPro)) {
-      const t = setTimeout(() => setPromoOpen(true), 800);
-      return () => clearTimeout(t);
-    }
+    if (isDemoMode) return;
+    if (showSplash) return;
+
+    const POPUP_SESSION_KEY = "meucorre_popup_shown_this_session";
+    const alreadyShown = sessionStorage.getItem(POPUP_SESSION_KEY);
+    if (alreadyShown) return; // já mostrou um popup nesta sessão
+
+    // Verifica qual popup mostrar (em ordem de prioridade)
+    const checkAndShow = async () => {
+      // 1. Onboarding (primeira vez no app)
+      const onboardingDone = localStorage.getItem("meucorre_onboarding_done");
+      if (!onboardingDone) {
+        const t = setTimeout(() => {
+          setOnboardingOpen(true);
+          sessionStorage.setItem(POPUP_SESSION_KEY, "onboarding");
+        }, 2000);
+        return () => clearTimeout(t);
+      }
+
+      // 2. Promo PRO (1x a cada 4h, se free)
+      if (shouldShowPromoPopup(isPro)) {
+        const t = setTimeout(() => {
+          setPromoOpen(true);
+          sessionStorage.setItem(POPUP_SESSION_KEY, "promo");
+        }, 1500);
+        return () => clearTimeout(t);
+      }
+
+      // 3. Share (1x por dia, se free)
+      if (shouldShowSharePopup(isPro)) {
+        const t = setTimeout(() => {
+          setShareOpen(true);
+          sessionStorage.setItem(POPUP_SESSION_KEY, "share");
+        }, 1500);
+        return () => clearTimeout(t);
+      }
+
+      // 4. Feedback (após 3+ corridas, 1x por mês)
+      const showFeedback = await shouldShowFeedbackPopup();
+      if (showFeedback) {
+        const t = setTimeout(() => {
+          setFeedbackOpen(true);
+          sessionStorage.setItem(POPUP_SESSION_KEY, "feedback");
+        }, 1500);
+        return () => clearTimeout(t);
+      }
+    };
+
+    checkAndShow();
   }, [showSplash, isPro, isDemoMode]);
-
-  // Pop-up "Compartilhe com amigos" — 1x por dia, 6s após promo
-  useEffect(() => {
-    if (isDemoMode) return; // sem popups em demo
-    if (!showSplash && shouldShowSharePopup(isPro) && !promoOpen) {
-      const t = setTimeout(() => setShareOpen(true), 6000);
-      return () => clearTimeout(t);
-    }
-  }, [showSplash, isPro, promoOpen, isDemoMode]);
-
-  // Pop-up de feedback — após 3+ corridas, 1x por mês
-  useEffect(() => {
-    if (isDemoMode) return; // sem popups em demo
-    if (!showSplash) {
-      shouldShowFeedbackPopup().then((show) => {
-        if (show) {
-          const t = setTimeout(() => setFeedbackOpen(true), 12000);
-          return () => clearTimeout(t);
-        }
-      });
-    }
-  }, [showSplash]);
 
   // Auto-ativação: se veio da página /obrigado com ?license=xxx, ativa automaticamente
   useEffect(() => {

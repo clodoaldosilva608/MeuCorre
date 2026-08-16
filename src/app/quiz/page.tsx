@@ -89,6 +89,21 @@ const QUESTIONS: Question[] = [
       { value: "taxes", label: "Declarar imposto de renda", emoji: "🧾" },
     ],
   },
+  {
+    id: "q5",
+    icon: Sparkles,
+    title: "Onde você nos encontrou?",
+    subtitle: "Ajude a gente a chegar em mais entregadores",
+    options: [
+      { value: "instagram", label: "Instagram", emoji: "📷" },
+      { value: "tiktok", label: "TikTok", emoji: "🎵" },
+      { value: "youtube", label: "YouTube", emoji: "▶️" },
+      { value: "facebook", label: "Facebook", emoji: "👍" },
+      { value: "indicacao", label: "Indicação de amigo", emoji: "🤝" },
+      { value: "google", label: "Google", emoji: "🔍" },
+      { value: "outro", label: "Outro", emoji: "✨" },
+    ],
+  },
 ];
 
 interface Answers {
@@ -96,11 +111,12 @@ interface Answers {
   q2?: string;
   q3?: string;
   q4?: string;
+  q5?: string;
 }
 
 export default function QuizPage() {
   const router = useRouter();
-  // Steps: 0-3 = perguntas, 4 = criação de conta, 5 = sucesso (conta criada)
+  // Steps: 0-4 = perguntas, 5 = criação de conta, 6 = sucesso (conta criada)
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [email, setEmail] = useState("");
