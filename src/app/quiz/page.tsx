@@ -455,6 +455,46 @@ export default function QuizPage() {
                 <span>•</span>
                 <span>Cancele quando quiser</span>
               </div>
+
+              {/* Separador */}
+              <div className="my-2 flex items-center gap-3">
+                <div className="h-px flex-1 bg-zinc-800" />
+                <span className="text-[10px] font-medium text-zinc-600">ou</span>
+                <div className="h-px flex-1 bg-zinc-800" />
+              </div>
+
+              {/* Opções alternativas */}
+              <a
+                href="/login"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-emerald-500/30 bg-emerald-500/5 py-3.5 text-sm font-bold text-emerald-400 transition-all hover:bg-emerald-500/10"
+              >
+                Já tenho conta — fazer login
+              </a>
+
+              <a
+                href="/#planos"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500/30 bg-amber-500/5 py-3.5 text-sm font-bold text-amber-400 transition-all hover:bg-amber-500/10"
+              >
+                <CreditCard className="h-4 w-4" />
+                Quero ser PRO agora
+              </a>
+
+              <button
+                onClick={() => {
+                  const deferredPrompt = (window as unknown as { deferredPrompt?: { prompt: () => void } }).deferredPrompt;
+                  if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                  } else {
+                    toast.info("Para instalar:", {
+                      description: "Toque no menu do navegador (⋮) → 'Adicionar à tela inicial'",
+                    });
+                  }
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-zinc-300 transition-all hover:bg-white/10"
+              >
+                <Sparkles className="h-4 w-4" />
+                Instalar no celular
+              </button>
             </div>
           </motion.div>
         </div>
