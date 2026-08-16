@@ -240,7 +240,6 @@ function HomeContent() {
   // ===== Modo demo: listener para trocar abas via postMessage =====
   // A landing page envia { type: "meucorre-demo-tab", tab: "corridas"|"despesas"|... }
   // para o iframe controlar qual aba está visível na demo automática.
-  // Também pré-popula o IndexedDB com dados de demonstração se vazio.
   useEffect(() => {
     if (!isDemoMode) return;
 
@@ -256,49 +255,6 @@ function HomeContent() {
     `;
     document.head.appendChild(style);
 
-    // Pré-popula dados de demonstração no IndexedDB se vazio
-    (async () => {
-      try {
-        await db.open();
-        const count = await db.deliveries.count();
-        if (count === 0) {
-          // Dados de demo: 15 corridas com GPS agrupadas (para o mapa de calor)
-          const today = new Date().toISOString().slice(0, 10);
-          const now = Date.now();
-          // Coordenadas base: São Paulo centro, espalhadas em ~2km
-          const base = { lat: -23.5505, lng: -46.6333 };
-          const jit = () => (Math.random() - 0.5) * 0.015; // ~0.8 km de raio
-          const apps = ["iFood", "99Food", "Rappi", "Lalamove"];
-          const notes = ["Centro → Vila Nova", "Centro → Jardim Europa", "Industrial → Centro", "Vila Mariana → Centro", "Centro → Pinheiros", "Bela Vista → Liberdade", "Consolação → Higienópolis", "República → Santa Ifigênia"];
-
-          const demoDeliveries = [];
-          for (let i = 0; i < 15; i++) {
-            demoDeliveries.push({
-              id: i + 1,
-              app: apps[i % apps.length],
-              value: Math.round((10 + Math.random() * 35) * 100) / 100,
-              km: Math.round((2 + Math.random() * 10) * 10) / 10,
-              date: today,
-              timestamp: now - i * 1800000, // 30 min entre cada
-              notes: notes[i % notes.length],
-              lat: base.lat + jit(),
-              lng: base.lng + jit(),
-            });
-          }
-
-          await db.deliveries.bulkAdd(demoDeliveries);
-          await db.expenses.bulkAdd([
-            { id: 1, category: "combustivel", value: 25, description: "Gasolina — 3L", date: today, timestamp: now - 45000 },
-            { id: 2, category: "alimentacao", value: 12, description: "Almoço express", date: today, timestamp: now - 35000 },
-            { id: 3, category: "manutencao", value: 8, description: "Calibragem pneus", date: today, timestamp: now - 25000 },
-          ]);
-          console.log("[demo] 15 corridas com GPS + 3 despesas inseridas no IndexedDB");
-        }
-      } catch (err) {
-        console.warn("[demo] Erro ao inserir dados demo:", err);
-      }
-    })();
-
     const handler = (event: MessageEvent) => {
       if (event.data?.type === "meucorre-demo-tab" && event.data.tab) {
         const validTabs: Tab[] = ["corridas", "despesas", "graficos", "ofertas"];
@@ -313,6 +269,59 @@ function HomeContent() {
       document.getElementById("demo-mode-css")?.remove();
     };
   }, [isDemoMode]);
+
+  // ===== Seed de dados de demonstração (sempre, não só em demo mode) =====
+  // Garante pelo menos 15 corridas com GPS para o mapa de calor funcionar
+  useEffect(() => {
+    (async () => {
+      try {
+        await db.open();
+        const allDeliveries = await db.deliveries.toArray();
+        const withGps = allDeliveries.filter(d => d.lat && d.lng);
+
+        if (withGps.length < 15) {
+          const today = new Date().toISOString().slice(0, 10);
+          const now = Date.now();
+          const base = { lat: -23.5505, lng: -46.6333 };
+          const jit = () => (Math.random() - 0.5) * 0.015;
+          const apps = ["iFood", "99Food", "Rappi", "Lalamove"];
+          const notes = ["Centro → Vila Nova", "Centro → Jardim Europa", "Industrial → Centro", "Vila Mariana → Centro", "Centro → Pinheiros", "Bela Vista → Liberdade", "Consolação → Higienópolis", "República → Santa Ifigênia"];
+          const needed = 15 - withGps.length;
+
+          const demoDeliveries = [];
+          for (let i = 0; i < needed; i++) {
+            demoDeliveries.push({
+              app: apps[i % apps.length],
+              value: Math.round((10 + Math.random() * 35) * 100) / 100,
+              km: Math.round((2 + Math.random() * 10) * 10) / 10,
+              date: today,
+              timestamp: now - i * 1800000,
+              notes: notes[i % notes.length],
+              lat: base.lat + jit(),
+              lng: base.lng + jit(),
+            });
+          }
+
+          if (demoDeliveries.length > 0) {
+            await db.deliveries.bulkAdd(demoDeliveries);
+          }
+
+          const expCount = await db.expenses.count();
+          if (expCount === 0) {
+            await db.expenses.bulkAdd([
+              { category: "combustivel", value: 25, description: "Gasolina — 3L", date: today, timestamp: now - 45000 },
+              { category: "alimentacao", value: 12, description: "Almoço express", date: today, timestamp: now - 35000 },
+              { category: "manutencao", value: 8, description: "Calibragem pneus", date: today, timestamp: now - 25000 },
+            ]);
+          }
+
+          console.log(`[seed] ${needed} corridas com GPS adicionadas (total: ${withGps.length + needed})`);
+        }
+      } catch (err) {
+        console.warn("[seed] Erro:", err);
+      }
+    })();
+  }, []);
 
   // Pop-up "Compre PRO" — aparece sempre que abre o app (se free, 1x a cada 4h)
   // Suprimido em modo demo para não interferir na apresentação.
