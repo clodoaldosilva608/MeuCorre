@@ -515,15 +515,42 @@ export default function QuizPage() {
               </ul>
             </div>
 
-            {/* CTA para o app */}
+            {/* CTAs: Abrir app + Instalar no celular + Entrar depois */}
             <div className="mt-8 space-y-3">
               <Button
                 onClick={handleGoToApp}
                 className="w-full bg-emerald-500 py-4 text-base font-bold text-zinc-950 hover:bg-emerald-400"
               >
                 <Zap className="mr-1.5 h-4 w-4" />
-                Começar a usar agora
+                Abrir app
               </Button>
+
+              <button
+                onClick={() => {
+                  // Tenta disparar o prompt de instalação do PWA
+                  const deferredPrompt = (window as unknown as { deferredPrompt?: { prompt: () => void } }).deferredPrompt;
+                  if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                  } else {
+                    // Fallback: mostra instruções
+                    toast.info("Para instalar:", {
+                      description: "Toque no menu do navegador (⋮) → 'Adicionar à tela inicial'",
+                    });
+                  }
+                }}
+                className="w-full rounded-xl border-2 border-emerald-500/40 bg-emerald-500/10 py-4 text-base font-bold text-emerald-400 transition-all hover:bg-emerald-500/20"
+              >
+                <Sparkles className="mr-1.5 h-4 w-4" />
+                Instalar no celular
+              </button>
+
+              <a
+                href="/login"
+                className="block w-full py-3 text-center text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-200"
+              >
+                Entrar depois
+              </a>
+
               <p className="text-[10px] text-zinc-500">
                 Após 14 dias: 5 lançamentos/dia grátis para sempre ou PRO vitalício R$ 18,90
               </p>

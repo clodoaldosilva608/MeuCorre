@@ -172,7 +172,7 @@ export default function LandingPage() {
     "monthly" | "annual" | "lifetime"
   >("lifetime");
   const openCheckout = () => {
-    setSelectedPlan("lifetime");
+    setSelectedPlan("annual");
     setCheckoutOpen(true);
   };
   const openCheckoutWithPlan = (plan: "monthly" | "annual" | "lifetime") => {
