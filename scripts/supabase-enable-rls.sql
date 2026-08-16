@@ -15,8 +15,7 @@
 -- EXECUTE NO: Supabase Dashboard → SQL Editor → New query
 -- =====================================================================
 
--- 1. Habilita RLS em TODAS as tabelas do schema public
---    (uma linha por tabela — não use wildcard porque pode falhar em tabelas do sistema)
+-- 1. Habilita RLS + FORCE em TODAS as tabelas do schema public
 
 DO $$
 DECLARE
@@ -36,9 +35,6 @@ END $$;
 --    essas policies só afetam acesso direto via Supabase client (anon key)
 --    que NÃO é usado pelo app em produção.
 
--- Para cada tabela, cria policy "deny all" — bloqueia SELECT/INSERT/UPDATE/DELETE
--- para usuários anônimos. Acesso real vem via Prisma (server-side).
-
 DO $$
 DECLARE
   tbl TEXT;
@@ -48,9 +44,7 @@ BEGIN
   LOOP
     -- Remove policies existentes (se houver)
     EXECUTE format('DROP POLICY IF EXISTS "deny_all_anon_%s" ON public.%I;', tbl, tbl);
-    -- Cria policy que bloqueia tudo para anon (sem cláusula USING = sempre false)
-    -- Como FORCED RLS está ativo, mesmo o owner precisa de policy
-    -- Mas service_role pula RLS, então app continua funcionando
+    -- Cria policy que bloqueia tudo para anon
     EXECUTE format(
       'CREATE POLICY "deny_all_anon_%s" ON public.%I FOR ALL USING (false) WITH CHECK (false);',
       tbl, tbl
@@ -59,27 +53,24 @@ BEGIN
   END LOOP;
 END $$;
 
--- 3. Verificação final — lista status de RLS por tabela
+-- 3. Verificação final — usa pg_class que tem a coluna relrowsecurity
+--    (pg_tables não expõe force RLS em algumas versões do Postgres)
+
 SELECT
-  tablename,
-  rowsecurity AS rls_enabled,
-  forcerowsecurity AS rls_forced
-FROM pg_tables
-WHERE schemaname = 'public'
-ORDER BY tablename;
+  c.relname AS tablename,
+  c.relrowsecurity AS rls_enabled,
+  c.relforcerowsecurity AS rls_forced
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public'
+  AND c.relkind = 'r'
+ORDER BY c.relname;
 
 -- =====================================================================
 -- Resultado esperado:
---   Todas as tabelas com rls_enabled = true e rls_forced = true
+--   43 tabelas com rls_enabled = true e rls_forced = true
 --
 -- Para acessar dados no app, use:
 --   - Prisma Client (server-side, com service_role) → pula RLS, funciona normal
 --   - Supabase client (browser) → bloqueado por padrão
---
--- Se precisar liberar leitura pública para alguma tabela (ex: Ads),
--- crie uma policy específica:
---
---   DROP POLICY IF EXISTS "deny_all_anon_Ad" ON public."Ad";
---   CREATE POLICY "read_active_ads" ON public."Ad"
---     FOR SELECT USING (active = true);
 -- =====================================================================
