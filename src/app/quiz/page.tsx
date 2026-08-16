@@ -19,6 +19,7 @@ import {
   Lock,
   Sparkles,
   PartyPopper,
+  CreditCard,
 } from "lucide-react";
 
 // ===== Página /quiz — Quiz de captação de leads com criação de conta =====
@@ -515,44 +516,54 @@ export default function QuizPage() {
               </ul>
             </div>
 
-            {/* CTAs: Abrir app + Instalar no celular + Entrar depois */}
+            {/* CTAs: Criar conta + Fazer login + Adquirir plano + Instalar PWA */}
             <div className="mt-8 space-y-3">
+              {/* Criar conta (ação principal) */}
               <Button
                 onClick={handleGoToApp}
                 className="w-full bg-emerald-500 py-4 text-base font-bold text-zinc-950 hover:bg-emerald-400"
               >
                 <Zap className="mr-1.5 h-4 w-4" />
-                Abrir app
+                Criar conta e começar
               </Button>
 
+              {/* Fazer login */}
+              <a
+                href="/login"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-emerald-500/30 bg-emerald-500/5 py-3.5 text-sm font-bold text-emerald-400 transition-all hover:bg-emerald-500/10"
+              >
+                Já tenho conta — fazer login
+              </a>
+
+              {/* Adquirir um plano */}
+              <a
+                href="/#planos"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500/30 bg-amber-500/5 py-3.5 text-sm font-bold text-amber-400 transition-all hover:bg-amber-500/10"
+              >
+                <CreditCard className="h-4 w-4" />
+                Quero ser PRO agora
+              </a>
+
+              {/* Instalar PWA */}
               <button
                 onClick={() => {
-                  // Tenta disparar o prompt de instalação do PWA
                   const deferredPrompt = (window as unknown as { deferredPrompt?: { prompt: () => void } }).deferredPrompt;
                   if (deferredPrompt) {
                     deferredPrompt.prompt();
                   } else {
-                    // Fallback: mostra instruções
                     toast.info("Para instalar:", {
                       description: "Toque no menu do navegador (⋮) → 'Adicionar à tela inicial'",
                     });
                   }
                 }}
-                className="w-full rounded-xl border-2 border-emerald-500/40 bg-emerald-500/10 py-4 text-base font-bold text-emerald-400 transition-all hover:bg-emerald-500/20"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-zinc-300 transition-all hover:bg-white/10"
               >
-                <Sparkles className="mr-1.5 h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
                 Instalar no celular
               </button>
 
-              <a
-                href="/login"
-                className="block w-full py-3 text-center text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-200"
-              >
-                Entrar depois
-              </a>
-
               <p className="text-[10px] text-zinc-500">
-                Após 14 dias: 5 lançamentos/dia grátis para sempre ou PRO vitalício R$ 18,90
+                Após 14 dias: 5 lançamentos/dia grátis para sempre ou PRO a partir de R$ 14,90/mês
               </p>
             </div>
           </motion.div>
