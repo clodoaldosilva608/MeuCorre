@@ -65,6 +65,16 @@ export function AdSense({
     // Aguarda o script do AdSense estar carregado
     if (typeof window === "undefined") return;
 
+    // Carrega o script AdSense sob demanda (apenas quando há slot válido)
+    // Isso evita o erro 'no_div' em páginas sem anúncios
+    if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
+      script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+    }
+
     try {
       // Push para a fila do AdSense
       (window.adsbygoogle = window.adsbygoogle || []).push({});

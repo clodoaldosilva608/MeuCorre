@@ -100,17 +100,9 @@ export default function RootLayout({
           }}
         />
 
-        {/* Google AdSense — tag <script> direto no HTML para o crawler do Google
-            verificar. NÃO usar next/script porque ele transforma em <link rel="preload">
-            e o Google não reconhece. Precisa ser <script> literal no HTML fonte. */}
-        {ADSENSE_CLIENT && (
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-            crossOrigin="anonymous"
-            dangerouslySetInnerHTML={{ __html: "" }}
-          />
-        )}
+        {/* Google AdSense — script carregado sob demanda pelo componente <AdSense />
+            quando há um slot válido na página. Carregar globalmente causava erro
+            'no_div' em páginas sem anúncios (dashboard, admin, login, etc.). */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
