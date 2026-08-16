@@ -60,6 +60,15 @@ interface Lead {
   rating: number | null;
   reviews: number | null;
   source: "google_maps" | "openstreetmap" | "demo";
+  // Redes sociais e contato
+  instagram: string | null;
+  facebook: string | null;
+  email: string | null;
+  openingHours: string | null;
+  // Oportunidade de serviço (se não tem site = potencial cliente de web dev)
+  hasWebsite: boolean;
+  hasSocialMedia: boolean;
+  webDevOpportunity: boolean;
 }
 
 // ===== Google Places API (Nearby Search) =====
@@ -109,24 +118,48 @@ async function searchGoogleMaps(city: string, category: string, lat: number, lng
 
   const places = (data.results || []).slice(0, limit);
 
-  // Para cada lugar, busca detalhes (telefone + website)
+  // Para cada lugar, busca detalhes completos (telefone, website, redes sociais, horário)
   const leads: Lead[] = [];
   for (const place of places) {
     let phone: string | null = null;
     let website: string | null = null;
+    let instagram: string | null = null;
+    let facebook: string | null = null;
+    let email: string | null = null;
+    let openingHours: string | null = null;
 
-    // Busca detalhes (phone + website)
+    // Busca detalhes completos
     try {
-      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website,international_phone_number&language=pt-BR&key=${apiKey}`;
+      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,international_phone_number,website,url,opening_hours,editorial_summary&language=pt-BR&key=${apiKey}`;
       const detailsRes = await fetch(detailsUrl);
       if (detailsRes.ok) {
         const detailsData = await detailsRes.json();
         if (detailsData.status === "OK") {
-          phone = detailsData.result?.formatted_phone_number || detailsData.result?.international_phone_number || null;
-          website = detailsData.result?.website || null;
+          const r = detailsData.result || {};
+          phone = r.formatted_phone_number || r.international_phone_number || null;
+          website = r.website || null;
+          openingHours = r.opening_hours?.weekday_text ? r.opening_hours.weekday_text.join(", ") : null;
+
+          // Detecta Instagram e Facebook no website
+          if (website) {
+            const wsLower = website.toLowerCase();
+            if (wsLower.includes("instagram.com")) {
+              instagram = website;
+            } else if (wsLower.includes("facebook.com") || wsLower.includes("fb.com")) {
+              facebook = website;
+            }
+          }
+
+          // Se o website é Instagram, marca como rede social (não site próprio)
+          if (instagram) website = null;
         }
       }
     } catch { /* ignore */ }
+
+    const hasSocialMedia = !!(instagram || facebook);
+    const hasWebsite = !!website;
+    // Oportunidade de web dev: não tem site próprio (só Instagram/Facebook ou nada)
+    const webDevOpportunity = !hasWebsite;
 
     leads.push({
       name: place.name || "Sem nome",
@@ -141,6 +174,13 @@ async function searchGoogleMaps(city: string, category: string, lat: number, lng
       rating: place.rating || null,
       reviews: place.user_ratings_total || null,
       source: "google_maps",
+      instagram,
+      facebook,
+      email,
+      openingHours,
+      hasWebsite,
+      hasSocialMedia,
+      webDevOpportunity,
     });
   }
 

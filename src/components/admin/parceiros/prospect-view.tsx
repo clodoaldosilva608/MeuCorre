@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Phone, Globe, Loader2, CheckCircle2, Flame, Store } from "lucide-react";
+import { Search, MapPin, Phone, Globe, Loader2, CheckCircle2, Flame, Store, Instagram, Facebook, Clock, Code2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,13 @@ interface Lead {
   rating: number | null;
   reviews: number | null;
   source: string;
+  instagram: string | null;
+  facebook: string | null;
+  email: string | null;
+  openingHours: string | null;
+  hasWebsite: boolean;
+  hasSocialMedia: boolean;
+  webDevOpportunity: boolean;
 }
 
 const CATEGORIES = [
@@ -214,52 +221,86 @@ export function ProspectView() {
           {leads.map((lead, i) => (
             <div
               key={`${lead.name}-${i}`}
-              className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-emerald-500/30"
+              className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-emerald-500/30"
             >
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-zinc-800">
-                <Store className="h-5 w-5 text-zinc-400" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-zinc-100">{lead.name}</p>
-                  {lead.rating && (
-                    <span className="flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">
-                      ⭐ {lead.rating}
-                      {lead.reviews && <span className="text-amber-600">({lead.reviews})</span>}
-                    </span>
-                  )}
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${
-                    lead.source === "google_maps" ? "bg-blue-500/10 text-blue-400" :
-                    lead.source === "openstreetmap" ? "bg-emerald-500/10 text-emerald-400" :
-                    "bg-zinc-700 text-zinc-400"
-                  }`}>
-                    {lead.source === "google_maps" ? "Google" : lead.source === "openstreetmap" ? "OSM" : "Demo"}
-                  </span>
+              {/* Linha 1: Nome + Rating + Fonte + Oportunidade Web Dev */}
+              <div className="flex items-center gap-2">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-zinc-800">
+                  <Store className="h-4 w-4 text-zinc-400" />
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
-                  {lead.phone && (
-                    <span className="flex items-center gap-1">
-                      <Phone className="h-3 w-3" />
-                      {lead.phone}
-                    </span>
-                  )}
-                  {lead.website && (
-                    <span className="flex items-center gap-1">
-                      <Globe className="h-3 w-3" />
-                      <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">
-                        Site
-                      </a>
-                    </span>
-                  )}
+                <p className="min-w-0 flex-1 truncate text-sm font-bold text-zinc-100">{lead.name}</p>
+                {lead.rating && (
+                  <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">
+                    ⭐ {lead.rating}
+                    {lead.reviews && <span className="text-amber-600">({lead.reviews})</span>}
+                  </span>
+                )}
+                <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                  lead.source === "google_maps" ? "bg-blue-500/10 text-blue-400" :
+                  lead.source === "openstreetmap" ? "bg-emerald-500/10 text-emerald-400" :
+                  "bg-zinc-700 text-zinc-400"
+                }`}>
+                  {lead.source === "google_maps" ? "Google" : lead.source === "openstreetmap" ? "OSM" : "Demo"}
+                </span>
+                {lead.webDevOpportunity && (
+                  <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[9px] font-bold text-purple-400" title="Não tem site próprio — oportunidade de vender criação de site">
+                    <Code2 className="h-2.5 w-2.5" />
+                    SEM SITE
+                  </span>
+                )}
+              </div>
+
+              {/* Linha 2: Contatos (telefone, site, insta, facebook, email) */}
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 pl-11 text-xs text-zinc-500">
+                {lead.phone && (
                   <span className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {lead.address}
+                    <Phone className="h-3 w-3 text-emerald-400" />
+                    {lead.phone}
                   </span>
-                </div>
+                )}
+                {lead.website && (
+                  <a href={lead.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:underline">
+                    <Globe className="h-3 w-3" />
+                    Site
+                  </a>
+                )}
+                {lead.instagram && (
+                  <a href={lead.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-pink-400 hover:underline">
+                    <Instagram className="h-3 w-3" />
+                    Instagram
+                  </a>
+                )}
+                {lead.facebook && (
+                  <a href={lead.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-400 hover:underline">
+                    <Facebook className="h-3 w-3" />
+                    Facebook
+                  </a>
+                )}
+                {lead.email && (
+                  <a href={`mailto:${lead.email}`} className="flex items-center gap-1 text-zinc-400 hover:underline">
+                    <Mail className="h-3 w-3" />
+                    {lead.email}
+                  </a>
+                )}
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {lead.address}
+                </span>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+
+              {/* Linha 3: Status badges */}
+              <div className="mt-2 flex items-center gap-2 pl-11">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                 <span className="text-[10px] font-bold text-emerald-400">NO KANBAN</span>
+                {lead.hasWebsite && (
+                  <span className="text-[10px] font-medium text-zinc-500">• Tem site próprio</span>
+                )}
+                {lead.hasSocialMedia && !lead.hasWebsite && (
+                  <span className="text-[10px] font-medium text-pink-400">• Só rede social</span>
+                )}
+                {!lead.hasSocialMedia && !lead.hasWebsite && (
+                  <span className="text-[10px] font-medium text-amber-400">• Sem presença digital</span>
+                )}
               </div>
             </div>
           ))}
