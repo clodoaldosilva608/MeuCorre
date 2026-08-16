@@ -89,28 +89,22 @@ async function getGoogleAccessToken(): Promise<string | null> {
 
 async function searchGoogleMaps(city: string, category: string, lat: number, lng: number, limit: number): Promise<Lead[]> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return [];
+
   const googleType = GOOGLE_CATEGORIES[category] || "restaurant";
   const radius = 5000; // 5km
 
-  let url: string;
-  let headers: Record<string, string> = {};
+  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${googleType}&language=pt-BR&key=${apiKey}`;
 
-  if (apiKey) {
-    // Método 1: API Key (mais simples)
-    url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${googleType}&language=pt-BR&key=${apiKey}`;
-  } else {
-    // Método 2: OAuth (Client ID + Secret)
-    const token = await getGoogleAccessToken();
-    if (!token) return []; // Sem credenciais Google
-    url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${googleType}&language=pt-BR`;
-    headers = { Authorization: `Bearer ${token}` };
-  }
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
 
-  const res = await fetch(url, { headers });
-  if (!res.ok) return [];
-
-  const data = await res.json();
-  if (data.status !== "OK" && data.status !== "ZERO_RESULTS") return [];
+    const data = await res.json();
+    if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+      console.warn("[prospect] Google Maps API erro:", data.status, data.error_message || "");
+      return [];
+    }
 
   const places = (data.results || []).slice(0, limit);
 
@@ -120,17 +114,10 @@ async function searchGoogleMaps(city: string, category: string, lat: number, lng
     let phone: string | null = null;
     let website: string | null = null;
 
-    // Busca detalhes (phone + website) — 1 request por lugar
+    // Busca detalhes (phone + website)
     try {
-      let detailsUrl: string;
-      let detailsHeaders: Record<string, string> = {};
-      if (apiKey) {
-        detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website,international_phone_number&language=pt-BR&key=${apiKey}`;
-      } else {
-        detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website,international_phone_number&language=pt-BR`;
-        detailsHeaders = headers; // Reusa o header de Authorization
-      }
-      const detailsRes = await fetch(detailsUrl, { headers: detailsHeaders });
+      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=formatted_phone_number,website,international_phone_number&language=pt-BR&key=${apiKey}`;
+      const detailsRes = await fetch(detailsUrl);
       if (detailsRes.ok) {
         const detailsData = await detailsRes.json();
         if (detailsData.status === "OK") {
@@ -157,6 +144,10 @@ async function searchGoogleMaps(city: string, category: string, lat: number, lng
   }
 
   return leads;
+  } catch (err) {
+    console.warn("[prospect] Google Maps erro:", err);
+    return [];
+  }
 }
 
 // ===== OpenStreetMap Overpass API (fallback gratuito) =====
