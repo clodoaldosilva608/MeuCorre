@@ -36,22 +36,39 @@ async function sendTelegramAlert(result: FullScanResult) {
     });
     if (!tokenSetting?.value) return;
 
-    // Busca o chat_id do grupo
-    const chatIdSetting = await prisma.setting.findUnique({
-      where: { key: "telegram_group_chat_id" },
-    });
-    const chatId = chatIdSetting?.value ?? "-1003981458177";
+    // Chat privado do admin (NÃO é o grupo público)
+    // O admin precisa ter iniciado uma conversa com o bot @meucorre_div_bot
+    // Para descobrir o chat_id: envie /start para o bot e leia getUpdates
+    const ADMIN_CHAT_ID = "802516531"; // @carcara08 (Clodoaldo)
 
     const score = result.overallScore;
     const total = result.totalFindings;
     const emoji = score >= 80 ? "✅" : score >= 50 ? "⚠️" : "🔴";
 
+    // Mensagem detalhada com breakdown por categoria
+    const categoryLines = Object.entries(result.results)
+      .map(([cat, res]) => {
+        const catEmoji = res.score >= 80 ? "✅" : res.score >= 50 ? "⚠️" : "🔴";
+        const labels: Record<string, string> = {
+          secrets: "Segredos",
+          rls: "RLS & Banco",
+          auth: "Auth & IDOR",
+          input: "Input & XSS",
+          ratelimit: "Rate Limit",
+        };
+        return `${catEmoji} ${labels[cat] ?? cat}: ${res.score}/100 (${res.findings.length} findings)`;
+      })
+      .join("\n");
+
     const message = `${emoji} *Security Scan Automático — MeuCorre*
 
-📊 *Score:* ${score}/100
-🔍 *Findings:* ${total}
+📊 *Score Geral:* ${score}/100
+🔍 *Total de Findings:* ${total}
 
-${score < 70 ? "⚠️ Atenção: score abaixo de 70. Veja detalhes em /admin/security" : "Tudo certo! Segurança em dia."}
+*Breakdown por categoria:*
+${categoryLines}
+
+${score < 70 ? "⚠️ Atenção: score abaixo de 70. Acesse /admin/security para detalhes." : "✅ Tudo certo! Segurança em dia."}
 
 _Data: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}_
 `;
@@ -62,7 +79,7 @@ _Data: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}_
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: chatId,
+          chat_id: ADMIN_CHAT_ID,
           text: message,
           parse_mode: "Markdown",
           disable_web_page_preview: true,
@@ -72,6 +89,8 @@ _Data: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}_
 
     if (!res.ok) {
       console.error("[cron/security-scan] Erro ao enviar alerta Telegram:", await res.text());
+    } else {
+      console.log("[cron/security-scan] ✅ Alerta enviado para o admin no Telegram (chat privado)");
     }
   } catch (err) {
     console.error("[cron/security-scan] Erro Telegram:", err);
@@ -170,9 +189,10 @@ export async function GET(req: NextRequest) {
       data: { value: JSON.stringify(updatedSchedule) },
     });
 
-    // 5. Envia alerta no Telegram se score < 70 ou se notifyTelegram=true
-    if (schedule.notifyTelegram && result.overallScore < 70) {
-      console.log("[cron/security-scan] Score < 70. Enviando alerta no Telegram...");
+    // 5. Envia relatório no Telegram (sempre, não só quando score < 70)
+    // O admin recebe o relatório completo toda vez que o scan roda
+    if (schedule.notifyTelegram) {
+      console.log("[cron/security-scan] Enviando relatório no Telegram (chat privado do admin)...");
       await sendTelegramAlert(result);
     }
 
@@ -187,7 +207,7 @@ export async function GET(req: NextRequest) {
       overallScore: result.overallScore,
       totalFindings: result.totalFindings,
       durationMs: result.durationMs,
-      telegramAlertSent: schedule.notifyTelegram && result.overallScore < 70,
+      telegramAlertSent: schedule.notifyTelegram,
     });
   } catch (err) {
     console.error("[cron/security-scan] Erro:", err);
