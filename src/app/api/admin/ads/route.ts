@@ -13,10 +13,17 @@ export async function GET() {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
-  const ads = await prisma.ad.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  return NextResponse.json({ ads });
+  try {
+    const ads = await prisma.ad.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ ads });
+  } catch (err) {
+    // Banco inacessível (ex: mismatch de provider) — retorna lista vazia
+    // para não quebrar a UI do admin. Loga o erro para diagnóstico.
+    console.error("[admin/ads] GET falhou:", err instanceof Error ? err.message : err);
+    return NextResponse.json({ ads: [], dbError: "Banco de dados indisponível" });
+  }
 }
 
 // POST /api/admin/ads — cria novo anúncio
@@ -62,24 +69,32 @@ export async function POST(req: NextRequest) {
     ? body.textColor
     : "#09090b";
 
-  const ad = await prisma.ad.create({
-    data: {
-      title: sanitizeString(body.title, 80),
-      description: sanitizeString(body.description, 150) || null,
-      cta: sanitizeString(body.cta, 20) || "Saiba mais",
-      url: validateExternalUrl(body.url),
-      imageUrl: validateImageUrl(body.imageUrl),
-      bgColor,
-      textColor,
-      placement: body.placement,
-      active: body.active ?? true,
-      startsAt: body.startsAt ? new Date(body.startsAt) : new Date(),
-      endsAt: body.endsAt ? new Date(body.endsAt) : null,
-    },
-  });
-
   // Invalida cache de anúncios
   invalidateAdsCache();
 
-  return NextResponse.json({ ad }, { status: 201 });
+  try {
+    const ad = await prisma.ad.create({
+      data: {
+        title: sanitizeString(body.title, 80),
+        description: sanitizeString(body.description, 150) || null,
+        cta: sanitizeString(body.cta, 20) || "Saiba mais",
+        url: validateExternalUrl(body.url),
+        imageUrl: validateImageUrl(body.imageUrl),
+        bgColor,
+        textColor,
+        placement: body.placement,
+        active: body.active ?? true,
+        startsAt: body.startsAt ? new Date(body.startsAt) : new Date(),
+        endsAt: body.endsAt ? new Date(body.endsAt) : null,
+      },
+    });
+
+    return NextResponse.json({ ad }, { status: 201 });
+  } catch (err) {
+    console.error("[admin/ads] POST falhou:", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "Falha ao salvar anúncio — banco de dados indisponível" },
+      { status: 503 },
+    );
+  }
 }

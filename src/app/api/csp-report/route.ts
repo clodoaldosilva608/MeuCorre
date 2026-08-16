@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 // POST /api/csp-report
 // Recebe relatórios de violação de CSP do navegador.
-// Em produção, integrar com Sentry ou logger externo.
+// Endpoint best-effort: nunca deve falhar (CSP report é fire-and-forget).
 // PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   try {
@@ -22,5 +21,6 @@ export async function POST(req: NextRequest) {
   } catch {
     // Ignore parse errors — CSP reports são best-effort
   }
-  return NextResponse.json({ ok: true }, { status: 204 });
+  // 204 No Content — sem body (RFC 7230 proíbe body em 204)
+  return new NextResponse(null, { status: 204 });
 }
