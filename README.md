@@ -276,11 +276,11 @@ DIRECT_URL="postgresql://...@pooler.supabase.com:5432/postgres"
 
 # Supabase Storage (opcional — para upload de imagens)
 NEXT_PUBLIC_SUPABASE_URL="https://PROJECT_REF.supabase.co"
-SUPABASE_SERVICE_ROLE_KEY="eyJhbGci..."
+SUPABASE_SERVICE_ROLE_KEY=""  # configure only in the deployment environment
 
 # Auth
 ADMIN_EMAIL="admin@meucorre.com"
-ADMIN_PASSWORD="senha-forte"
+ADMIN_PASSWORD=""  # configure only in the deployment environment
 ADMIN_JWT_SECRET="openssl-rand-hex-32"
 USER_JWT_SECRET="openssl-rand-hex-32"
 

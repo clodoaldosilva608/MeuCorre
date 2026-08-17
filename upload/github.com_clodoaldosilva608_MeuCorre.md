@@ -585,7 +585,7 @@ DIRECT_URL="postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supab
 
 # ===== Admin =====
 ADMIN_EMAIL="clodoaldo608@gmail.com"
-ADMIN_PASSWORD="SuaSenhaForteAqui"
+ADMIN_PASSWORD=""  # configure somente na Vercel ou no ambiente local
 
 # ===== Pix (fallback manual, se Kiwify indisponível) =====
 PIX_KEY="meucorre@pix.com.br"
@@ -594,7 +594,7 @@ PLAN_PRICE=18.90
 
 # ===== Kiwify =====
 KIWIFY_PRODUCT_ID=""                          # ID interno do produto (opcional)
-KIWIFY_WEBHOOK_SECRET="seu_webhook_secret"    # Token do webhook
+KIWIFY_WEBHOOK_SECRET=""    # configure somente na Vercel ou no ambiente local
 NEXT_PUBLIC_KIWIFY_PRODUCT_SLUG="bknZCSZ"     # Slug do produto (URL checkout)
 
 ⚠️ NUNCA commite o .env no Git. O .gitignore já exclui ele.

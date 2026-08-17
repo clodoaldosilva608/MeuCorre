@@ -1,6 +1,6 @@
 // Testa se o CLIENT_SECRET está correto usando o token endpoint
-const CLIENT_ID = "402530830806-s5vo56507sm0tjqmv8s8bqidvfjbgb55.apps.googleusercontent.com";
-const CLIENT_SECRET = "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";
+const CLIENT_ID = process.env.BLOGGER_CLIENT_ID ?? "";
+const CLIENT_SECRET = process.env.BLOGGER_CLIENT_SECRET ?? "";
 const REDIRECT_URI = "https://meucorre.vercel.app/api/blogger-callback";
 
 async function main() {

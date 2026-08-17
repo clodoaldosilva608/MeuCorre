@@ -1,6 +1,6 @@
 // Testa as novas credenciais OAuth do Google
-const CLIENT_ID = "402530830806-no8pqbhsmpii9du1r3rcn1q0abftkvig.apps.googleusercontent.com";
-const CLIENT_SECRET = "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";
+const CLIENT_ID = process.env.BLOGGER_CLIENT_ID ?? "";
+const CLIENT_SECRET = process.env.BLOGGER_CLIENT_SECRET ?? "";
 const REDIRECT_URI = "https://meucorre.vercel.app/api/blogger-callback";
 
 async function main() {

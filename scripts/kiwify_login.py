@@ -21,7 +21,7 @@ WEBHOOK_URL = "https://meucorre-clodoaldosilva608.vercel.app/api/webhooks/kiwify
 THANK_YOU_URL = "https://meucorre-clodoaldosilva608.vercel.app/obrigado"
 PRODUCT_NAME = "MeuCorre PRO — Plano Vitalício"
 PRODUCT_PRICE = "97,00"
-WEBHOOK_SECRET = "kw_meucorre_2026_x9k7m3p5q8"
+WEBHOOK_SECRET = os.environ.get("KIWIFY_WEBHOOK_SECRET", "")
 
 # Esconde sinais de webdriver pra burlar anti-bot da Kiwify
 INIT_SCRIPT = """
