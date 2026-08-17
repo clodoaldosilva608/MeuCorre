@@ -1,393 +1,197 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
-import { canExecute, recordSuccess, recordFailure } from "@/lib/circuit-breaker";
-import { logger } from "@/lib/logger";
-import { z } from "zod";
 
-// ===== Webhook Kiwify — evento "compra_aprovada" =====
+// POST /api/webhooks/kiwify
+// Recebe notificações de venda da Kiwify e registra no banco.
 //
-// Fluxo:
-// 1. Usuário clica em "Comprar PRO" na landing page
-// 2. Redireciona pra https://pay.kiwify.com.br/{PRODUCT_SLUG}?email=...&name=...
-// 3. Paga via Pix ou cartão na Kiwify
-// 4. Kiwify dispara POST pra esta rota com o payload da compra aprovada
-// 5. Validamos o token, criamos a assinatura no DB (status: approved),
-//    geramos uma licença crypto 32-hex
-// 6. Kiwify redireciona o usuário pra /obrigado?order=XXX onde mostramos a licença
+// A Kiwify envia POST com JSON no formato:
+// {
+//   "event": "order_approved" | "order_refunded" | "order_canceled" |
+//            "subscription_created" | "subscription_canceled",
+//   "order": {
+//     "order_id": "uuid",
+//     "product_id": "uuid",
+//     "product_name": "Curso Premium...",
+//     "price": 247.00,
+//     "payment_method": "credit_card" | "pix" | "boleto",
+//     "customer": {
+//       "name": "João Silva",
+//       "email": "joao@email.com",
+//       "phone": "11999999999"
+//     },
+//     "affiliate": {
+//       "id": "uuid",
+//       "commission": 74.10
+//     } | null
+//   }
+// }
 //
-// Validação: a Kiwify envia o token configurado no dashboard no header
-// `X-Kiwify-Signature` (ou query ?token=...). Validamos ambos.
+// Segurança: a Kiwify envia header "x-kiwify-signature" com HMAC-SHA256
+// do body usando o WEBHOOK_SECRET. Verificamos antes de processar.
 
-interface KiwifyWebhookPayload {
-  order_id: string;
-  order_ref?: string;
-  order_status: string; // "paid" | "waiting_payment" | "refunded" | "rejected" | "chargedback"
-  payment_method?: string;
-  created_at?: string;
-  approved_date?: string;
-  Product?: {
-    product_id: string;
-    product_name: string;
-  };
-  Customer?: {
-    full_name: string;
-    email: string;
-    mobile?: string;
-    CPF?: string;
-  };
-  Commissions?: {
-    charge_amount?: string; // em centavos, em string
-    product_base_price?: string;
-  };
-  TrackingParameters?: {
-    src?: string | null;
-    sck?: string | null;
-    plan?: string | null; // "monthly" | "annual" | "lifetime" (enviado pelo MeuCorre)
-    [k: string]: unknown;
-  };
-  Subscription?: unknown;
-}
-
-function isValidStatus(s?: string): s is "paid" | "waiting_payment" | "refunded" | "rejected" | "chargedback" {
-  return !!s && ["paid", "waiting_payment", "refunded", "rejected", "chargedback"].includes(s);
-}
-
-// Extrai e valida o plano do payload (enviado via TrackingParameters.plan)
-function extractPlan(payload: KiwifyWebhookPayload): "monthly" | "annual" | "lifetime" | null {
-  const plan = payload.TrackingParameters?.plan;
-  if (plan === "monthly" || plan === "annual" || plan === "lifetime") {
-    return plan;
-  }
-  // Se não veio plano, assume lifetime (compatibilidade com compras antigas)
-  // que eram todas vitalícias por padrão.
-  return "lifetime";
-}
-
-// Verifica se o plano vitalício ainda está disponível (limite de 500 OU 90 dias)
-async function isLifetimeAvailable(): Promise<boolean> {
-  const now = new Date();
-
-  // Busca configurações
-  const settings = await prisma.setting.findMany({
-    where: { key: { in: ["lifetime_max_sales", "lifetime_cutoff_date"] } },
-    select: { key: true, value: true },
-  });
-  const settingsMap: Record<string, string> = {};
-  for (const s of settings) settingsMap[s.key] = s.value;
-
-  const maxSales = settingsMap.lifetime_max_sales
-    ? parseInt(settingsMap.lifetime_max_sales, 10)
-    : 500;
-
-  let cutoffDate: Date;
-  if (settingsMap.lifetime_cutoff_date) {
-    cutoffDate = new Date(settingsMap.lifetime_cutoff_date);
-  } else {
-    cutoffDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
-  }
-
-  if (now > cutoffDate) return false;
-
-  const totalSold = await prisma.subscription.count({
-    where: { status: "approved", plan: "lifetime" },
-  });
-
-  return totalSold < maxSales;
-}
-
-// Extrai o token APENAS do header X-Kiwify-Signature (nunca da query string).
-// Tokens na query string vazam em logs de proxy/CDN e são vulneráveis a CSRF.
-function extractToken(req: NextRequest): string | null {
-  return req.headers.get("x-kiwify-signature");
-}
-
-// Comparação constante-tempo pra evitar timing attacks.
-function safeEqual(a: string, b: string): boolean {
-  const aBuf = Buffer.from(a);
-  const bBuf = Buffer.from(b);
-  if (aBuf.length !== bBuf.length) return false;
-  return crypto.timingSafeEqual(aBuf, bBuf);
-}
-
-// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
-  // ===== 0. Circuit breaker — falha rápido se DB estiver down =====
-  // Previne thundering herd: se DB caiu, Kiwify retenta múltiplas vezes.
-  // Sem circuit breaker, cada retentativa ocupa uma conexão e agrava a queda.
-  const CIRCUIT_NAME = "kiwify-webhook-db";
-  if (!canExecute(CIRCUIT_NAME)) {
-    logger.warn("Webhook rejeitado: circuit breaker aberto (DB down)", {
-      orderId: "unknown",
-    });
-    return NextResponse.json(
-      { error: "Serviço temporariamente indisponível", retry: true },
-      { status: 503 },
-    );
-  }
-
-  // ===== 1. Validar token (timing-safe + header only) =====
-  const expectedToken = process.env.KIWIFY_WEBHOOK_SECRET;
-  if (!expectedToken) {
-    logger.error("KIWIFY_WEBHOOK_SECRET não configurado");
-    return NextResponse.json(
-      { error: "Webhook não configurado" },
-      { status: 503 },
-    );
-  }
-  const receivedToken = extractToken(req);
-  if (!receivedToken || !safeEqual(receivedToken, expectedToken)) {
-    logger.warn("Token inválido ou ausente", { hasToken: !!receivedToken });
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
-  // ===== 2. Parse do payload =====
-  let payload: KiwifyWebhookPayload;
   try {
-    payload = (await req.json()) as KiwifyWebhookPayload;
-  } catch {
-    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
-  }
+    // 1. Ler body raw (não parsed) para validar assinatura
+    const bodyText = await req.text();
 
-  if (!payload.order_id || !isValidStatus(payload.order_status)) {
-    logger.warn("Payload inválido", {
-      orderId: payload.order_id,
-      status: payload.order_status,
-    });
-    return NextResponse.json(
-      { error: "Payload inválido (order_id ou order_status faltando)" },
-      { status: 400 },
-    );
-  }
+    // 2. Validar assinatura HMAC (se WEBHOOK_SECRET configurado)
+    const webhookSecret = process.env.KIWIFY_WEBHOOK_SECRET;
+    const signature = req.headers.get("x-kiwify-signature") || "";
 
-  logger.info("Webhook recebido", {
-    orderId: payload.order_id,
-    status: payload.order_status,
-    email: payload.Customer?.email,
-  });
+    if (webhookSecret) {
+      const expectedSignature = crypto
+        .createHmac("sha256", webhookSecret)
+        .update(bodyText)
+        .digest("hex");
 
-  // ===== 3. Validar product_id (opcional, se KIWIFY_PRODUCT_ID estiver setado) =====
-  const expectedProductId = process.env.KIWIFY_PRODUCT_ID;
-  if (
-    expectedProductId &&
-    payload.Product?.product_id &&
-    payload.Product.product_id !== expectedProductId
-  ) {
-    console.warn(
-      `[kiwify-webhook] product_id não bate: esperado=${expectedProductId} recebido=${payload.Product.product_id}`,
-    );
-    // Não falhamos o webhook (Kiwify esperaria retry), só ignoramos.
-    return NextResponse.json({ ok: true, ignored: "wrong_product" });
-  }
+      if (signature !== expectedSignature) {
+        console.warn("[kiwify-webhook] Assinatura inválida");
+        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      }
+    }
 
-  // ===== 4-5. Processar evento (com circuit breaker + error handling) =====
-  try {
-    // ===== 4. Idempotência: se já existe assinatura com este order_id, só retorna OK =====
-    const existing = await prisma.subscription.findUnique({
-      where: { kiwifyOrderId: payload.order_id },
-    });
-    if (existing) {
-      // Se já existe e status mudou (ex: refund), atualiza
-      if (payload.order_status === "refunded" && existing.status === "approved") {
-        await prisma.subscription.update({
-          where: { id: existing.id },
+    // 3. Parse JSON
+    let payload: KiwifyWebhookPayload;
+    try {
+      payload = JSON.parse(bodyText);
+    } catch {
+      console.error("[kiwify-webhook] JSON inválido");
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    // 4. Processar evento
+    const event = payload.event;
+    const order = payload.order;
+
+    if (!event || !order) {
+      return NextResponse.json({ error: "Missing event or order" }, { status: 400 });
+    }
+
+    console.log(`[kiwify-webhook] Evento: ${event}, Order: ${order.order_id}`);
+
+    // 5. Mapear evento para source de receita
+    let source = "products";
+    let amount = order.price || 0;
+    let description = order.product_name || "Venda Kiwify";
+
+    switch (event) {
+      case "order_approved":
+      case "subscription_created":
+        // Venda confirmada — registrar receita
+        if (order.product_name?.toLowerCase().includes("curso premium")) {
+          source = "course";
+        } else if (order.product_name?.toLowerCase().includes("e-book") ||
+                   order.product_name?.toLowerCase().includes("ebook")) {
+          source = "ebook";
+        } else if (order.product_name?.toLowerCase().includes("toolkit")) {
+          source = "toolkit";
+        } else if (order.product_name?.toLowerCase().includes("live") ||
+                   order.product_name?.toLowerCase().includes("mentoria")) {
+          source = "live";
+        } else if (order.product_name?.toLowerCase().includes("vip") ||
+                   order.product_name?.toLowerCase().includes("whatsapp")) {
+          source = "subscription";
+        }
+
+        // Deduz comissão de afiliado (se houver) do lucro
+        const commission = order.affiliate?.commission || 0;
+        const netAmount = amount - commission;
+
+        // 6. Criar entrada de receita
+        await prisma.revenueEntry.create({
           data: {
-            status: "rejected",
-            reviewNotes: "Reembolsado via Kiwify",
-            reviewedAt: new Date(),
+            date: new Date(),
+            source,
+            description: `${description} — ${order.customer?.name || "Cliente"} (${order.customer?.email || "sem email"})`,
+            amount,
+            cost: commission, // comissão de afiliado é "custo"
+            productId: order.product_id,
+            metadata: {
+              orderId: order.order_id,
+              paymentMethod: order.payment_method,
+              customer: order.customer,
+              affiliate: order.affiliate,
+              event,
+              raw: payload,
+            },
           },
         });
-        logger.info("Assinatura reembolsada", { subId: existing.id, orderId: payload.order_id });
-      }
-      recordSuccess(CIRCUIT_NAME);
-      return NextResponse.json({ ok: true, idempotent: true });
-    }
 
-    // ===== 5. Processar evento =====
-    const customer = payload.Customer;
-    if (!customer?.email || !customer?.full_name) {
-      return NextResponse.json(
-        { error: "Customer sem email/nome" },
-        { status: 400 },
-      );
-    }
+        console.log(`[kiwify-webhook] Receita registrada: R$ ${amount} (líquido R$ ${netAmount})`);
+        break;
 
-    const email = customer.email.trim().toLowerCase();
-    const name = customer.full_name.trim();
-
-    if (payload.order_status === "paid") {
-      // ===== APROVAR =====
-      // Extrai o plano selecionado pelo usuário (enviado via TrackingParameters)
-      const plan = extractPlan(payload);
-
-      // ===== Validação do limite vitalício =====
-      // Se o plano for lifetime, verifica se ainda há vagas disponíveis.
-      // Se não houver, converte para anual automaticamente (não bloqueia o pagamento).
-      let finalPlan = plan;
-      if (plan === "lifetime") {
-        const lifetimeAvailable = await isLifetimeAvailable();
-        if (!lifetimeAvailable) {
-          // Oferta vitalício encerrada — converte para anual (mesmo preço R$ 97)
-          // e notifica via log para o admin entrar em contato se necessário.
-          finalPlan = "annual";
-          logger.warn("Vitalício esgotado — convertendo para anual", {
-            orderId: payload.order_id,
-            email: customer.email,
-          });
-        }
-      }
-
-      // Verifica se já existe assinatura aprovada pra este email
-      const alreadyPro = await prisma.subscription.findFirst({
-        where: { buyerEmail: email, status: "approved" },
-      });
-      if (alreadyPro) {
-        // Vincula o order_id pra auditoria, mas não gera nova licença
-        await prisma.subscription.update({
-          where: { id: alreadyPro.id },
+      case "order_refunded":
+      case "order_canceled":
+        // Reembolso — registrar como custo (despesa)
+        await prisma.revenueEntry.create({
           data: {
-            kiwifyOrderId: payload.order_id,
-            paymentMethod: "kiwify",
-            plan: finalPlan,
+            date: new Date(),
+            source,
+            description: `REEMBOLSO: ${description} — ${order.customer?.name || "Cliente"}`,
+            amount: 0,
+            cost: order.price || 0, // valor reembolsado
+            productId: order.product_id,
+            metadata: {
+              orderId: order.order_id,
+              event,
+              reason: event,
+              raw: payload,
+            },
           },
         });
-        recordSuccess(CIRCUIT_NAME);
-        return NextResponse.json({
-          ok: true,
-          message: "Cliente já PRO — order_id vinculado",
-          licenseKey: alreadyPro.licenseKey,
-          plan: finalPlan,
-        });
-      }
 
-      // Amount em reais (payload vem em centavos como string)
-      const amountBRL =
-        payload.Commissions?.charge_amount
-          ? Number(payload.Commissions.charge_amount) / 100
-          : Number(process.env.PLAN_PRICE ?? 18.9);
+        console.log(`[kiwify-webhook] Reembolso registrado: R$ ${order.price}`);
+        break;
 
-      const licenseKey = crypto.randomBytes(16).toString("hex");
+      case "subscription_canceled":
+        // Assinatura cancelada — apenas log (sem impacto financeiro imediato)
+        console.log(`[kiwify-webhook] Assinatura cancelada: ${order.order_id}`);
+        break;
 
-      const sub = await prisma.subscription.create({
-        data: {
-          buyerName: name,
-          buyerEmail: email,
-          buyerPhone: customer.mobile,
-          amount: amountBRL,
-          paymentMethod: "kiwify",
-          kiwifyOrderId: payload.order_id,
-          status: "approved",
-          reviewedAt: new Date(),
-          reviewedBy: "kiwify-webhook",
-          reviewNotes: `Auto-aprovado via webhook Kiwify — order ${payload.order_id}`,
-          licenseKey,
-          plan: finalPlan,
-        },
-      });
-
-      logger.info("Assinatura aprovada", {
-        subId: sub.id,
-        licenseKey: licenseKey.slice(0, 8) + "...",
-        email,
-        orderId: payload.order_id,
-      });
-
-      // ===== Referral: se o novo PRO foi indicado, credita recompensa =====
-      try {
-        // Busca o usuário pelo email
-        const referredUser = await prisma.user.findUnique({
-          where: { email },
-          select: { id: true },
-        });
-
-        if (referredUser) {
-          // Verifica se tem referral pendente
-          const referral = await prisma.referral.findUnique({
-            where: { referredId: referredUser.id },
-          });
-
-          if (referral && referral.status === "pending") {
-            // Verifica se a campanha está ativa
-            const campaign = await prisma.referralCampaign.findFirst({
-              orderBy: { createdAt: "desc" },
-            });
-
-            const rewardAmount = campaign?.active
-              ? Number(campaign.rewardAmount)
-              : Number(referral.payoutAmount);
-
-            await prisma.referral.update({
-              where: { id: referral.id },
-              data: {
-                status: "converted",
-                convertedAt: new Date(),
-                payoutAmount: rewardAmount,
-              },
-            });
-
-            logger.info("Referral convertido", {
-              referralId: referral.id,
-              referrerId: referral.referrerId,
-              rewardAmount,
-              email,
-            });
-          }
-        }
-      } catch (referralError) {
-        // Referral falha não bloqueia o webhook
-        logger.warn("Erro ao processar referral", {
-          email,
-          error: referralError instanceof Error ? referralError.message : "unknown",
-        });
-      }
-
-      recordSuccess(CIRCUIT_NAME);
-      return NextResponse.json({
-        ok: true,
-        subscriptionId: sub.id,
-        licenseKey,
-        orderId: payload.order_id,
-      });
+      default:
+        console.log(`[kiwify-webhook] Evento não processado: ${event}`);
     }
 
-    // Para outros status (waiting_payment, rejected, chargeback), apenas registra
-    // uma assinatura pendente pra histórico.
-    await prisma.subscription.create({
-      data: {
-        buyerName: name,
-        buyerEmail: email,
-        buyerPhone: customer.mobile,
-        amount: Number(process.env.PLAN_PRICE ?? 18.9),
-        paymentMethod: "kiwify",
-        kiwifyOrderId: payload.order_id,
-        status: payload.order_status === "waiting_payment" ? "pending" : "rejected",
-        reviewNotes: `Evento Kiwify: ${payload.order_status}`,
-      },
-    });
-
-    recordSuccess(CIRCUIT_NAME);
-    return NextResponse.json({ ok: true, status: payload.order_status });
+    // 7. Responder 200 (Kiwify espera 200 para confirmar recebimento)
+    return NextResponse.json({ ok: true, event, orderId: order.order_id });
   } catch (error) {
-    // Erro de banco — registra falha no circuit breaker
-    recordFailure(CIRCUIT_NAME);
-    logger.error("Erro ao processar webhook", {
-      orderId: payload.order_id,
-      error: error instanceof Error ? error.message : "unknown",
-    });
-    // Retorna 500 — Kiwify vai retentar, mas circuit breaker vai falhar rápido
-    // se o erro persistir (após 5 falhas, circuito abre)
+    console.error("[kiwify-webhook] Erro:", error);
     return NextResponse.json(
-      { error: "Erro interno", retry: true },
-      { status: 500 },
+      { error: "Internal error" },
+      { status: 500 }
     );
   }
 }
 
-// GET só pra health check
+// GET — para verificar se endpoint está online
 export async function GET() {
   return NextResponse.json({
     ok: true,
-    webhook: "kiwify",
+    message: "Kiwify webhook endpoint ativo",
     timestamp: new Date().toISOString(),
   });
+}
+
+// Interface do payload (baseado na documentação Kiwify)
+interface KiwifyWebhookPayload {
+  event: string;
+  order: {
+    order_id: string;
+    product_id?: string;
+    product_name?: string;
+    price?: number;
+    payment_method?: string;
+    customer?: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      document?: string;
+    };
+    affiliate?: {
+      id?: string;
+      name?: string;
+      commission?: number;
+    } | null;
+  };
 }
