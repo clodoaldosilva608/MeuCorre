@@ -40,16 +40,17 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  const validatedBody = parsed.data;
 
-  const email = sanitizeString(body.email?.toLowerCase().trim() ?? "", 200);
+  const email = sanitizeString(validatedBody.email?.toLowerCase().trim() ?? "", 200);
   if (!email) {
     return NextResponse.json({ error: "Email obrigatório" }, { status: 400 });
   }
 
   try {
     // Busca o User pelo email para pegar o ID
-    const user = body.userId
-      ? { id: body.userId }
+    const user = validatedBody.userId
+      ? { id: validatedBody.userId }
       : await prisma.user.findUnique({
           where: { email },
           select: { id: true },

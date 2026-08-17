@@ -54,28 +54,29 @@ export async function PATCH(
       { status: 400 },
     );
   }
+  const validatedBody = parsed.data;
 
   const data: Record<string, unknown> = {};
 
-  if (body.status !== undefined) {
+  if (validatedBody.status !== undefined) {
     const valid = ["pending", "approved", "rejected"];
-    if (!valid.includes(body.status)) {
+    if (!valid.includes(validatedBody.status)) {
       return NextResponse.json({ error: "Status inválido" }, { status: 400 });
     }
-    data.status = body.status;
+    data.status = validatedBody.status;
     data.reviewedAt = new Date();
   }
 
-  if (body.amount !== undefined) {
-    const amount = Number(body.amount);
+  if (validatedBody.amount !== undefined) {
+    const amount = Number(validatedBody.amount);
     if (isNaN(amount) || amount < 0) {
       return NextResponse.json({ error: "Valor inválido" }, { status: 400 });
     }
     data.amount = amount;
   }
 
-  if (body.reviewNotes !== undefined) {
-    data.reviewNotes = body.reviewNotes.trim().slice(0, 500) || null;
+  if (validatedBody.reviewNotes !== undefined) {
+    data.reviewNotes = validatedBody.reviewNotes.trim().slice(0, 500) || null;
   }
 
   try {

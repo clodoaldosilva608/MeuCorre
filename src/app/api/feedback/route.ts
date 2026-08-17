@@ -35,9 +35,10 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  const validatedBody = parsed.data;
 
-  const rating = Number(body.rating);
-  const message = (body.message ?? "").trim();
+  const rating = Number(validatedBody.rating);
+  const message = (validatedBody.message ?? "").trim();
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return NextResponse.json(
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
   }
 
   const userAgent = req.headers.get("user-agent")?.slice(0, 500) ?? null;
-  const page = body.page?.slice(0, 50) ?? null;
+  const page = validatedBody.page?.slice(0, 50) ?? null;
 
   const feedback = await prisma.feedback.create({
     data: {

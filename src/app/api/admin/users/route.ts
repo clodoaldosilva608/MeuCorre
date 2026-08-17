@@ -68,10 +68,11 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  const validatedBody = parsed.data;
 
-  const name = body.name?.trim();
-  const email = body.email?.trim().toLowerCase();
-  const password = body.password;
+  const name = validatedBody.name?.trim();
+  const email = validatedBody.email?.trim().toLowerCase();
+  const password = validatedBody.password;
 
   if (!name || name.length < 2) {
     return NextResponse.json({ error: "Nome inválido" }, { status: 400 });
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
   const passwordHash = await hashPassword(password);
 
   // Se admin marcar como PRO, gera licença
-  const isPro = body.isPro ?? false;
+  const isPro = validatedBody.isPro === "true";
   const licenseKey = isPro ? crypto.randomBytes(16).toString("hex") : null;
 
   const user = await prisma.user.create({
@@ -101,8 +102,8 @@ export async function POST(req: NextRequest) {
       passwordHash,
       isPro,
       licenseKey,
-      phone: body.phone?.trim().slice(0, 30) || null,
-      city: body.city?.trim().slice(0, 100) || null,
+      phone: validatedBody.phone?.trim().slice(0, 30) || null,
+      city: validatedBody.city?.trim().slice(0, 100) || null,
     },
     select: {
       id: true,
@@ -122,8 +123,8 @@ export async function POST(req: NextRequest) {
       data: {
         buyerName: name,
         buyerEmail: email,
-        buyerPhone: body.phone?.trim() || null,
-        buyerCity: body.city?.trim() || null,
+        buyerPhone: validatedBody.phone?.trim() || null,
+        buyerCity: validatedBody.city?.trim() || null,
         amount: 0, // cortesia do admin
         paymentMethod: "admin_grant",
         status: "approved",

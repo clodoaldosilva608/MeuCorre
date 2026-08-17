@@ -480,7 +480,7 @@ export default function AdminMonetizacaoPage() {
 
 function StatCard({
   icon: Icon, label, value, sub, color,
-}: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; sub?: string; color: string }) {
+}: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; label: string; value: string; sub?: string; color: string }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
       <div className="flex items-center gap-2 text-zinc-500">

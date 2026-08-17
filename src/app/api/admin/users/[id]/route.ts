@@ -40,37 +40,38 @@ export async function PATCH(
       { status: 400 },
     );
   }
+  const validatedBody = parsed.data;
 
   const data: Record<string, unknown> = {};
 
-  if (body.name !== undefined) {
-    const name = body.name.trim();
+  if (validatedBody.name !== undefined) {
+    const name = validatedBody.name.trim();
     if (name.length < 2) return NextResponse.json({ error: "Nome inválido" }, { status: 400 });
     data.name = name;
   }
 
-  if (body.password !== undefined) {
-    if (body.password.length < 6)
+  if (validatedBody.password !== undefined) {
+    if (validatedBody.password.length < 6)
       return NextResponse.json({ error: "Senha mínima 6 caracteres" }, { status: 400 });
-    data.passwordHash = await hashPassword(body.password);
+    data.passwordHash = await hashPassword(validatedBody.password);
   }
 
-  if (body.phone !== undefined) data.phone = body.phone.trim().slice(0, 30) || null;
-  if (body.city !== undefined) data.city = body.city.trim().slice(0, 100) || null;
-  if (body.active !== undefined) data.active = body.active;
+  if (validatedBody.phone !== undefined) data.phone = validatedBody.phone.trim().slice(0, 30) || null;
+  if (validatedBody.city !== undefined) data.city = validatedBody.city.trim().slice(0, 100) || null;
+  if (validatedBody.active !== undefined) data.active = validatedBody.active;
 
-  if (body.trialExtendedUntil !== undefined) {
-    data.trialExtendedUntil = body.trialExtendedUntil
-      ? new Date(body.trialExtendedUntil)
+  if (validatedBody.trialExtendedUntil !== undefined) {
+    data.trialExtendedUntil = validatedBody.trialExtendedUntil
+      ? new Date(validatedBody.trialExtendedUntil)
       : null;
   }
 
   // Toggle PRO
-  if (body.isPro !== undefined) {
+  if (validatedBody.isPro !== undefined) {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
 
-    if (body.isPro && !user.isPro) {
+    if (validatedBody.isPro && !user.isPro) {
       data.isPro = true;
       data.licenseKey = user.licenseKey ?? crypto.randomBytes(16).toString("hex");
       await prisma.subscription.create({
@@ -104,7 +105,7 @@ export async function PATCH(
       } catch {
         // Referral falha não bloqueia grant
       }
-    } else if (!body.isPro && user.isPro) {
+    } else if (!validatedBody.isPro && user.isPro) {
       data.isPro = false;
       data.licenseKey = null;
     }

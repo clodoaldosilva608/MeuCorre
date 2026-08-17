@@ -69,12 +69,12 @@ jobs:
           GITLEAKS_ENABLE_COMMENTS: true
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
 
+      - name: 🗄️ Prisma generate
+        run: npx prisma generate
+
       - name: 🔍 TypeScript check
         run: npx tsc --noEmit --skipLibCheck
         continue-on-error: false
-
-      - name: 🗄️ Prisma generate
-        run: npx prisma generate
 
       - name: 🏗️ Next.js build
         run: npx next build

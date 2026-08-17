@@ -63,6 +63,7 @@ export async function PATCH(req: NextRequest) {
       { status: 400 },
     );
   }
+  const validatedBody = parsed.data;
 
   let campaign = await prisma.referralCampaign.findFirst({
     orderBy: { createdAt: "desc" },
@@ -75,11 +76,11 @@ export async function PATCH(req: NextRequest) {
   }
 
   const data: Record<string, unknown> = {};
-  if (body.active !== undefined) data.active = body.active;
-  if (body.rewardAmount !== undefined) data.rewardAmount = body.rewardAmount;
-  if (body.maxReferrals !== undefined) data.maxReferrals = body.maxReferrals;
-  if (body.startsAt !== undefined) data.startsAt = body.startsAt ? new Date(body.startsAt) : null;
-  if (body.endsAt !== undefined) data.endsAt = body.endsAt ? new Date(body.endsAt) : null;
+  if (validatedBody.active !== undefined) data.active = validatedBody.active;
+  if (validatedBody.rewardAmount !== undefined) data.rewardAmount = validatedBody.rewardAmount;
+  if (validatedBody.maxReferrals !== undefined) data.maxReferrals = validatedBody.maxReferrals;
+  if (validatedBody.startsAt !== undefined) data.startsAt = validatedBody.startsAt ? new Date(validatedBody.startsAt) : null;
+  if (validatedBody.endsAt !== undefined) data.endsAt = validatedBody.endsAt ? new Date(validatedBody.endsAt) : null;
 
   const updated = await prisma.referralCampaign.update({
     where: { id: campaign.id },

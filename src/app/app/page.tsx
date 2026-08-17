@@ -286,7 +286,7 @@ function HomeContent() {
           const apps = ["iFood", "99Food", "Rappi", "Lalamove"];
           const notes = ["Centro → Vila Nova", "Centro → Jardim Europa", "Industrial → Centro", "Vila Mariana → Centro", "Centro → Pinheiros"];
 
-          const demoDeliveries = [];
+          const demoDeliveries: Delivery[] = [];
           for (let i = 0; i < 5; i++) {
             demoDeliveries.push({
               app: apps[i % apps.length],

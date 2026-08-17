@@ -100,8 +100,7 @@ export async function PATCH(req: NextRequest) {
       { status: 400 },
     );
   }
-
-  const { id, action, pixKey, notes } = body;
+  const { id, action, pixKey, notes } = parsed.data;
 
   if (!id || !action) {
     return NextResponse.json({ error: "ID e action são obrigatórios" }, { status: 400 });

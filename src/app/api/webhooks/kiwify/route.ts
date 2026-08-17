@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
               customer: order.customer,
               affiliate: order.affiliate,
               event,
-              raw: payload,
+              raw: JSON.parse(JSON.stringify(payload)),
             },
           },
         });
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
               orderId: order.order_id,
               event,
               reason: event,
-              raw: payload,
+              raw: JSON.parse(JSON.stringify(payload)),
             },
           },
         });

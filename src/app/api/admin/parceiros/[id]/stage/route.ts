@@ -139,8 +139,8 @@ export async function PATCH(
       data: {
         partnerId: id,
         type: "stage_change",
+        title: "Alteração de etapa",
         description: `Stage alterado: ${STAGE_LABELS[oldStage] || oldStage} → ${STAGE_LABELS[parsed.data.stage]}`,
-        performedBy: "admin",
       },
     });
 
