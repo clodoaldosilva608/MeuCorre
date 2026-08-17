@@ -1319,7 +1319,7 @@ export default function LandingPage() {
             className="mt-10 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 text-center"
           >
             <p className="text-sm text-zinc-600">
-              <strong className="text-zinc-900"> Quer divulgar e ganhar comissões?</strong>{" "}
+              <strong className="text-zinc-900">Quer divulgar e ganhar comissões?</strong>{" "}
               Participe do programa de afiliados MeuCorre e ganhe até 50% por venda.
             </p>
             <a
@@ -1331,6 +1331,9 @@ export default function LandingPage() {
               Quero ser afiliado
               <ArrowRight className="h-4 w-4" />
             </a>
+            <p className="mt-2 text-[10px] text-zinc-400">
+              Acesse sua conta Kiwify → aba "Afiliados" → busque por "MeuCorre"
+            </p>
           </motion.div>
         </div>
       </section>
