@@ -32,6 +32,10 @@ import {
   CreditCard,
   Lock,
   Fuel,
+  BookOpen,
+  GraduationCap,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 
 // Ícones SVG das marcas WhatsApp e Telegram (lucide não tem brand icons)
@@ -1142,6 +1146,194 @@ export default function LandingPage() {
 
       {/* ===== 7.6 SEÇÃO YOUTUBE — vídeos do canal @meucorre-z4j ===== */}
       <YouTubeSection />
+
+      {/* ===== 7.7 SEÇÃO PRODUTOS DIGITAIS — E-books e Curso Premium ===== */}
+      <section className="bg-white py-16 text-zinc-900 md:py-24">
+        <div className="mx-auto max-w-5xl px-4">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="text-center"
+          >
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
+              <Sparkles className="h-3 w-3" />
+              Materiais exclusivos para entregadores
+            </p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+              Conhecimento que <span className="text-neon">multiplica seu lucro</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-zinc-500 md:text-lg">
+              E-books e curso premium criados por quem é da entrega, para quem é da entrega.
+              Conteúdo prático, direto ao ponto, sem enrolação.
+            </p>
+          </motion.div>
+
+          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {/* Produto 1: E-book 10 Erros (R$ 27) */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-80px" }}
+              className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-lg"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-emerald-500/10">
+                  <BookOpen className="h-6 w-6 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-zinc-400">E-book de entrada</p>
+                  <p className="text-sm font-bold text-zinc-900">20+ páginas</p>
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900">10 Erros que Entregadores Cometem</h3>
+              <p className="mt-2 text-sm text-zinc-500">
+                Os 10 erros mais comuns que fazem você perder dinheiro todos os dias — e como evitar cada um.
+              </p>
+              <ul className="mt-4 space-y-2 text-xs text-zinc-600">
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Como calcular o lucro real</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Depreciação da moto explicada</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Plano de ação de 7 dias</li>
+              </ul>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-zinc-900">R$ 27</span>
+                <span className="text-sm text-zinc-400">pagamento único</span>
+              </div>
+              <a
+                href="https://pay.kiwify.com.br/D7AebQz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-600"
+              >
+                Garanta sua oferta
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <p className="mt-2 text-center text-[10px] text-zinc-400">
+                Entrega imediata · Pix ou cartão · 50% comissão para afiliados
+              </p>
+            </motion.div>
+
+            {/* Produto 2: E-book Gestão Financeira (R$ 97) */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-80px" }}
+              className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-lg"
+            >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-blue-500/10">
+                  <BookOpen className="h-6 w-6 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-zinc-400">Guia completo</p>
+                  <p className="text-sm font-bold text-zinc-900">60+ páginas</p>
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900">Gestão Financeira para Entregadores</h3>
+              <p className="mt-2 text-sm text-zinc-500">
+                O guia definitivo: do cálculo de custos ao IR, do MEI aos investimentos. 25 capítulos em 5 partes.
+              </p>
+              <ul className="mt-4 space-y-2 text-xs text-zinc-600">
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-blue-500" /> Custos fixos vs variáveis</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-blue-500" /> MEI, DAS, IR passo a passo</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-blue-500" /> Plano de 90 dias para estabilizar</li>
+              </ul>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-zinc-900">R$ 97</span>
+                <span className="text-sm text-zinc-400">pagamento único</span>
+              </div>
+              <a
+                href="https://pay.kiwify.com.br/qUmn5jr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
+              >
+                Garanta sua oferta
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <p className="mt-2 text-center text-[10px] text-zinc-400">
+                Entrega imediata · Pix ou cartão · 30% comissão para afiliados
+              </p>
+            </motion.div>
+
+            {/* Produto 3: Curso Premium (R$ 247) */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-80px" }}
+              className="relative flex flex-col rounded-2xl border-2 border-emerald-500 bg-gradient-to-b from-emerald-50 to-white p-6 shadow-lg"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                  <Star className="h-3 w-3 fill-white" />
+                  Mais completo
+                </span>
+              </div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-emerald-500/10">
+                  <GraduationCap className="h-6 w-6 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-zinc-400">Curso premium</p>
+                  <p className="text-sm font-bold text-zinc-900">15 módulos · 150 capítulos</p>
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900">Curso Premium: Negócio de Entregador</h3>
+              <p className="mt-2 text-sm text-zinc-500">
+                De hobby a profissão. Gestão financeira avançada, frota, investimentos, MEI e escala do negócio.
+              </p>
+              <ul className="mt-4 space-y-2 text-xs text-zinc-600">
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> 15 módulos liberados semanalmente</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Acesso vitalício + atualizações</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Plano de 10 anos: entregador → empresário</li>
+              </ul>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-zinc-900">R$ 247</span>
+                <span className="text-sm text-zinc-400">pagamento único</span>
+              </div>
+              <a
+                href="https://pay.kiwify.com.br/Ku7IAdQ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-600"
+              >
+                Garanta sua oferta
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <p className="mt-2 text-center text-[10px] text-zinc-400">
+                Entrega imediata (Módulo 1) · Pix ou cartão · 30% comissão para afiliados
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Call-to-action para afiliados */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="mt-10 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 text-center"
+          >
+            <p className="text-sm text-zinc-600">
+              <strong className="text-zinc-900"> Quer divulgar e ganhar comissões?</strong>{" "}
+              Participe do programa de afiliados MeuCorre e ganhe até 50% por venda.
+            </p>
+            <a
+              href="https://kiwify.com.br/afiliados"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-500 hover:underline"
+            >
+              Quero ser afiliado
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </motion.div>
+        </div>
+      </section>
 
       {/* ===== 8. CTA FINAL grande ===== */}
       <section className="relative overflow-hidden bg-ink py-20 text-center text-white md:py-28">
