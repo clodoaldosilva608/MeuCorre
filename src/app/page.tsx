@@ -1323,7 +1323,7 @@ export default function LandingPage() {
               Participe do programa de afiliados MeuCorre e ganhe até 50% por venda.
             </p>
             <a
-              href="https://kiwify.com.br/afiliados"
+              href="https://app.kiwify.com.br/"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-500 hover:underline"
