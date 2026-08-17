@@ -24,28 +24,28 @@ ON CONFLICT ("platform") DO UPDATE SET
   "notes" = EXCLUDED."notes",
   "updatedAt" = NOW();
 
--- 2. Atualiza e-book "10 Erros" com URL do Kiwify (substitua PLACEHOLDER pelo slug real)
+-- 2. Atualiza e-book "10 Erros" com URL real do Kiwify
 UPDATE "AffiliateProduct" SET
-  "url" = 'https://pay.kiwify.com.br/PLACEHOLDER_10_ERROS',
-  "notes" = 'E-book criado! 20+ páginas. Substituir PLACEHOLDER pelo slug real do Kiwify após criar o produto.',
+  "url" = 'https://pay.kiwify.com.br/D7AebQz',
+  "notes" = 'E-book criado e ativo na Kiwify. Conteúdo publicado na Área de Membros. Afiliados habilitados com 50% de comissão e cookie de 30 dias.',
   "updatedAt" = NOW()
 WHERE "id" = 'ebook_financas_entregador';
 
--- 3. Atualiza curso/e-book "Gestão Financeira" com URL do Kiwify
+-- 3. Atualiza e-book "Gestão Financeira" com URL real do Kiwify
 UPDATE "AffiliateProduct" SET
-  "url" = 'https://pay.kiwify.com.br/PLACEHOLDER_GESTAO_FINANCAS',
-  "notes" = 'E-book criado! 60+ páginas. Substituir PLACEHOLDER pelo slug real do Kiwify após criar o produto.',
+  "url" = 'https://pay.kiwify.com.br/qUmn5jr',
+  "notes" = 'E-book criado e ativo na Kiwify. Conteúdo publicado na Área de Membros. Afiliados habilitados com 30% de comissão e cookie de 30 dias.',
   "updatedAt" = NOW()
 WHERE "id" = 'course_gestao_financas';
 
--- 4. Adiciona curso premium avançado (R$ 247)
+-- 4. Adiciona ou atualiza curso premium avançado (R$ 247)
 INSERT INTO "AffiliateProduct" ("id", "type", "name", "description", "url", "price", "commission", "category", "platform", "active", "featured", "sortOrder", "notes", "updatedAt")
 VALUES
   ('course_premium_avancado', 'course', 'Curso Premium Avançado: Negócio de Entregador',
    'Curso completo de 15 módulos (150 capítulos). De hobby a profissão: gestão financeira avançada, multi-app, frota, MEI, IR, investimentos e escala do negócio de entrega.',
-   'https://pay.kiwify.com.br/PLACEHOLDER_PREMIUM',
-   247.00, null, 'cursos', 'kiwify', true, true, 1,
-   'Curso premium com 15 módulos × 10 capítulos × 16 páginas = 2.400 páginas. Estrutura completa + Módulo 1 já escrito. Substituir PLACEHOLDER pelo slug real do Kiwify.',
+   'https://pay.kiwify.com.br/Ku7IAdQ',
+   247.00, 30.00, 'cursos', 'kiwify', true, true, 1,
+   'Curso premium ativo na Kiwify. Conteúdo do Módulo 1 publicado na Área de Membros. Afiliados habilitados com 30% de comissão e cookie de 30 dias.',
    NOW())
 ON CONFLICT (id) DO UPDATE SET
   "name" = EXCLUDED."name",
