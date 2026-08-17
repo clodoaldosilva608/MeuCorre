@@ -12,7 +12,7 @@ import sharp from "sharp";
 
 const BASE_URL = "https://meucorre.vercel.app";
 const ADMIN_EMAIL = "clodoaldo608@gmail.com";
-const ADMIN_PASSWORD = "Silva88677488@#";
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD ?? "");
 const IMAGES_DIR = path.resolve(process.cwd(), "tmp/pacote-visual-extracted");
 const MAX_DIMENSION = 1080; // px
 const JPEG_QUALITY = 85;

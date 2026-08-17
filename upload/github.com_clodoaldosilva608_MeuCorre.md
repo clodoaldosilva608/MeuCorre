@@ -895,7 +895,7 @@ Práticas implementadas
 ✅ Postgres com connection pooler (Supavisor)
 ✅ Licenças crypto (32-hex random) — não adivinháveis
 Recomendações pós-deploy
-Troque a senha admin Silva88677488@# pra uma forte (16+ chars) — atualize em ADMIN_PASSWORD na Vercel
+Troque a senha admin <ADMIN_PASSWORD_REDACTED> pra uma forte (16+ chars) — atualize em ADMIN_PASSWORD na Vercel
 Regenere o token Vercel após setup (https://vercel.com/account/tokens)
 Rotacione tokens Supabase periodicamente (https://supabase.com/dashboard/project/PROJECT_REF/settings/api)
 Monitore logs da Vercel pra detectar tentativas de ataque

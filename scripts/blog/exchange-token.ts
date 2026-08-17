@@ -1,7 +1,7 @@
 // Troca o code OAuth por token e salva no banco
 const BASE_URL = "https://meucorre.vercel.app";
 const ADMIN_EMAIL = "clodoaldo608@gmail.com";
-const ADMIN_PASSWORD = "Silva88677488@#";
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD ?? "");
 
 // Code que o usuário colou (vem do clipboard)
 const OAUTH_CODE = process.argv[2] || "4/0AXEQxIDYxozm87jKgN01Z2G4PFaUCsMEFYYOFgtSlVJqab6aoGE5i2IR7pgn3Vs71hEmoA";

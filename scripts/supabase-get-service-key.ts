@@ -3,7 +3,7 @@
 // usando a senha do banco (postgres) como credencial
 
 const SUPABASE_PROJECT_REF = "pjetmhsevohaqtqfbxrr";
-const SUPABASE_DB_PASSWORD = "Silva88677488@#"; // da DATABASE_URL
+const SUPABASE_DB_PASSWORD = (process.env.ADMIN_PASSWORD ?? ""); // da DATABASE_URL
 
 async function main() {
   console.log("=== Tentando pegar service_role key do Supabase ===\n");

@@ -14,7 +14,7 @@ Add-Type -AssemblyName System.Net.Http
 # ===== Configurações =====
 $BaseUrl = "https://meucorre.vercel.app"
 $AdminEmail = "clodoaldo608@gmail.com"
-$AdminPassword = "Silva88677488@#"
+$AdminPassword = $env:ADMIN_PASSWORD
 $FolderPath = "C:\Users\ACER\Downloads\pacote-visual"
 
 # ===== Função para determinar Content-Type por extensão =====

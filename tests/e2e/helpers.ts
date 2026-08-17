@@ -17,7 +17,7 @@ export const TEST_ACCOUNTS = {
   },
   admin: {
     email: "clodoaldo608@gmail.com",
-    password: "Silva88677488@#",
+    password: (process.env.ADMIN_PASSWORD ?? ""),
   },
 };
 

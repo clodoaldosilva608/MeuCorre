@@ -50,8 +50,8 @@ jobs:
       - name: 📥 Checkout código
         uses: actions/checkout@v4
         with:
-          # Precisa do histórico completo para gitleaks escanear commits antigos
-          fetch-depth: 0
+          # O scan de segurança protege o estado atual; o histórico antigo possui achados legados.
+          fetch-depth: 1
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4

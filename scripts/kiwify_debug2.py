@@ -1,9 +1,10 @@
+import os
 """Tenta login e captura TODA a resposta (HTML + mensagem de erro)."""
 import asyncio
 from playwright.async_api import async_playwright
 
 EMAIL = "clodoaldo608@gmail.com"
-PASSWORD = "Silva88677488@#"
+PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 
 INIT_SCRIPT = """
 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });

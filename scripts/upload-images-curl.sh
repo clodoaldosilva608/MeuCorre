@@ -20,7 +20,7 @@ echo "🔐 Login..." | tee -a "$LOG_FILE"
 COOKIE_FILE="/tmp/meucorre-upload-cookies.txt"
 curl -s -X POST "$BASE_URL/api/admin/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"clodoaldo608@gmail.com","password":"Silva88677488@#"}' \
+  -d '{"email":"clodoaldo608@gmail.com","password":"${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}"}' \
   -c "$COOKIE_FILE" -o /dev/null
 echo "   ✅ Login OK" | tee -a "$LOG_FILE"
 

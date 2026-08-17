@@ -38,7 +38,7 @@ console.log(`[forgot-password] Reset link para ${email}: ${resetLink}`);
 #### V2. Senha de admin em texto plano no código de teste
 **Arquivo**: `tests/e2e/helpers.ts`
 ```typescript
-admin: { email: "clodoaldo608@gmail.com", password: "Silva88677488@#" }
+admin: { email: "clodoaldo608@gmail.com", password: "<ADMIN_PASSWORD_REDACTED>" }
 ```
 **Risco**: Credencial real de produção commitada no Git.
 **Correção**: Usar variável de ambiente `E2E_ADMIN_PASSWORD` ou conta de teste separada.

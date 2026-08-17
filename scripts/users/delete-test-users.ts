@@ -8,7 +8,7 @@
 
 const BASE_URL = "https://meucorre.vercel.app";
 const ADMIN_EMAIL = "clodoaldo608@gmail.com";
-const ADMIN_PASSWORD = "Silva88677488@#";
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD ?? "");
 
 interface User {
   id: string;

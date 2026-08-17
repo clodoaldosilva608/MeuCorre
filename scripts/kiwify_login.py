@@ -16,7 +16,7 @@ import time
 from playwright.async_api import async_playwright
 
 EMAIL = "clodoaldo608@gmail.com"
-PASSWORD = "Silva88677488@#"
+PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 WEBHOOK_URL = "https://meucorre-clodoaldosilva608.vercel.app/api/webhooks/kiwify"
 THANK_YOU_URL = "https://meucorre-clodoaldosilva608.vercel.app/obrigado"
 PRODUCT_NAME = "MeuCorre PRO — Plano Vitalício"

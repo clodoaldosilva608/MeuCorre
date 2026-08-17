@@ -57,7 +57,7 @@ async function main() {
     method: "POST",
     body: JSON.stringify({
       email: "clodoaldo608@gmail.com",
-      password: "Silva88677488@#",
+      password: (process.env.ADMIN_PASSWORD ?? ""),
     }),
   });
 

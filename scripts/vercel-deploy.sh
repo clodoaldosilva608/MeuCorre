@@ -53,7 +53,7 @@ declare -A ENV_VARS=(
   ["PLAN_PRICE"]="18.9"
   ["USER_JWT_SECRET"]="${USER_JWT_SECRET:-$(openssl rand -hex 32)}"
   ["ADMIN_JWT_SECRET"]="${ADMIN_JWT_SECRET:-$(openssl rand -hex 32)}"
-  ["ADMIN_PASSWORD"]="${ADMIN_PASSWORD:-Silva88677488@#}"
+  ["ADMIN_PASSWORD"]="${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}"
 )
 
 echo "=== 1. Configurando variáveis de ambiente ==="

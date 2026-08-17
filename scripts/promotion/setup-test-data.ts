@@ -1,7 +1,7 @@
 // Cadastra grupos de teste e cria posts de teste
 const BASE_URL = "https://meucorre.vercel.app";
 const ADMIN_EMAIL = "clodoaldo608@gmail.com";
-const ADMIN_PASSWORD = "Silva88677488@#";
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD ?? "");
 
 async function main() {
   // Login

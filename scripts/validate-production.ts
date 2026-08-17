@@ -24,7 +24,7 @@ import * as path from "node:path";
 
 const BASE_URL = process.env.BASE_URL ?? "https://meucorre.vercel.app";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "clodoaldo608@gmail.com";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "Silva88677488@#";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? (process.env.ADMIN_PASSWORD ?? "");
 
 // Parse --step argument
 const stepArg = process.argv.find((a) => a.startsWith("--step="));

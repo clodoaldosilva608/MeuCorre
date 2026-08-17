@@ -1,7 +1,7 @@
 // Verificação final: quantos posts estão no Blogger
 const BASE_URL = "https://meucorre.vercel.app";
 const ADMIN_EMAIL = "clodoaldo608@gmail.com";
-const ADMIN_PASSWORD = "Silva88677488@#";
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD ?? "");
 
 async function main() {
   const res = await fetch(`${BASE_URL}/api/admin/login`, {

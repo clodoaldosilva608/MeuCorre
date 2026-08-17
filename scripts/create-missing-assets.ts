@@ -7,7 +7,7 @@ async function login() {
   const res = await fetch(`${BASE_URL}/api/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "clodoaldo608@gmail.com", password: "Silva88677488@#" }),
+    body: JSON.stringify({ email: "clodoaldo608@gmail.com", password: (process.env.ADMIN_PASSWORD ?? "") }),
   });
   const setCookie = res.headers.getSetCookie?.() ?? [];
   return setCookie.map((c: string) => c.split(";")[0]).join("; ");
