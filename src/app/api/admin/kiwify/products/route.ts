@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { kiwifyFetch, getKiwifyAccessToken } from "@/lib/kiwify-client";
 
 // GET /api/admin/kiwify/products
-// Lista produtos da Kiwify via API (com cache de 1 hora)
+// Lista produtos da Kiwify via API oficial (com cache de 1 hora)
 // Documentação: https://docs.kiwify.com.br/api-reference/products/list
 
-const KIWIFY_API_BASE = "https://api.kiwify.com.br/v1";
-
-// Cache em memória (renova a cada 1 hora)
 let productsCache: { data: unknown; timestamp: number } | null = null;
 const CACHE_TTL = 60 * 60 * 1000; // 1 hora
 
@@ -16,61 +14,34 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const apiToken = process.env.KIWIFY_API_TOKEN;
-  if (!apiToken) {
+  const clientId = process.env.KIWIFY_CLIENT_ID;
+
+  if (!clientId) {
     return NextResponse.json({
-      error: "KIWIFY_API_TOKEN não configurado",
+      error: "KIWIFY_CLIENT_ID não configurado",
       products: [],
     });
   }
 
-  // Verificar cache
+  // Verificar cache de produtos
   if (productsCache && Date.now() - productsCache.timestamp < CACHE_TTL) {
     return NextResponse.json({ products: productsCache.data, cached: true });
   }
 
   try {
-    // A Kiwify usa OAuth: primeiro gera bearer token com api_key
-    // Documentação: https://docs.kiwify.com.br/api-reference/general
-    const tokenRes = await fetch(`${KIWIFY_API_BASE}/oauth/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        api_key: apiToken,
-        grant_type: "client_credentials",
-      }),
-    });
-
-    if (!tokenRes.ok) {
-      const err = await tokenRes.text();
-      console.error("[kiwify/products] OAuth falhou:", err);
+    // Testar se OAuth funciona
+    const token = await getKiwifyAccessToken();
+    if (!token) {
       return NextResponse.json({
-        error: "Falha na autenticação Kiwify",
-        details: err,
+        error: "Falha na autenticação Kiwify (OAuth). Verifique KIWIFY_CLIENT_ID e KIWIFY_CLIENT_SECRET.",
         products: [],
       }, { status: 502 });
     }
 
-    const tokenData = await tokenRes.json();
-    const accessToken = tokenData.access_token;
+    const res = await kiwifyFetch("/products");
 
-    if (!accessToken) {
-      return NextResponse.json({
-        error: "Token Kiwify não retornado",
-        products: [],
-      }, { status: 502 });
-    }
-
-    // Listar produtos
-    const productsRes = await fetch(`${KIWIFY_API_BASE}/products`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!productsRes.ok) {
-      const err = await productsRes.text();
+    if (!res.ok) {
+      const err = await res.text();
       console.error("[kiwify/products] List falhou:", err);
       return NextResponse.json({
         error: "Falha ao listar produtos",
@@ -79,8 +50,8 @@ export async function GET() {
       }, { status: 502 });
     }
 
-    const productsData = await productsRes.json();
-    const products = productsData.data || productsData.products || [];
+    const data = await res.json();
+    const products = data.data || [];
 
     // Atualizar cache
     productsCache = { data: products, timestamp: Date.now() };

@@ -1,24 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthed } from "@/lib/admin-auth";
+import { kiwifyFetch } from "@/lib/kiwify-client";
 
 // GET /api/admin/kiwify/orders?days=30
-// Lista pedidos da Kiwify via API (com cache de 5 minutos)
+// Lista pedidos (vendas) da Kiwify via API oficial (com cache de 5 minutos)
+// Documentação: https://docs.kiwify.com.br/api-reference/sales/list-sales
 
-const KIWIFY_API_BASE = "https://api.kiwify.com.br/v1";
 let ordersCache: { data: unknown; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 export async function GET(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  }
-
-  const apiToken = process.env.KIWIFY_API_TOKEN;
-  if (!apiToken) {
-    return NextResponse.json({
-      error: "KIWIFY_API_TOKEN não configurado",
-      orders: [],
-    });
   }
 
   const url = new URL(req.url);
@@ -30,52 +23,28 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // OAuth token
-    const tokenRes = await fetch(`${KIWIFY_API_BASE}/oauth/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        api_key: apiToken,
-        grant_type: "client_credentials",
-      }),
-    });
-
-    if (!tokenRes.ok) {
-      return NextResponse.json({
-        error: "Falha na autenticação Kiwify",
-        orders: [],
-      }, { status: 502 });
-    }
-
-    const tokenData = await tokenRes.json();
-    const accessToken = tokenData.access_token;
-
-    // Listar orders dos últimos N dias
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
+    const startDateStr = startDate.toISOString().split("T")[0]; // YYYY-MM-DD
 
-    const ordersRes = await fetch(
-      `${KIWIFY_API_BASE}/orders?start_date=${startDate.toISOString()}&per_page=100`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
+    // Endpoint: /v1/sales (não /orders)
+    // Documentação: https://docs.kiwify.com.br/api-reference/sales/list-sales
+    const res = await kiwifyFetch(
+      `/sales?start_date=${startDateStr}&per_page=100`
     );
 
-    if (!ordersRes.ok) {
-      const err = await ordersRes.text();
+    if (!res.ok) {
+      const err = await res.text();
       console.error("[kiwify/orders] List falhou:", err);
       return NextResponse.json({
-        error: "Falha ao listar pedidos",
+        error: "Falha ao listar vendas",
         details: err,
         orders: [],
       }, { status: 502 });
     }
 
-    const ordersData = await ordersRes.json();
-    const orders = ordersData.data || ordersData.orders || [];
+    const data = await res.json();
+    const orders = data.data || [];
 
     // Atualizar cache
     ordersCache = { data: orders, timestamp: Date.now() };
