@@ -59,7 +59,7 @@ const SPONSORED_BRANDS: SponsoredBrand[] = [
 // Duplica para criar loop infinito
 const LOOP_BRANDS = [...SPONSORED_BRANDS, ...SPONSORED_BRANDS];
 
-const SPONSOR_CHECKOUT_URL = "https://pay.kiwify.com.br/FCIdFRB";
+const SPONSOR_CHECKOUT_URL = "https://pay.kiwify.com.br/th2VNpn";
 
 // Gera iniciais a partir do nome da marca
 function getInitials(name: string): string {
