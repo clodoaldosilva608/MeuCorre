@@ -12,6 +12,7 @@ import { BlogCarousel } from "@/components/meucorre/blog-carousel";
 import { TestimonialsCarousel } from "@/components/meucorre/testimonials-carousel";
 import { FounderMessage } from "@/components/meucorre/founder-message";
 import { YouTubeSection } from "@/components/meucorre/youtube-section";
+import { SponsoredBrandsCarousel } from "@/components/meucorre/sponsored-brands-carousel";
 import { AnimatedCounter } from "@/components/meucorre/animated-counter";
 import { StickyCTA } from "@/components/meucorre/sticky-cta";
 import { DownloadButton } from "@/components/meucorre/download-button";
@@ -1147,7 +1148,10 @@ export default function LandingPage() {
       {/* ===== 7.6 SEÇÃO YOUTUBE — vídeos do canal @meucorre-z4j ===== */}
       <YouTubeSection />
 
-      {/* ===== 7.7 SEÇÃO PRODUTOS DIGITAIS — E-books e Curso Premium ===== */}
+      {/* ===== 7.7 SEÇÃO MARCAS PATROCINADAS — carrossel + CTA R$ 16,90/mês ===== */}
+      <SponsoredBrandsCarousel />
+
+      {/* ===== 7.8 SEÇÃO PRODUTOS DIGITAIS — E-books e Curso Premium ===== */}
       <section className="bg-white py-16 text-zinc-900 md:py-24">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
