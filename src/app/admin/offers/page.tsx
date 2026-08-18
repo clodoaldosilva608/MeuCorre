@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -168,13 +169,22 @@ export default function AdminOffersPage() {
             afiliado com tracking automático.
           </p>
         </div>
-        <Button
-          onClick={openCreate}
-          className="bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
-        >
-          <Plus className="mr-1.5 h-4 w-4" />
-          Nova oferta
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            asChild
+            variant="outline"
+            className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800"
+          >
+            <Link href="/admin/offers/import">Importar planilha</Link>
+          </Button>
+          <Button
+            onClick={openCreate}
+            className="bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nova oferta
+          </Button>
+        </div>
       </div>
 
       {/* Estatísticas rápidas */}
