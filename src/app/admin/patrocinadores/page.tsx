@@ -316,7 +316,7 @@ export default function AdminPatrocinadoresPage() {
   );
 }
 
-function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: React.ComponentType<{ className?: string }>; color: string }) {
+function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; color: string }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
       <div className="flex items-center gap-2 text-zinc-500"><Icon className="h-4 w-4" style={{ color }} /><span className="text-xs">{label}</span></div>
