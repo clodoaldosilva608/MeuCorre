@@ -1405,3 +1405,54 @@ model RevenueEntry {
   @@index([source, date])
   @@index([date])
 }
+
+// ===== Patrocinadores (Marcas Patrocinadas) =====
+//
+// Marcas que pagam para serem divulgadas na plataforma MeuCorre.
+// Aparecem no carrossel da landing page e como banners na dashboard do usuário.
+
+model Sponsor {
+  id              String   @id @default(cuid())
+  // Nome da marca/empresa
+  name            String
+  // Descrição curta para o carrossel
+  description     String?
+  // Categoria (Acessórios, Seguros, Tecnologia, etc.)
+  category        String?
+  // URL do site do patrocinador
+  website         String?
+  // URL do logo (upload ou URL externa)
+  logoUrl         String?
+  // URL do banner para pop-up na dashboard (upload ou URL externa)
+  bannerUrl       String?
+  // Link de destino do banner (para onde o banner redireciona)
+  bannerLink      String?
+  // Redes sociais
+  instagram       String?
+  facebook        String?
+  whatsapp        String?
+  // Contato
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  // Endereço
+  address         String?
+  city            String?
+  state           String?
+  // Configurações de exibição
+  active          Boolean  @default(true)
+  showInCarousel  Boolean  @default(true)
+  showBanner      Boolean  @default(false)
+  // Ordenação no carrossel
+  sortOrder       Int      @default(0)
+  // Datas da assinatura
+  startDate       DateTime @default(now())
+  endDate         DateTime?
+  // Notas internas do admin
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([active, showInCarousel])
+  @@index([active, showBanner])
+}

@@ -38,6 +38,7 @@ import { GoalsProgress } from "@/components/meucorre/goals-progress";
 import { OnboardingPopup } from "@/components/meucorre/onboarding-popup";
 import { BlogPromoPopup } from "@/components/meucorre/blog-promo-popup";
 import { SocialFollowPopup } from "@/components/meucorre/social-follow-popup";
+import { SponsorBannerPopup } from "@/components/meucorre/sponsor-banner-popup";
 import { HeatmapMap } from "@/components/meucorre/heatmap-map";
 import { useGoals } from "@/hooks/use-goals";
 import { useWorkSessions } from "@/hooks/use-work-sessions";
@@ -1116,6 +1117,11 @@ function HomeContent() {
           6.5s após abrir o app. Instagram, TikTok, YouTube + share buttons.
           Suprimido em modo demo. */}
       {!isDemoMode && <SocialFollowPopup />}
+
+      {/* Banner pop-up de patrocinadores — aparece 1x por dia, 5s após abrir o app.
+          Mostra banners de marcas patrocinadas que pagaram para aparecer na dashboard.
+          Admin configura em /admin/patrocinadores (showBanner = true). */}
+      {!isDemoMode && <SponsorBannerPopup />}
 
       {/* Mapa de calor — áreas quentes onde o entregador mais faz corridas.
           Aberto via botão "Mapa de calor" no Corre do dia.

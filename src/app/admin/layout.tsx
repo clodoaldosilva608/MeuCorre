@@ -51,6 +51,7 @@ const NAV_BASE = [
   { href: "/admin/redes-sociais", label: "Redes Sociais", icon: Share2 },
   { href: "/admin/monetizacao", label: "Monetização", icon: DollarSign },
   { href: "/admin/vendas", label: "Vendas", icon: ShoppingCart },
+  { href: "/admin/patrocinadores", label: "Patrocinadores", icon: Megaphone },
   { href: "/admin/flags", label: "Feature Flags", icon: Flag },
   { href: "/admin/security", label: "Segurança", icon: Shield },
 ];
