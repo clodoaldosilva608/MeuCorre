@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, ExternalLink, Loader2, DollarSign, TrendingUp,
   ShoppingCart, BookOpen, Wrench, Video, Users, Target, Lightbulb,
-  CheckCircle2, Clock, ArrowRight,
+  CheckCircle2, Clock, ArrowRight, Share2, Copy, Check, MessageCircle, Send, Facebook, Twitter,
 } from "lucide-react";
 
 interface AffiliateProduct {
@@ -434,6 +434,41 @@ export default function AdminMonetizacaoPage() {
                     <ExternalLink className="h-3 w-3" />
                     Abrir link
                   </a>
+
+                  {/* Botões de divulgação nas redes sociais */}
+                  <div className="mt-2">
+                    <p className="mb-1.5 text-[10px] font-medium text-zinc-500 flex items-center gap-1">
+                      <Share2 className="h-3 w-3" />
+                      Divulgar e ganhar comissão
+                    </p>
+                    <div className="flex gap-1.5">
+                      <ShareButton
+                        icon={MessageCircle}
+                        color="#25D366"
+                        label="WhatsApp"
+                        url={`https://wa.me/?text=${encodeURIComponent(`📦 ${product.name} — ${product.price ? `R$ ${product.price.toFixed(2)}` : "Grátis"}\n\n${product.description || ""}\n\n👉 ${product.url}`)}`}
+                      />
+                      <ShareButton
+                        icon={Facebook}
+                        color="#1877F2"
+                        label="Facebook"
+                        url={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(product.url)}&quote=${encodeURIComponent(product.name)}`}
+                      />
+                      <ShareButton
+                        icon={Twitter}
+                        color="#000000"
+                        label="Twitter/X"
+                        url={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`📦 ${product.name} — ${product.price ? `R$ ${product.price.toFixed(2)}` : "Grátis"}\n\n👉 ${product.url}`)}`}
+                      />
+                      <ShareButton
+                        icon={Send}
+                        color="#0088CC"
+                        label="Telegram"
+                        url={`https://t.me/share/url?url=${encodeURIComponent(product.url)}&text=${encodeURIComponent(`📦 ${product.name} — ${product.price ? `R$ ${product.price.toFixed(2)}` : "Grátis"}`)}`}
+                      />
+                      <CopyLinkButton url={product.url} />
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -728,5 +763,60 @@ function RevenueDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ===== Componente: Botão de compartilhar em rede social =====
+function ShareButton({
+  icon: Icon,
+  color,
+  label,
+  url,
+}: {
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  color: string;
+  label: string;
+  url: string;
+}) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`Compartilhar no ${label}`}
+      className="grid h-8 w-8 place-items-center rounded-lg border border-zinc-800 bg-zinc-950 transition-all hover:scale-110 hover:border-zinc-600"
+    >
+      <Icon className="h-3.5 w-3.5" style={{ color }} />
+    </a>
+  );
+}
+
+// ===== Componente: Botão de copiar link =====
+function CopyLinkButton({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success("Link copiado!", { description: "Cole onde quiser divulgar" });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Erro ao copiar link");
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copiar link"
+      className="grid h-8 w-8 place-items-center rounded-lg border border-zinc-800 bg-zinc-950 transition-all hover:scale-110 hover:border-zinc-600"
+    >
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-emerald-400" />
+      ) : (
+        <Copy className="h-3.5 w-3.5 text-zinc-400" />
+      )}
+    </button>
   );
 }
