@@ -689,6 +689,7 @@ function HomeContent() {
         activeTab={activeTab}
         goal={goalsWithProgress[0]}
         recentDeliveries={filteredDeliveries}
+        apps={apps}
         onPeriodChange={setPeriod}
         onNewDelivery={openNewDelivery}
         onStartSession={startSession}
