@@ -1153,3 +1153,29 @@
 .reference-brand-logo { width: 42px; height: 42px; object-fit: contain; }
 .reference-dashboard-brand img { width: 54px; height: 54px; object-fit: contain; }
 .reference-dashboard-brand { font-size: 31px; }
+
+
+.reference-dashboard-header-actions { display: flex; align-items: center; gap: 14px; }
+.reference-menu-button { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; background: #171b18; color: #ecf2ed; }
+.reference-menu-button:hover, .reference-menu-button:focus-visible { border-color: #66d84d; color: #66d84d; outline: none; }
+.reference-menu-button svg { width: 22px; height: 22px; }
+.reference-sidebar-backdrop { position: fixed; inset: 0; z-index: 80; cursor: pointer; background: rgba(0,0,0,0.66); backdrop-filter: blur(3px); }
+.reference-sidebar { position: fixed; top: 0; right: 0; z-index: 90; display: flex; width: min(360px, calc(100vw - 24px)); height: 100dvh; flex-direction: column; border-left: 1px solid rgba(255,255,255,0.14); background: #101311; box-shadow: -24px 0 70px rgba(0,0,0,0.55); animation: reference-sidebar-in 180ms ease-out; }
+.reference-sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.11); }
+.reference-sidebar-head strong { display: block; color: #f5f8f5; font-size: 18px; }
+.reference-sidebar-head small { display: block; margin-top: 4px; color: #8d998f; font-size: 11px; }
+.reference-sidebar-head button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; color: #aab5ad; }
+.reference-sidebar-head button:hover, .reference-sidebar-head button:focus-visible { background: #202620; color: #66d84d; outline: none; }
+.reference-sidebar-head svg { width: 20px; }
+.reference-sidebar nav { display: flex; flex: 1; flex-direction: column; gap: 3px; overflow-y: auto; padding: 14px; }
+.reference-sidebar nav button, .reference-sidebar nav a { display: flex; align-items: center; gap: 13px; min-height: 46px; border-radius: 10px; padding: 10px 12px; color: #d6ded7; font-size: 13px; text-align: left; }
+.reference-sidebar nav button:hover, .reference-sidebar nav button:focus-visible, .reference-sidebar nav a:hover, .reference-sidebar nav a:focus-visible { background: #202620; color: #66d84d; outline: none; }
+.reference-sidebar nav svg { width: 18px; height: 18px; flex: 0 0 auto; color: #9eaaa1; }
+.reference-sidebar nav p { margin: 10px 12px 2px; color: #77837a; font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+.reference-sidebar nav .danger { color: #f07979; }
+.reference-sidebar nav .danger svg { color: #f07979; }
+.reference-sidebar-sep { height: 1px; margin: 9px 0; background: rgba(255,255,255,0.11); }
+@keyframes reference-sidebar-in { from { transform: translateX(100%); opacity: 0.8; } to { transform: translateX(0); opacity: 1; } }
+@media (max-width: 520px) { .reference-dashboard-header { padding-inline: 15px; } .reference-dashboard-header-actions { gap: 8px; } .reference-offline { font-size: 11px; } .reference-offline small { font-size: 9px; } .reference-menu-button { width: 38px; height: 38px; } .reference-sidebar { width: min(340px, calc(100vw - 18px)); } }
+
+.landing-legacy-content > h2 { width: min(100%, 760px); margin: 28px auto 0; padding: 0 20px; color: #f1f6f2; font-size: clamp(22px, 4vw, 32px); font-weight: 900; letter-spacing: -0.03em; text-align: center; }

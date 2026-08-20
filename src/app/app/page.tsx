@@ -676,6 +676,15 @@ function HomeContent() {
         onStartSession={startSession}
         onOpenHeatmap={() => setHeatmapOpen(true)}
         onTabChange={setActiveTab}
+        onOpenApps={isDemoMode ? (() => {}) : () => setAppManagerOpen(true)}
+        onOpenCapture={isDemoMode ? (() => {}) : () => setCaptureOpen(true)}
+        onOpenLicense={isDemoMode ? (() => {}) : () => setLicenseOpen(true)}
+        onOpenShare={isDemoMode ? (() => {}) : () => setShareOpen(true)}
+        onOpenOnboarding={isDemoMode ? undefined : () => setOnboardingOpen(true)}
+        onExportJSON={isDemoMode ? (() => {}) : handleExportJSON}
+        onExportCSV={isDemoMode ? (() => {}) : handleExportCSV}
+        onClearAll={isDemoMode ? (() => {}) : () => setConfirmClear(true)}
+        onLogout={isDemoMode ? (() => {}) : handleLogout}
       />
       <details className="dashboard-legacy-content">
         <summary>Mais recursos do app</summary>

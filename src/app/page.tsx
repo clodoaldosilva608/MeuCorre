@@ -245,8 +245,8 @@ export default function LandingPage() {
   return (
     <div className="landing-page flex min-h-screen flex-col bg-ink text-white">
       <ReferenceLanding onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
-      <details className="landing-legacy-content">
-        <summary>Mais recursos do produto</summary>
+      <section className="landing-legacy-content">
+        <h2>Mais recursos do produto</h2>
         <div className="landing-legacy-inner">
         <Header onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
 
@@ -1659,7 +1659,7 @@ export default function LandingPage() {
       {/* Sticky CTA no mobile — aparece ao rolar */}
       <StickyCTA href={getFreeDownloadHref(isAuthenticated)} />
         </div>
-      </details>
+      </section>
     </div>
   );
 }
