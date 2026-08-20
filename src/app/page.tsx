@@ -526,8 +526,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== 3. A SOLUÇÃO (claro, fundo branco) ===== */}
-      <section className="bg-white py-16 text-zinc-900 md:py-24">
+      {/* ===== 3. A SOLUÇÃO (dark, glass cards) ===== */}
+      <section className="bg-ink py-16 text-white md:py-24">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
@@ -540,12 +540,12 @@ export default function LandingPage() {
               <Check className="h-3 w-3" />
               A solução
             </p>
-            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
               MeuCorre junta tudo
               <br />
               <span className="text-neon">numa tela só</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-600 md:text-lg">
+            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-400 md:text-lg">
               Sem planilha, sem caderninho, sem abrir 3 apps pra somar. O
               entregador lança, o app calcula, você decide.
             </p>
@@ -562,15 +562,15 @@ export default function LandingPage() {
               <motion.div
                 key={i}
                 variants={itemUp}
-                className="feature-card rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-lg"
+                className="feature-card rounded-2xl border border-white/8 bg-white/3 p-5 backdrop-blur-md transition-all hover:-translate-y-1 hover:border-emerald-500/30 hover:bg-white/5"
               >
                 <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-500/10 text-2xl">
                   {f.emoji}
                 </div>
-                <h3 className="mt-3 text-sm font-bold text-zinc-900">
+                <h3 className="mt-3 text-sm font-bold text-white">
                   {f.title}
                 </h3>
-                <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+                <p className="mt-1 text-xs leading-relaxed text-zinc-400">
                   {f.desc}
                 </p>
               </motion.div>
@@ -579,8 +579,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== 4. VEJA COMO FUNCIONA (iPhone showcase animado) ===== */}
-      <section className="relative overflow-hidden border-y border-zinc-200 bg-zinc-50 py-16 text-zinc-900 md:py-24">
+      {/* ===== 4. VEJA COMO FUNCIONA (dark, iPhone showcase) ===== */}
+      <section className="relative overflow-hidden border-y border-white/8 bg-ink py-16 text-white md:py-24">
         {/* AdSense — banner horizontal discreto entre seções (só aparece se configurado) */}
         <div className="mx-auto mb-12 max-w-3xl px-4">
           <AdSense
@@ -600,10 +600,10 @@ export default function LandingPage() {
             <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
               Veja como funciona
             </p>
-            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
               Não é promessa. É tela.
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-600 md:text-lg">
+            <p className="mx-auto mt-4 max-w-xl text-base text-zinc-400 md:text-lg">
               Olha como o MeuCorre trabalha por você — do lançamento ao lucro
               líquido. Veja o app rodando no celular:
             </p>
@@ -637,11 +637,11 @@ export default function LandingPage() {
               <motion.div
                 key={i}
                 variants={itemUp}
-                className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-white p-4"
+                className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/3 p-4 backdrop-blur-md"
               >
                 <span className="text-2xl">{f.emoji}</span>
                 <div>
-                  <p className="text-sm font-bold text-zinc-900">{f.title}</p>
+                  <p className="text-sm font-bold text-white">{f.title}</p>
                   <p className="mt-0.5 text-xs text-zinc-600">{f.desc}</p>
                 </div>
               </motion.div>
@@ -691,7 +691,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== BLOG CARROSSEL (direita → esquerda) ===== */}
-      <section className="bg-white py-16 text-zinc-900 md:py-20">
+      <section className="bg-ink py-16 text-white md:py-20">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
@@ -703,7 +703,7 @@ export default function LandingPage() {
             <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
               Blog MeuCorre
             </p>
-            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
               Dicas que aumentam seu lucro
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base text-zinc-600">
@@ -721,7 +721,7 @@ export default function LandingPage() {
         <div className="mt-8 text-center">
           <a
             href="/blog"
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-500 bg-white px-6 py-3 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-50"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-500/100 px-6 py-3 text-sm font-bold text-black transition-all hover:bg-emerald-500/10"
           >
             Ver todos os artigos →
           </a>
@@ -764,7 +764,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 6. PLANOS (gratuito + 3 tiers: mensal / anual / vitalício) ===== */}
-      <section id="planos" className="bg-white py-16 text-zinc-900 md:py-24">
+      <section id="planos" className="bg-ink py-16 text-white md:py-24">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
@@ -776,7 +776,7 @@ export default function LandingPage() {
             <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-orange-hot/40 bg-orange-hot/10 px-3 py-1 text-xs font-bold text-orange-hot">
               🔥 Escolha seu plano — sem fidelidade
             </div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
               MeuCorre PRO — você escolhe como pagar
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base text-zinc-600">
@@ -811,7 +811,7 @@ export default function LandingPage() {
               </div>
               <a
                 href="/quiz"
-                className="inline-flex shrink-0 items-center gap-2 rounded-xl border-2 border-emerald-500 bg-white px-6 py-3 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-50"
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-500/100 px-6 py-3 text-sm font-bold text-black transition-all hover:bg-emerald-500/10"
                 data-cta-origin="plans_comecar_gratis"
               >
                 Começar grátis
@@ -839,7 +839,7 @@ export default function LandingPage() {
             {/* MENSAL */}
             <motion.div
               variants={itemUp}
-              className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+              className="flex flex-col rounded-2xl border border-white/8 bg-white/3/3 p-5 backdrop-blur-md"
             >
               <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
                 Mensal
@@ -868,7 +868,7 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={() => openCheckoutWithPlan("monthly")}
-                className="mt-5 w-full rounded-xl border-2 border-zinc-300 bg-white py-3 text-sm font-bold text-zinc-700 transition-all hover:border-neon hover:text-neon"
+                className="mt-5 w-full rounded-xl border-2 border-white/8 bg-white/3 py-3 text-sm font-bold text-white transition-all hover:border-neon hover:text-neon"
               >
                 Assinar mensal
               </button>
@@ -877,7 +877,7 @@ export default function LandingPage() {
             {/* ANUAL — destaque "mais popular" */}
             <motion.div
               variants={itemUp}
-              className="relative flex flex-col rounded-2xl border-2 border-neon bg-white p-5 shadow-neon"
+              className="relative flex flex-col rounded-2xl border-2 border-neon bg-white/3 p-5 backdrop-blur-md shadow-neon"
             >
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-neon px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
                 Mais popular
@@ -999,7 +999,7 @@ export default function LandingPage() {
             {lifetimeStatus?.available === false && (
               <motion.div
                 variants={itemUp}
-                className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-zinc-300 bg-zinc-100 p-5 text-zinc-500"
+                className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-white/8 bg-white/3 p-5 text-zinc-500 backdrop-blur-md"
               >
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-zinc-400 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-950">
                   Esgotado
@@ -1048,14 +1048,14 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 7. FAQ ===== */}
-      <section className="border-t border-zinc-200 bg-zinc-50 py-16 text-zinc-900 md:py-20">
+      <section className="border-t border-white/8 bg-ink py-16 text-white md:py-20">
         <div className="mx-auto max-w-2xl px-4">
           <motion.h2
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-80px" }}
-            className="text-center text-2xl font-extrabold tracking-tight text-zinc-900 md:text-3xl"
+            className="text-center text-2xl font-extrabold tracking-tight text-white md:text-3xl"
           >
             Perguntas frequentes
           </motion.h2>
@@ -1097,7 +1097,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== 7.5 GALERIA SOCIAL (imagens do Instagram/TikTok/YouTube) ===== */}
-      <section className="bg-white py-12 text-zinc-900 md:py-16">
+      <section className="bg-ink py-12 text-white md:py-16">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
@@ -1109,7 +1109,7 @@ export default function LandingPage() {
             <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-xs font-medium text-neon">
               @meucorre nas redes
             </p>
-            <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900 md:text-3xl">
+            <h2 className="text-2xl font-extrabold tracking-tight text-white md:text-3xl">
               Siga o MeuCorre
             </h2>
           </motion.div>
@@ -1152,7 +1152,7 @@ export default function LandingPage() {
       <SponsoredBrandsCarousel />
 
       {/* ===== 7.8 SEÇÃO PRODUTOS DIGITAIS — E-books e Curso Premium ===== */}
-      <section className="bg-white py-16 text-zinc-900 md:py-24">
+      <section className="bg-ink py-16 text-white md:py-24">
         <div className="mx-auto max-w-5xl px-4">
           <motion.div
             variants={fadeUp}
@@ -1165,7 +1165,7 @@ export default function LandingPage() {
               <Sparkles className="h-3 w-3" />
               Materiais exclusivos para entregadores
             </p>
-            <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
               Conhecimento que <span className="text-neon">multiplica seu lucro</span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-base text-zinc-500 md:text-lg">
@@ -1181,7 +1181,7 @@ export default function LandingPage() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-80px" }}
-              className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-lg"
+              className="flex flex-col rounded-2xl border border-white/8 bg-white/3 p-6 backdrop-blur-md transition-shadow hover:shadow-lg"
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-xl bg-emerald-500/10">
@@ -1225,7 +1225,7 @@ export default function LandingPage() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-80px" }}
-              className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-lg"
+              className="flex flex-col rounded-2xl border border-white/8 bg-white/3 p-6 backdrop-blur-md transition-shadow hover:shadow-lg"
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-xl bg-blue-500/10">
@@ -1382,7 +1382,7 @@ export default function LandingPage() {
       </section>
 
       {/* AdSense — banner antes do footer */}
-      <div className="bg-white py-4">
+      <div className="bg-ink py-4">
         <div className="mx-auto max-w-3xl px-4">
           <AdSense
             slot="3333333333"
@@ -1464,7 +1464,7 @@ export default function LandingPage() {
                 href="https://chat.whatsapp.com/FOH9IYGwee19NIYOSEVe3z?s=cl&p=a&ilr=0"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-4 rounded-2xl border-2 border-emerald-500/30 bg-emerald-500/5 p-4 transition-all hover:border-emerald-500/60 hover:bg-emerald-500/10 active:scale-[0.98]"
+                className="group flex items-center gap-4 rounded-2xl border-2 border-emerald-500/30 bg-emerald-500/5 p-4 transition-all hover:border-emerald-500/60 hover:bg-emerald-500/100/10 active:scale-[0.98]"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 transition-transform group-hover:scale-110">
                   <WhatsAppIcon size={28} />
@@ -1630,7 +1630,7 @@ function PainCard({
         "rounded-2xl border p-4 text-left transition-all",
         isDark
           ? "card-neon hover:border-orange-hot/50"
-          : "border-zinc-200 bg-white hover:border-neon",
+          : "border-white/8 bg-white/3 hover:border-neon",
       ].join(" ")}
     >
       <div className="text-2xl">{emoji}</div>
@@ -1657,7 +1657,7 @@ function PainCard({
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white">
+    <div className="rounded-xl border border-white/8 bg-white/3">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between p-4 text-left"
@@ -1838,7 +1838,7 @@ function CheckoutDialog({
         onOpenChange(o);
       }}
     >
-      <DialogContent className="max-w-md gap-0 border-neon/30 bg-white p-0 text-zinc-900">
+      <DialogContent className="max-w-md gap-0 border-neon/30 bg-zinc-900 p-0 text-white">
         <DialogHeader className="border-b border-neon/10 px-5 py-4">
           <DialogTitle className="flex items-center gap-2 text-base font-bold text-neon">
             <CreditCard className="h-4 w-4" />
@@ -1866,7 +1866,7 @@ function CheckoutDialog({
                     className={`rounded-lg border-2 p-2 text-center transition-all ${
                       isSelected
                         ? "border-neon bg-neon/5"
-                        : "border-zinc-200 bg-white hover:border-zinc-300"
+                        : "border-white/8 bg-white/3 hover:border-zinc-300"
                     }`}
                   >
                     <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
@@ -1895,7 +1895,7 @@ function CheckoutDialog({
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              className="border-zinc-200 bg-white text-zinc-900 focus:border-neon"
+              className="border-white/8 bg-white/3 text-zinc-900 focus:border-neon"
             />
           </div>
           <div className="space-y-1.5">
@@ -1905,7 +1905,7 @@ function CheckoutDialog({
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
-              className="border-zinc-200 bg-white text-zinc-900 focus:border-neon"
+              className="border-white/8 bg-white/3 text-zinc-900 focus:border-neon"
             />
             <p className="text-[10px] text-zinc-500">
               Sua licença será enviada para este email
@@ -1917,7 +1917,7 @@ function CheckoutDialog({
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               placeholder="(11) 99999-9999"
-              className="border-zinc-200 bg-white text-zinc-900 focus:border-neon"
+              className="border-white/8 bg-white/3 text-zinc-900 focus:border-neon"
             />
           </div>
 
