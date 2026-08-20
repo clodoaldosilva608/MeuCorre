@@ -651,3 +651,179 @@
   opacity: 1;
   transform: translateY(0);
 }
+
+
+/* ================================================================
+   MEUCORRE — EXECUÇÃO VISUAL INTEGRAL DAS REFERÊNCIAS
+   Escopos: .landing-page e .meucorre-app-shell
+   Mantém lógica, dados e interações; altera somente apresentação.
+   ================================================================ */
+
+.landing-page {
+  --mc-bg: #0a0a0a;
+  --mc-surface: #161616;
+  --mc-surface-elevated: #1c1f1e;
+  --mc-line: rgba(255, 255, 255, 0.1);
+  --mc-green: #4ade80;
+  --mc-muted: #a1a1aa;
+  background: var(--mc-bg) !important;
+  color: #fff;
+}
+
+.landing-page section,
+.landing-page footer {
+  background-color: var(--mc-bg) !important;
+  color: #fff;
+}
+
+.landing-page section[id],
+.landing-page .section-fade {
+  scroll-margin-top: 72px;
+}
+
+.landing-page .card-neon,
+.landing-page .feature-card,
+.landing-page [class*="rounded-2xl"][class*="border"] {
+  background: linear-gradient(145deg, rgba(28, 31, 30, 0.98), rgba(16, 17, 17, 0.98)) !important;
+  border-color: var(--mc-line) !important;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+}
+
+/* Cards de preço: a referência é totalmente escura, com destaque verde apenas no plano ativo. */
+.landing-page #planos .bg-zinc-50,
+.landing-page #planos .from-zinc-50,
+.landing-page #planos .to-white,
+.landing-page #planos .bg-white,
+.landing-page #planos [class*="bg-gradient-to-br"] {
+  background: linear-gradient(145deg, #1c1f1e, #101111) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.landing-page #planos .text-zinc-900,
+.landing-page #planos .text-zinc-800 {
+  color: #fff !important;
+}
+
+.landing-page #planos .text-zinc-500,
+.landing-page #planos .text-zinc-400 {
+  color: #a1a1aa !important;
+}
+
+.landing-page .btn-neon {
+  min-height: 48px;
+  border-radius: 14px;
+  background: var(--mc-green) !important;
+  box-shadow: 0 8px 24px rgba(74, 222, 128, 0.2);
+}
+
+.landing-page .btn-neon-outline {
+  min-height: 48px;
+  border-radius: 14px;
+  border-color: rgba(74, 222, 128, 0.65);
+}
+
+/* Hero mobile: uma coluna, mockup abaixo do CTA e ritmo semelhante à referência. */
+@media (max-width: 1023px) {
+  .landing-page section:first-of-type > div.relative.mx-auto {
+    min-height: auto !important;
+    padding-top: 5rem !important;
+    padding-bottom: 3.5rem !important;
+  }
+
+  .landing-page section:first-of-type h1 {
+    max-width: 20rem;
+    margin-inline: auto;
+    font-size: clamp(2.25rem, 11vw, 3.5rem) !important;
+    line-height: 0.98 !important;
+  }
+
+  .landing-page section:first-of-type .phone-showcase,
+  .landing-page section:first-of-type iframe {
+    max-width: min(100%, 22rem);
+    margin-inline: auto;
+  }
+
+  .landing-page .float-badge {
+    display: none;
+  }
+
+  .landing-page .grid {
+    gap: 0.75rem;
+  }
+}
+
+/* Dashboard: largura e ritmo compactos, com a mesma hierarquia do mockup. */
+.meucorre-app-shell {
+  --mc-bg: #0a0a0a;
+  --mc-surface: #161616;
+  --mc-surface-elevated: #1c1f1e;
+  --mc-line: rgba(255, 255, 255, 0.09);
+  background: var(--mc-bg) !important;
+}
+
+.meucorre-app-shell main {
+  width: 100%;
+  max-width: 430px !important;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  padding-bottom: 9.5rem;
+}
+
+.meucorre-app-shell .header-premium {
+  background: rgba(10, 10, 10, 0.92);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.meucorre-app-shell .hero-card {
+  background: linear-gradient(145deg, #1c1f1e, #121413);
+  border-color: rgba(74, 222, 128, 0.18);
+  border-radius: 18px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.24);
+}
+
+.meucorre-app-shell .stat-card,
+.meucorre-app-shell .app-summary-card {
+  background: linear-gradient(145deg, #1c1f1e, #151817);
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.meucorre-app-shell .stat-card {
+  min-height: 86px;
+}
+
+.meucorre-app-shell .bottom-nav-premium {
+  background: rgba(13, 15, 14, 0.97);
+  border-top-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.meucorre-app-shell .bottom-nav-premium button {
+  min-height: 52px;
+}
+
+.meucorre-app-shell .bottom-nav-premium button[aria-current="page"] > div {
+  background: rgba(74, 222, 128, 0.14);
+  border-radius: 10px;
+}
+
+@media (min-width: 768px) {
+  .meucorre-app-shell main {
+    max-width: 760px !important;
+  }
+}
+
+@media (min-width: 1100px) {
+  .meucorre-app-shell main {
+    max-width: 1020px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page *,
+  .meucorre-app-shell * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

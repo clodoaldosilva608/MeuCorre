@@ -30,9 +30,11 @@ export function Fab({ onClick, variant = "primary", label = "Adicionar" }: FabPr
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
       aria-label={label}
-      className={`fixed bottom-24 right-5 z-50 grid h-14 w-14 place-items-center rounded-full ring-4 ring-zinc-950/40 ${fabClass}`}
-    >
-      <Plus className="h-7 w-7" strokeWidth={3} />
+      className={`fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-1/2 z-50 flex h-14 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 items-center justify-center gap-3 rounded-2xl px-6 text-base font-extrabold ring-4 ring-zinc-950/40 ${fabClass}`}
+      >
+      <Plus className="h-6 w-6" strokeWidth={3} />
+      <span>{label === "Adicionar" ? "Nova corrida" : label}</span>
+
     </motion.button>
   );
 }

@@ -666,7 +666,7 @@ function HomeContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
+    <div className="meucorre-app-shell flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
       <AppLoadingLogo visible={showSplash} duration={10000}>
         {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
         {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}

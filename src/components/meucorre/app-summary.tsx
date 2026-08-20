@@ -40,7 +40,7 @@ export function AppSummary({ stats }: AppSummaryProps) {
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {stats.byApp.map((app: AppStat, idx) => (
               <motion.div
                 key={app.app}
@@ -48,9 +48,9 @@ export function AppSummary({ stats }: AppSummaryProps) {
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2, delay: idx * 0.04 }}
-                className="overflow-hidden rounded-xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900"
+                className="app-summary-card min-h-[92px] overflow-hidden rounded-2xl border border-border dark:border-zinc-800 bg-card dark:bg-zinc-900"
               >
-                <div className="relative flex items-center justify-between p-3">
+                <div className="relative flex h-full flex-col justify-between gap-2 p-3">
                   {/* Barra de proporção (background) */}
                   <div
                     className="absolute inset-y-0 left-0 opacity-[0.12]"
@@ -60,12 +60,12 @@ export function AppSummary({ stats }: AppSummaryProps) {
                     }}
                   />
                   {/* Conteúdo */}
-                  <div className="relative flex items-center gap-2.5">
+                  <div className="relative flex items-center gap-2">
                     {app.image ? (
                       <img
                         src={app.image}
                         alt={app.label}
-                        className="h-8 w-8 rounded-lg object-cover"
+                        className="h-8 w-8 rounded-xl object-cover"
                       />
                     ) : (
                       <div
@@ -76,7 +76,8 @@ export function AppSummary({ stats }: AppSummaryProps) {
                       </div>
                     )}
                     <div className="leading-tight">
-                      <p className="text-sm font-semibold text-zinc-200">
+                      <p className="text-xs font-semibold text-zinc-200"
+>
                         {app.label}
                       </p>
                       <p className="text-[10px] text-zinc-500">
@@ -85,7 +86,8 @@ export function AppSummary({ stats }: AppSummaryProps) {
                       </p>
                     </div>
                   </div>
-                  <span className="relative text-sm font-bold text-emerald-400">
+                  <span className="relative text-sm font-bold text-emerald-400"
+>
                     {formatBRL(app.total)}
                   </span>
                 </div>

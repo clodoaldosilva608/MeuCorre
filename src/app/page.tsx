@@ -242,7 +242,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-ink text-white">
+    <div className="landing-page flex min-h-screen flex-col bg-ink text-white">
       <Header onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
 
       {/* ===== 1. HERO — gradient mesh animado + badge flutuante + contador ===== */}
