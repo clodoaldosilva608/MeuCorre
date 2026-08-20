@@ -29,8 +29,10 @@ export async function GET(req: NextRequest) {
 
     // Endpoint: /v1/sales (não /orders)
     // Documentação: https://docs.kiwify.com.br/api-reference/sales/list-sales
+    // Kiwify exige: start_date + end_date (ambos obrigatórios), sem per_page
+    const endDateStr = new Date().toISOString().split("T")[0];
     const res = await kiwifyFetch(
-      `/sales?start_date=${startDateStr}&per_page=100`
+      `/sales?start_date=${startDateStr}&end_date=${endDateStr}`
     );
 
     if (!res.ok) {
