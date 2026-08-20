@@ -15,6 +15,7 @@ import { YouTubeSection } from "@/components/meucorre/youtube-section";
 import { SponsoredBrandsCarousel } from "@/components/meucorre/sponsored-brands-carousel";
 import { AnimatedCounter } from "@/components/meucorre/animated-counter";
 import { StickyCTA } from "@/components/meucorre/sticky-cta";
+import { ReferenceLanding } from "@/components/meucorre/reference-landing";
 import { DownloadButton } from "@/components/meucorre/download-button";
 import {
   Dialog,
@@ -243,7 +244,11 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page flex min-h-screen flex-col bg-ink text-white">
-      <Header onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
+      <ReferenceLanding onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
+      <details className="landing-legacy-content">
+        <summary>Mais recursos do produto</summary>
+        <div className="landing-legacy-inner">
+        <Header onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
 
       {/* ===== 1. HERO — gradient mesh animado + badge flutuante + contador ===== */}
       <section className="relative overflow-hidden" style={{ backgroundColor: "#0D0F0E", backgroundImage: "radial-gradient(ellipse at top, rgba(22, 101, 52, 0.12), transparent 60%)" }}>
@@ -1653,6 +1658,8 @@ export default function LandingPage() {
 
       {/* Sticky CTA no mobile — aparece ao rolar */}
       <StickyCTA href={getFreeDownloadHref(isAuthenticated)} />
+        </div>
+      </details>
     </div>
   );
 }
