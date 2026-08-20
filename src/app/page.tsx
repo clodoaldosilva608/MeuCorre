@@ -271,8 +271,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Conteúdo do hero */}
-        <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col items-center justify-center px-4 py-16 text-center md:py-24">
+        {/* Conteúdo do hero — mobile: centralizado, desktop: 2 colunas */}
+        <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center px-4 py-16 text-center md:py-24 lg:flex-row lg:items-center lg:gap-12 lg:text-left">
           {/* Logo / brand */}
           <motion.div
             variants={fadeIn}
@@ -834,7 +834,7 @@ export default function LandingPage() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-60px" }}
-            className="mx-auto mt-6 grid max-w-4xl gap-4 md:grid-cols-3"
+            className="mx-auto mt-6 grid max-w-5xl gap-4 md:grid-cols-3"
           >
             {/* MENSAL */}
             <motion.div

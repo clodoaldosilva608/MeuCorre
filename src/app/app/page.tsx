@@ -686,7 +686,7 @@ function HomeContent() {
         onLogout={isDemoMode ? (() => {}) : handleLogout}
       />
 
-      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">
+      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4 md:max-w-2xl lg:max-w-4xl lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         {/* Banner de anúncio no topo (apenas se não for PRO) */}
         {!isPro &&
           bannerAds
