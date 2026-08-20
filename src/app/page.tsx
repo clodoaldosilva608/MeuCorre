@@ -1344,8 +1344,8 @@ export default function LandingPage() {
 
       {/* ===== 8. CTA FINAL grande ===== */}
       <section className="relative overflow-hidden bg-ink py-20 text-center text-white md:py-28">
-        {/* Glow */}
-        <div className="pointer-events-none absolute -bottom-32 left-1/2 h-72 w-[600px] -translate-x-1/2 rounded-full bg-neon/20 blur-3xl" />
+        {/* Glow — mais sutil e premium */}
+        <div className="pointer-events-none absolute -bottom-32 left-1/2 h-72 w-[500px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
 
         <motion.div
           variants={fadeUp}
