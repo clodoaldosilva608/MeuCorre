@@ -230,7 +230,7 @@
 /* ===== Glass Card (padrão redesign pixel-perfect) ===== */
 /* Card com fundo semi-transparente + blur + borda sutil + sombra profunda */
 .glass-card {
-  background: rgba(28, 31, 30, 0.8);
+  background: #1C1F1E;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid #2D302F;
@@ -246,7 +246,7 @@
 
 /* ===== Hero Card (card de destaque com lucro líquido) — redesign pixel-perfect ===== */
 .hero-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+  background: #1C1F1E;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(74, 222, 128, 0.15);
@@ -267,7 +267,7 @@
 
 /* ===== Stat Card (card menor para métricas) — redesign pixel-perfect ===== */
 .stat-card {
-  background: rgba(28, 31, 30, 0.8);
+  background: #1C1F1E;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid #2D302F;
@@ -276,7 +276,7 @@
   transition: all 0.25s ease;
 }
 .stat-card:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: #252827;
   border-color: rgba(74, 222, 128, 0.15);
   transform: translateY(-1px);
 }
