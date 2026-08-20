@@ -1070,3 +1070,79 @@
   .reference-pricing article { min-height: 0; }
   .reference-final-cta { grid-template-columns: 1fr; }
 }
+
+
+/* Dashboard dedicada: composição literal da referência mobile. */
+.reference-dashboard { width: min(100%, 760px); min-height: 100vh; margin: 0 auto; background: #090b0a; color: #f7f9f7; }
+.reference-dashboard-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 20px 18px; }
+.reference-dashboard-header img { width: 178px; height: 52px; object-fit: contain; object-position: left center; }
+.reference-offline { color: #b0bbb3; font-size: 13px; line-height: 1.35; text-align: right; }
+.reference-offline span { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; background: #5ee34e; }
+.reference-offline small { color: #7d8b81; font-size: 10px; }
+.reference-dashboard-body { display: grid; gap: 14px; padding: 0 16px 105px; }
+.reference-dashboard-profit, .reference-dashboard-kpis, .reference-dashboard-card { border: 1px solid rgba(255,255,255,0.13); border-radius: 15px; background: linear-gradient(145deg, #202321, #151816); }
+.reference-dashboard-profit { display: grid; grid-template-columns: 1.1fr 0.9fr; min-height: 150px; padding: 22px; }
+.reference-dashboard-profit > div:first-child { border-right: 1px solid rgba(255,255,255,0.14); }
+.reference-dashboard-profit p { margin: 0; color: #e8ede9; font-size: 16px; }
+.reference-dashboard-profit p span { color: #8c9990; font-size: 12px; }
+.reference-dashboard-profit strong { display: block; margin-top: 16px; color: #66d84d; font-size: clamp(32px, 6vw, 52px); line-height: 0.95; }
+.reference-dashboard-profit small { display: block; margin-top: 16px; color: #b4beb7; font-size: 13px; }
+.reference-dashboard-breakdown { display: grid; align-content: center; gap: 18px; padding-left: 25px; }
+.reference-dashboard-breakdown p { color: #c2cbc4; font-size: 15px; }
+.reference-dashboard-breakdown b, .reference-dashboard-breakdown em { display: block; margin-top: 4px; color: #66d84d; font-size: 17px; font-style: normal; }
+.reference-dashboard-breakdown em { color: #e35d5d; }
+.reference-dashboard-kpis { display: grid; grid-template-columns: repeat(4, 1fr); padding: 14px 10px; }
+.reference-dashboard-kpis > div { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 0 12px; border-right: 1px solid rgba(255,255,255,0.14); }
+.reference-dashboard-kpis > div:last-child { border-right: 0; }
+.reference-dashboard-kpis svg { width: 23px; color: #66d84d; }
+.reference-dashboard-kpis span { color: #acb6ae; font-size: 12px; }
+.reference-dashboard-kpis b { display: block; margin-top: 4px; color: #f4f7f4; font-size: 16px; }
+.reference-periods { display: grid; grid-template-columns: repeat(4, 1fr); padding: 2px; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; background: #171a18; }
+.reference-periods button { padding: 11px 4px; border-radius: 8px; color: #d0d7d1; font-size: 13px; }
+.reference-periods button.active { background: #62d84d; color: #071006; font-weight: 850; }
+.reference-dashboard-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.reference-dashboard-card { padding: 18px; }
+.reference-dashboard-card header { display: flex; align-items: center; justify-content: space-between; }
+.reference-dashboard-card h2 { margin: 0; font-size: 19px; font-weight: 850; }
+.reference-dashboard-card header span, .reference-dashboard-card header button { color: #66d84d; font-size: 12px; }
+.reference-run-card { min-height: 255px; background: linear-gradient(145deg, rgba(28,33,30,0.98), rgba(15,18,16,0.98)), radial-gradient(circle at 70% 45%, rgba(110,120,115,0.15), transparent 35%); }
+.reference-run-card > p { max-width: 210px; margin-top: 16px; color: #b7c0b9; font-size: 14px; line-height: 1.5; }
+.reference-map-dot { width: 19px; height: 19px; margin: 15px 0 12px 53%; border: 4px solid #fff; border-radius: 50%; background: #4a9aff; box-shadow: 0 0 0 6px rgba(74,154,255,0.14); }
+.reference-run-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 7px; }
+.reference-run-actions button { display: grid; justify-items: center; gap: 5px; color: #bbc4bd; font-size: 11px; }
+.reference-run-actions svg { width: 26px; height: 26px; padding: 6px; border-radius: 50%; background: #262c28; color: #65d64d; }
+.reference-goal-card { min-height: 255px; }
+.reference-goal-line, .reference-goal-meta { display: flex; justify-content: space-between; margin-top: 22px; color: #d5ddd6; font-size: 13px; }
+.reference-goal-line b { color: #66d84d; }
+.reference-progress { height: 9px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: #2a302b; }
+.reference-progress span { display: block; width: 58%; height: 100%; border-radius: inherit; background: #66d84d; }
+.reference-goal-meta { margin-top: 9px; color: #66d84d; font-size: 12px; }
+.reference-goal-meta span:last-child { color: #aab4ac; }
+.reference-streak { display: grid; grid-template-columns: 1fr auto; gap: 5px; margin-top: 18px; padding: 13px; border: 1px solid rgba(255,255,255,0.12); border-radius: 11px; }
+.reference-streak strong { color: #f4f7f4; font-size: 13px; }
+.reference-streak b { color: #66d84d; font-size: 13px; }
+.reference-streak small { grid-column: 1 / -1; color: #9da79f; font-size: 11px; }
+.reference-apps-card, .reference-recent-card { padding: 16px; }
+.reference-app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+.reference-app-grid > div { display: grid; gap: 7px; padding: 12px 10px; border: 1px solid rgba(255,255,255,0.11); border-radius: 11px; background: #222623; }
+.reference-app-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: #fff; font-size: 10px; font-weight: 950; }
+.reference-app-grid strong { font-size: 12px; }
+.reference-app-grid b { color: #66d84d; font-size: 16px; }
+.reference-app-grid small { color: #a4ada6; font-size: 10px; }
+.reference-recent-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.11); text-align: left; }
+.reference-recent-row:last-child { border-bottom: 0; }
+.reference-recent-row span { display: flex; gap: 20px; align-items: flex-start; }
+.reference-recent-row b { color: #f3f6f3; font-size: 14px; }
+.reference-recent-row small { color: #b7c0b8; font-size: 12px; line-height: 1.45; }
+.reference-recent-row strong { color: #66d84d; font-size: 17px; }
+.reference-recent-row svg { width: 19px; color: #9aa69d; }
+.reference-new-run { display: flex; align-items: center; justify-content: center; gap: 10px; width: min(100%, 390px); margin: 2px auto 0; border-radius: 999px; padding: 15px; background: linear-gradient(90deg, #65d84d, #7edf42); color: #071006; font-size: 18px; font-weight: 900; }
+.reference-new-run span { display: grid; place-items: center; width: 29px; height: 29px; border: 2px solid #071006; border-radius: 50%; font-size: 24px; line-height: 1; }
+.reference-dashboard-nav { position: sticky; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, 1fr); width: min(100%, 760px); margin: -88px auto 0; border: 1px solid rgba(255,255,255,0.16); border-radius: 25px 25px 0 0; padding: 15px 13px 20px; background: rgba(28,31,29,0.97); backdrop-filter: blur(15px); }
+.reference-dashboard-nav button { display: grid; justify-items: center; gap: 6px; color: #aeb7af; font-size: 12px; }
+.reference-dashboard-nav button.active { color: #66d84d; }
+.reference-dashboard-nav svg { width: 22px; height: 22px; }
+.dashboard-legacy-content { width: min(100%, 760px); margin: 0 auto; padding: 0 16px 30px; }
+.dashboard-legacy-content > summary { cursor: pointer; padding: 14px; color: #66d84d; font-size: 12px; font-weight: 800; text-align: center; }
+.dashboard-legacy-inner { margin-top: 10px; }
+@media (max-width: 720px) { .reference-dashboard-header img { width: 160px; } .reference-dashboard-profit { grid-template-columns: 1fr 0.9fr; padding: 16px; } .reference-dashboard-profit strong { font-size: 34px; } .reference-dashboard-profit p { font-size: 13px; } .reference-dashboard-breakdown { padding-left: 15px; } .reference-dashboard-kpis > div { gap: 5px; padding: 0 7px; } .reference-dashboard-kpis svg { width: 18px; } .reference-dashboard-kpis span { font-size: 9px; } .reference-dashboard-kpis b { font-size: 12px; } .reference-dashboard-duo { gap: 8px; } .reference-dashboard-card { padding: 14px; } .reference-dashboard-card h2 { font-size: 16px; } .reference-app-grid { gap: 6px; } .reference-app-grid > div { padding: 8px; } .reference-app-grid b { font-size: 13px; } .reference-app-grid strong { font-size: 10px; } .reference-recent-row span { gap: 10px; } }

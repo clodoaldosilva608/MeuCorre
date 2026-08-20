@@ -22,7 +22,8 @@ const Charts = lazy(() =>
 );
 import { OffersList } from "@/components/meucorre/offers-list";
 import { Fab } from "@/components/meucorre/fab";
-import { BottomNav, type Tab } from "@/components/meucorre/bottom-nav";
+import { BottomNav } from "@/components/meucorre/bottom-nav";
+import { ReferenceDashboard } from "@/components/meucorre/reference-dashboard";
 import { AppLoadingLogo } from "@/components/meucorre/app-loading-logo";
 import { AdBanner } from "@/components/meucorre/ad-banner";
 import { AdCard } from "@/components/meucorre/ad-card";
@@ -667,6 +668,18 @@ function HomeContent() {
 
   return (
     <div className="meucorre-app-shell flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground">
+      <ReferenceDashboard
+        stats={stats}
+        period={period}
+        onPeriodChange={setPeriod}
+        onNewDelivery={openNewDelivery}
+        onStartSession={startSession}
+        onOpenHeatmap={() => setHeatmapOpen(true)}
+        onTabChange={setActiveTab}
+      />
+      <details className="dashboard-legacy-content">
+        <summary>Mais recursos do app</summary>
+        <div className="dashboard-legacy-inner">
       <AppLoadingLogo visible={showSplash} duration={10000}>
         {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
         {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
@@ -1243,6 +1256,8 @@ function HomeContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </div>
+      </details>
     </div>
   );
 }
