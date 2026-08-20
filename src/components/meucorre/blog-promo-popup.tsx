@@ -49,14 +49,18 @@ const HIGHLIGHTS = [
 interface Props {
   forceOpen?: boolean;
   onForceClose?: () => void;
+  /** Quando true, NÃO abre automaticamente (outro dialog crítico está ativo). */
+  suppress?: boolean;
 }
 
-export function BlogPromoPopup({ forceOpen, onForceClose }: Props = {}) {
+export function BlogPromoPopup({ forceOpen, onForceClose, suppress }: Props = {}) {
   const [autoOpen, setAutoOpen] = useState(false);
 
   useEffect(() => {
     if (forceOpen !== undefined) return;
     if (typeof window === "undefined") return;
+    // Não dispara timer se houver dialog crítico ativo (ex: Nova Corrida)
+    if (suppress) return;
 
     const last = localStorage.getItem(STORAGE_KEY);
     if (!last) {
@@ -68,7 +72,15 @@ export function BlogPromoPopup({ forceOpen, onForceClose }: Props = {}) {
       const t = setTimeout(() => setAutoOpen(true), 3500);
       return () => clearTimeout(t);
     }
-  }, [forceOpen]);
+  }, [forceOpen, suppress]);
+
+  // Se suppress ficar true depois do pop-up já estar aberto, fecha ele
+  // para liberar a tela pro dialog crítico (ex: DeliveryForm)
+  useEffect(() => {
+    if (suppress && autoOpen) {
+      setAutoOpen(false);
+    }
+  }, [suppress, autoOpen]);
 
   const open = forceOpen !== undefined ? forceOpen : autoOpen;
 

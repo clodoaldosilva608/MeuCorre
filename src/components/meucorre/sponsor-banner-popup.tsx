@@ -14,7 +14,12 @@ interface BannerSponsor {
 
 const STORAGE_KEY = "meucorre_banner_dismissed";
 
-export function SponsorBannerPopup() {
+interface Props {
+  /** Quando true, NÃO abre automaticamente (outro dialog crítico está ativo). */
+  suppress?: boolean;
+}
+
+export function SponsorBannerPopup({ suppress }: Props = {}) {
   const [banners, setBanners] = useState<BannerSponsor[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -41,6 +46,15 @@ export function SponsorBannerPopup() {
       })
       .catch(() => {});
   }, []);
+
+  // Se suppress ficar true (dialog crítico aberto), fecha o banner para
+  // liberar a tela. Caso contrário o banner overlay z-50 sobrepõe o
+  // DeliveryForm e o usuário acha que o botão "Nova corrida" não funciona.
+  useEffect(() => {
+    if (suppress && visible) {
+      setVisible(false);
+    }
+  }, [suppress, visible]);
 
   // Rotaciona banners a cada 10 segundos (se houver mais de 1)
   useEffect(() => {

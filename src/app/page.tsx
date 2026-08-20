@@ -246,7 +246,7 @@ export default function LandingPage() {
   return (
     <div className="landing-page flex min-h-screen flex-col bg-ink text-white">
       <ReferenceLanding onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
-      <LandingFunctionalSections />
+      <LandingFunctionalSections onSelectPlan={openCheckoutWithPlan} />
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}

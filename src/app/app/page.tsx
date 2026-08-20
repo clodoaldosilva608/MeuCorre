@@ -321,9 +321,13 @@ function HomeContent() {
   // ===== Sistema de fila de pop-ups (1 por sessão, com prioridade) =====
   // Regra: apenas 1 popup por sessão. Entre sessões, intervalo mínimo de 24h.
   // Prioridade: Onboarding > Promo PRO > Share > Feedback > BlogPromo > SocialFollow
+  // IMPORTANTE: nenhum pop-up auto abre se um dialog crítico estiver ativo
+  // (DeliveryForm / ExpenseForm). Isso garante que o botão "Nova corrida"
+  // sempre funcione — o usuário não fica com a tela bloqueada por um banner.
   useEffect(() => {
     if (isDemoMode) return;
     if (showSplash) return;
+    if (deliveryFormOpen || expenseFormOpen) return;
 
     const POPUP_SESSION_KEY = "meucorre_popup_shown_this_session";
     const alreadyShown = sessionStorage.getItem(POPUP_SESSION_KEY);
@@ -331,10 +335,15 @@ function HomeContent() {
 
     // Verifica qual popup mostrar (em ordem de prioridade)
     const checkAndShow = async () => {
+      // Re-check defensivo: se o usuário abriu um dialog crítico entre o
+      // agendamento e o disparo, cancela a abertura.
+      if (deliveryFormOpen || expenseFormOpen) return;
+
       // 1. Onboarding (primeira vez no app)
       const onboardingDone = localStorage.getItem("meucorre_onboarding_done");
       if (!onboardingDone) {
         const t = setTimeout(() => {
+          if (deliveryFormOpen || expenseFormOpen) return;
           setOnboardingOpen(true);
           sessionStorage.setItem(POPUP_SESSION_KEY, "onboarding");
         }, 2000);
@@ -344,6 +353,7 @@ function HomeContent() {
       // 2. Promo PRO (1x a cada 4h, se free)
       if (shouldShowPromoPopup(isPro)) {
         const t = setTimeout(() => {
+          if (deliveryFormOpen || expenseFormOpen) return;
           setPromoOpen(true);
           sessionStorage.setItem(POPUP_SESSION_KEY, "promo");
         }, 1500);
@@ -353,6 +363,7 @@ function HomeContent() {
       // 3. Share (1x por dia, se free)
       if (shouldShowSharePopup(isPro)) {
         const t = setTimeout(() => {
+          if (deliveryFormOpen || expenseFormOpen) return;
           setShareOpen(true);
           sessionStorage.setItem(POPUP_SESSION_KEY, "share");
         }, 1500);
@@ -363,6 +374,7 @@ function HomeContent() {
       const showFeedback = await shouldShowFeedbackPopup();
       if (showFeedback) {
         const t = setTimeout(() => {
+          if (deliveryFormOpen || expenseFormOpen) return;
           setFeedbackOpen(true);
           sessionStorage.setItem(POPUP_SESSION_KEY, "feedback");
         }, 1500);
@@ -371,7 +383,7 @@ function HomeContent() {
     };
 
     checkAndShow();
-  }, [showSplash, isPro, isDemoMode]);
+  }, [showSplash, isPro, isDemoMode, deliveryFormOpen, expenseFormOpen]);
 
   // Auto-ativação: se veio da página /obrigado com ?license=xxx, ativa automaticamente
   useEffect(() => {
@@ -1108,7 +1120,7 @@ function HomeContent() {
 
       {/* Pop-up "Compre PRO" — aparece sempre que abre o app (free) */}
       <PromoPopup
-        open={promoOpen}
+        open={promoOpen && !deliveryFormOpen && !expenseFormOpen}
         onClose={() => {
           setPromoOpen(false);
           dismissPromoPopup();
@@ -1120,7 +1132,7 @@ function HomeContent() {
 
       {/* Pop-up "Compartilhe com amigos" / "Indique e Ganhe" */}
       <SharePopup
-        open={shareOpen}
+        open={shareOpen && !deliveryFormOpen && !expenseFormOpen}
         onClose={() => {
           setShareOpen(false);
           dismissSharePopup();
@@ -1131,7 +1143,7 @@ function HomeContent() {
 
       {/* Pop-up de feedback */}
       <FeedbackPopup
-        open={feedbackOpen}
+        open={feedbackOpen && !deliveryFormOpen && !expenseFormOpen}
         onClose={() => {
           setFeedbackOpen(false);
           markFeedbackAsked();
@@ -1148,7 +1160,7 @@ function HomeContent() {
       {/* Pop-up "Confira o blog" — 1x por semana, 3.5s após abrir o app.
           Chama o usuário pra ler os 90+ artigos do blog do MeuCorre.
           Suprimido em modo demo. */}
-      {!isDemoMode && <BlogPromoPopup />}
+      {!isDemoMode && <BlogPromoPopup suppress={deliveryFormOpen || expenseFormOpen} />}
 
       {/* Pop-up "Siga nossas redes + compartilhe com amigos" — 1x por semana,
           6.5s após abrir o app. Instagram, TikTok, YouTube + share buttons.
@@ -1158,7 +1170,7 @@ function HomeContent() {
       {/* Banner pop-up de patrocinadores — aparece 1x por dia, 5s após abrir o app.
           Mostra banners de marcas patrocinadas que pagaram para aparecer na dashboard.
           Admin configura em /admin/patrocinadores (showBanner = true). */}
-      {!isDemoMode && <SponsorBannerPopup />}
+      {!isDemoMode && <SponsorBannerPopup suppress={deliveryFormOpen || expenseFormOpen} />}
 
       {/* Mapa de calor — áreas quentes onde o entregador mais faz corridas.
           Aberto via botão "Mapa de calor" no Corre do dia.

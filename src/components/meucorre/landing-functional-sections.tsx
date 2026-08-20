@@ -14,7 +14,24 @@ const faqItems = [
   ["Tem como testar antes de pagar?", "Sim. O plano grátis permite começar sem cadastro de pagamento. Você pode testar o fluxo e contratar o PRO quando fizer sentido."],
 ] as const;
 
-export function LandingFunctionalSections() {
+interface LandingFunctionalSectionsProps {
+  /** Abre o dialog de checkout já com o plano selecionado. */
+  onSelectPlan?: (plan: "monthly" | "annual" | "lifetime") => void;
+}
+
+export function LandingFunctionalSections({ onSelectPlan }: LandingFunctionalSectionsProps = {}) {
+  // Handler de clique no botão do plano — se onSelectPlan existe, usa ele
+  // (abre o dialog de checkout). Caso contrário, faz scroll suvo para #planos.
+  const handlePlanClick = (plan: "monthly" | "annual" | "lifetime") => (
+    e: React.MouseEvent<HTMLAnchorElement>
+  ) => {
+    if (onSelectPlan) {
+      e.preventDefault();
+      onSelectPlan(plan);
+    }
+    // Se não tem onSelectPlan, deixa o <a href="#planos"> fazer o scroll nativo
+  };
+
   return (
     <div className="reference-functional-sections">
       <section className="reference-landing-section" aria-labelledby="landing-blog-title">
@@ -43,21 +60,21 @@ export function LandingFunctionalSections() {
             <p className="reference-plan-price">R$ 18,90</p>
             <p className="reference-plan-period">pagamento único</p>
             <ul><li>✓ Tudo do plano Grátis</li><li>✓ Mapa de calor</li><li>✓ Metas avançadas</li><li>✓ Captura por notificação</li><li>✓ Sem mensalidade</li></ul>
-            <a href="#" className="reference-plan-btn solid">Garantir vitalício</a>
+            <a href="#planos" onClick={handlePlanClick("lifetime")} className="reference-plan-btn solid">Garantir vitalício</a>
           </div>
           <div className="reference-plan-card">
             <h3>Anual</h3>
             <p className="reference-plan-price">R$ 97</p>
             <p className="reference-plan-period">/ano (economize 46%)</p>
             <ul><li>✓ Tudo do vitalício</li><li>✓ Atualizações por 1 ano</li><li>✓ Suporte prioritário</li></ul>
-            <a href="#" className="reference-plan-btn outline">Quero anual</a>
+            <a href="#planos" onClick={handlePlanClick("annual")} className="reference-plan-btn outline">Quero anual</a>
           </div>
           <div className="reference-plan-card">
             <h3>Mensal</h3>
             <p className="reference-plan-price">R$ 14,90</p>
             <p className="reference-plan-period">/mês (cancele quando quiser)</p>
             <ul><li>✓ Tudo do vitalício</li><li>✓ Cancele a qualquer momento</li></ul>
-            <a href="#" className="reference-plan-btn outline">Quero mensal</a>
+            <a href="#planos" onClick={handlePlanClick("monthly")} className="reference-plan-btn outline">Quero mensal</a>
           </div>
         </div>
       </section>

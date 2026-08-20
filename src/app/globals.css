@@ -1142,6 +1142,25 @@
 .reference-dashboard-nav button { display: grid; justify-items: center; gap: 6px; color: #aeb7af; font-size: 12px; }
 .reference-dashboard-nav button.active { color: #66d84d; }
 .reference-dashboard-nav svg { width: 22px; height: 22px; }
+
+/* ===== Plans grid (landing page — seção "MeuCorre PRO") ===== */
+.reference-plans-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+.reference-plan-card { display: flex; flex-direction: column; gap: 8px; padding: 20px 16px; border: 1px solid rgba(255,255,255,0.10); border-radius: 16px; background: #111412; }
+.reference-plan-card.featured { border-color: rgba(25,214,107,0.55); box-shadow: 0 0 0 1px rgba(25,214,107,0.18), 0 20px 60px rgba(11,98,47,0.18); position: relative; }
+.reference-plan-card h3 { margin: 0; color: #f4f7f4; font-size: 17px; font-weight: 850; }
+.reference-plan-card.featured h3 { color: #20df70; }
+.reference-plan-card .reference-plan-price { margin: 4px 0 0; color: #20df70; font-size: 28px; font-weight: 900; line-height: 1; }
+.reference-plan-card .reference-plan-period { margin: 0; color: #849087; font-size: 11px; }
+.reference-plan-card ul { display: grid; gap: 7px; margin: 14px 0 16px; padding: 0; list-style: none; color: #a6b0a9; font-size: 11.5px; }
+.reference-plan-card ul li { display: flex; align-items: center; gap: 6px; }
+.reference-plan-card .reference-plan-badge { display: inline-block; margin-bottom: 4px; padding: 3px 9px; border-radius: 999px; background: rgba(25,214,107,0.16); color: #20df70; font-size: 9.5px; font-weight: 950; letter-spacing: 0.04em; align-self: flex-start; }
+.reference-plan-card .reference-plan-btn { display: inline-flex; align-items: center; justify-content: center; margin-top: auto; border-radius: 9px; padding: 11px; background: #19d66b; color: #06110a; font-size: 11.5px; font-weight: 950; text-decoration: none; transition: filter 0.15s; }
+.reference-plan-card .reference-plan-btn:hover { filter: brightness(1.08); }
+.reference-plan-card .reference-plan-btn.outline { background: transparent; border: 1px solid rgba(255,255,255,0.18); color: #f4f7f4; }
+.reference-plan-card .reference-plan-btn.outline:hover { border-color: #20df70; color: #20df70; }
+@media (max-width: 920px) { .reference-plans-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .reference-plans-grid { grid-template-columns: 1fr; } }
+
 .dashboard-legacy-content { width: min(100%, 760px); margin: 0 auto; padding: 0 16px 30px; }
 .dashboard-legacy-content > summary { cursor: pointer; padding: 14px; color: #66d84d; font-size: 12px; font-weight: 800; text-align: center; }
 .dashboard-legacy-inner { margin-top: 10px; }
