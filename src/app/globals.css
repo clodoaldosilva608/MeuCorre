@@ -41,12 +41,13 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  /* ===== Cores de marca MeuCorre (paleta do banner) ===== */
-  --color-neon: #39ff14;
-  --color-neon-soft: #00ff66;
+  /* ===== Cores de marca MeuCorre (paleta do redesign pixel-perfect) ===== */
+  --color-neon: #4ade80;
+  --color-neon-soft: #86efac;
+  --color-neon-glow: rgba(74, 222, 128, 0.15);
   --color-gold: #ffd700;
   --color-orange-hot: #ff6b00;
-  --color-ink: #0d0d0d;
+  --color-ink: #0a0a0a;
   --color-graphite: #1a1a1a;
   --color-asphalt: #2d3748;
   /* ===== Paleta Premium Enterprise (Dark Glassmorphism Tech) ===== */
@@ -58,9 +59,9 @@
   --color-amber-warn: #FB923C;
   --color-lime-acc: #84CC16;
   --color-steel: #64748B;
-  --color-ink-deep: #0A0F0D;
-  --color-ink-card: #111916;
-  --color-ink-elevated: #151D19;
+  --color-ink-deep: #0A0A0A;
+  --color-ink-card: #111111;
+  --color-ink-elevated: #161616;
 }
 
 /* ===== Tema Claro (padrão MeuCorre light) ===== */
@@ -99,24 +100,24 @@
   --sidebar-ring: oklch(0.7 0.18 160);
 }
 
-/* ===== Tema Escuro Premium (Dark Glassmorphism Tech — fintech enterprise) ===== */
+/* ===== Tema Escuro Premium (Dark Glassmorphism Tech — redesign pixel-perfect) ===== */
 .dark {
-  /* Background quase preto com leve matiz esverdeada (#0A0F0D) */
-  --background: oklch(0.12 0.005 160);
+  /* Background preto puro #0a0a0a (alinhado com referência) */
+  --background: oklch(0.07 0.003 160);
   --foreground: oklch(0.985 0 0);
-  /* Cards com fundo #111916 (cinza-escuro com transparência) */
-  --card: oklch(0.16 0.006 160);
+  /* Cards com fundo #111111 (cinza-escuro com transparência) */
+  --card: oklch(0.12 0.004 160);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.16 0.006 160);
+  --popover: oklch(0.12 0.004 160);
   --popover-foreground: oklch(0.985 0 0);
-  /* Verde neon/ácido #4ADE80 como primary */
+  /* Verde neon #4ADE80 como primary */
   --primary: oklch(0.78 0.19 145);
-  --primary-foreground: oklch(0.12 0.005 160);
-  --secondary: oklch(0.22 0.006 160);
+  --primary-foreground: oklch(0.07 0.003 160);
+  --secondary: oklch(0.18 0.004 160);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.22 0.006 160);
-  --muted-foreground: oklch(0.68 0.01 160);
-  --accent: oklch(0.22 0.01 160);
+  --muted: oklch(0.18 0.004 160);
+  --muted-foreground: oklch(0.65 0.01 160);
+  --accent: oklch(0.18 0.01 160);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.65 0.22 25);
   /* Bordas sutis com baixa opacidade (rgba(255,255,255,0.08)) */
@@ -148,17 +149,17 @@
   }
 }
 
-/* ===== Utilitários de marca MeuCorre (paleta do banner) ===== */
-/* Verde neon — accent principal para CTAs e destaques financeiros */
-.bg-neon { background-color: #39ff14; }
-.text-neon { color: #39ff14; }
-.border-neon { border-color: #39ff14; }
-.bg-neon-soft { background-color: #00ff66; }
-.text-neon-soft { color: #00ff66; }
-.from-neon { --tw-gradient-from: #39ff14 var(--tw-gradient-from-position); --tw-gradient-to: transparent var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-.to-neon-soft { --tw-gradient-to: #00ff66 var(--tw-gradient-to-position); }
-.shadow-neon { box-shadow: 0 0 20px rgba(57, 255, 20, 0.4), 0 0 40px rgba(57, 255, 20, 0.15); }
-.shadow-neon-lg { box-shadow: 0 0 30px rgba(57, 255, 20, 0.5), 0 0 60px rgba(57, 255, 20, 0.25); }
+/* ===== Utilitários de marca MeuCorre (paleta redesign pixel-perfect) ===== */
+/* Verde neon #4ade80 — accent principal para CTAs e destaques financeiros */
+.bg-neon { background-color: #4ade80; }
+.text-neon { color: #4ade80; }
+.border-neon { border-color: #4ade80; }
+.bg-neon-soft { background-color: #86efac; }
+.text-neon-soft { color: #86efac; }
+.from-neon { --tw-gradient-from: #4ade80 var(--tw-gradient-from-position); --tw-gradient-to: transparent var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.to-neon-soft { --tw-gradient-to: #86efac var(--tw-gradient-to-position); }
+.shadow-neon { box-shadow: 0 0 20px rgba(74, 222, 128, 0.3), 0 0 40px rgba(74, 222, 128, 0.1); }
+.shadow-neon-lg { box-shadow: 0 0 30px rgba(74, 222, 128, 0.4), 0 0 60px rgba(74, 222, 128, 0.2); }
 
 /* Dourado — valores monetários e moedas */
 .text-gold { color: #ffd700; }
@@ -169,26 +170,26 @@
 .bg-orange-hot { background-color: #ff6b00; }
 
 /* Preto profundo e grafite — backgrounds */
-.bg-ink { background-color: #0d0d0d; }
+.bg-ink { background-color: #0a0a0a; }
 .bg-graphite { background-color: #1a1a1a; }
 .bg-asphalt { background-color: #2d3748; }
 
 /* Glow para texto neon (hero) */
-.text-glow-neon { text-shadow: 0 0 12px rgba(57, 255, 20, 0.6), 0 0 24px rgba(57, 255, 20, 0.3); }
+.text-glow-neon { text-shadow: 0 0 12px rgba(74, 222, 128, 0.5), 0 0 24px rgba(74, 222, 128, 0.2); }
 .text-glow-gold { text-shadow: 0 0 12px rgba(255, 215, 0, 0.5), 0 0 24px rgba(255, 215, 0, 0.25); }
 
-/* Botão neon padrão MeuCorre (hero + CTAs) */
+/* Botão neon padrão MeuCorre (hero + CTAs) — redesign pixel-perfect */
 .btn-neon {
-  background-color: #39ff14;
-  color: #0d0d0d;
+  background-color: #4ade80;
+  color: #0a0a0a;
   font-weight: 800;
   border-radius: 0.75rem;
   transition: all 0.2s ease;
-  box-shadow: 0 0 20px rgba(57, 255, 20, 0.4), 0 0 40px rgba(57, 255, 20, 0.15);
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.3), 0 0 40px rgba(74, 222, 128, 0.1);
 }
 .btn-neon:hover {
-  background-color: #00ff66;
-  box-shadow: 0 0 30px rgba(57, 255, 20, 0.6), 0 0 60px rgba(57, 255, 20, 0.3);
+  background-color: #86efac;
+  box-shadow: 0 0 30px rgba(74, 222, 128, 0.5), 0 0 60px rgba(74, 222, 128, 0.2);
   transform: translateY(-1px);
 }
 .btn-neon:active {
@@ -198,27 +199,27 @@
 /* Botão outline neon (CTA secundário) */
 .btn-neon-outline {
   background-color: transparent;
-  color: #39ff14;
-  border: 2px solid #39ff14;
+  color: #4ade80;
+  border: 2px solid #4ade80;
   font-weight: 700;
   border-radius: 0.75rem;
   transition: all 0.2s ease;
 }
 .btn-neon-outline:hover {
-  background-color: rgba(57, 255, 20, 0.1);
-  box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+  background-color: rgba(74, 222, 128, 0.1);
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
 }
 
 /* Card com borda neon */
 .card-neon {
-  background-color: rgba(13, 13, 13, 0.6);
-  border: 1px solid rgba(57, 255, 20, 0.3);
+  background-color: rgba(10, 10, 10, 0.6);
+  border: 1px solid rgba(74, 222, 128, 0.3);
   border-radius: 1rem;
   backdrop-filter: blur(8px);
 }
 .card-neon:hover {
-  border-color: rgba(57, 255, 20, 0.6);
-  box-shadow: 0 0 24px rgba(57, 255, 20, 0.2);
+  border-color: rgba(74, 222, 128, 0.6);
+  box-shadow: 0 0 24px rgba(74, 222, 128, 0.15);
 }
 
 /* ========================================
@@ -226,20 +227,21 @@
    Dark Glassmorphism Tech (fintech)
    ======================================== */
 
-/* ===== Glass Card (padrão premium) ===== */
+/* ===== Glass Card (padrão redesign pixel-perfect) ===== */
 /* Card com fundo semi-transparente + blur + borda sutil + sombra profunda */
 .glass-card {
-  background: rgba(17, 25, 22, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
 .glass-card:hover {
   border-color: rgba(74, 222, 128, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(74, 222, 128, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.05);
 }
 
 /* ===== Hero Card (card de destaque com lucro líquido) ===== */
