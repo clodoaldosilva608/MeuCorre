@@ -1153,7 +1153,7 @@ function HomeContent() {
       {/* Pop-up "Siga nossas redes + compartilhe com amigos" — 1x por semana,
           6.5s após abrir o app. Instagram, TikTok, YouTube + share buttons.
           Suprimido em modo demo. */}
-      {!isDemoMode && <SocialFollowPopup />}
+      {!isDemoMode && <SocialFollowPopup suppress={deliveryFormOpen || expenseFormOpen} />}
 
       {/* Banner pop-up de patrocinadores — aparece 1x por dia, 5s após abrir o app.
           Mostra banners de marcas patrocinadas que pagaram para aparecer na dashboard.

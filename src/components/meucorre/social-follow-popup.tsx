@@ -114,7 +114,7 @@ interface Props {
   onForceClose?: () => void;
 }
 
-export function SocialFollowPopup({ forceOpen, onForceClose }: Props = {}) {
+export function SocialFollowPopup({ forceOpen, onForceClose, suppress }: Props & { suppress?: boolean } = {}) {
   const [autoOpen, setAutoOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [followedNetworks, setFollowedNetworks] = useState<Set<string>>(
@@ -124,10 +124,14 @@ export function SocialFollowPopup({ forceOpen, onForceClose }: Props = {}) {
   useEffect(() => {
     if (forceOpen !== undefined) return;
     if (typeof window === "undefined") return;
+    if (suppress) return; // não abrir se outro dialog estiver aberto
 
     const last = localStorage.getItem(STORAGE_KEY);
     if (!last) {
-      const t = setTimeout(() => setAutoOpen(true), 6500);
+      const t = setTimeout(() => {
+        // Verifica novamente se suppress mudou antes de abrir
+        if (!suppress) setAutoOpen(true);
+      }, 6500);
       return () => clearTimeout(t);
     }
     const lastTime = new Date(last).getTime();
