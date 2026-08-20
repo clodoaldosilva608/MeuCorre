@@ -1034,6 +1034,24 @@ function HomeContent() {
           </p>
         </footer>
       </main>
+        </div>
+      </section>}
+      {/* ↑ FIM de showLegacyContent — TODO o conteúdo acima (header alternativo,
+          main com SummaryCards/Goals/Charts/etc) só renderiza quando ?legacy=1. */}
+
+      {/* ===== Elementos SEMPRE renderizados (independente de ?legacy=1) =====
+          Estes ficavam ANTES dentro do bloco showLegacyContent, o que fazia com
+          que FAB, BottomNav, dialogs (DeliveryForm, etc) NUNCA aparecessem em
+          produção (onde ?legacy=1 não é passado). Isso quebrava o botão
+          "Nova corrida" e todos os outros fluxos críticos da dashboard. */}
+
+      {/* Splash com vídeo do MeuCorre — também precisa renderizar mesmo sem legacy */}
+      {showSplash && !showLegacyContent && (
+        <AppLoadingLogo visible={showSplash} duration={10000}>
+          {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
+          {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}
+        </AppLoadingLogo>
+      )}
 
       {/* FAB — oculto em modo demo (não pode adicionar corridas) */}
       {!isDemoMode && (
@@ -1291,8 +1309,6 @@ function HomeContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-        </div>
-      </section>}
     </div>
   );
 }
