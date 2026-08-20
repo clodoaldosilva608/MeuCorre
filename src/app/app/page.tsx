@@ -675,6 +675,8 @@ function HomeContent() {
         stats={stats}
         period={period}
         activeTab={activeTab}
+        goal={goalsWithProgress[0]}
+        recentDeliveries={filteredDeliveries}
         onPeriodChange={setPeriod}
         onNewDelivery={openNewDelivery}
         onStartSession={startSession}
