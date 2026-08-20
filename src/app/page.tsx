@@ -257,7 +257,7 @@ export default function LandingPage() {
             className="absolute inset-0 opacity-[0.03]"
             style={{
               backgroundImage:
-                "linear-gradient(to right, #39ff14 1px, transparent 1px), linear-gradient(to bottom, #39ff14 1px, transparent 1px)",
+                "linear-gradient(to right, #4ade80 1px, transparent 1px), linear-gradient(to bottom, #4ade80 1px, transparent 1px)",
               backgroundSize: "40px 40px",
             }}
           />
@@ -367,23 +367,23 @@ export default function LandingPage() {
               </a>
             </motion.div>
 
-            {/* Trust badges — como no banner */}
+            {/* Trust badges — glass-card style */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
               animate="show"
               className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-300 md:text-xs"
             >
-              <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
+              <span className="rounded-full border border-white/8 bg-white/3 px-3 py-1 backdrop-blur-md">
                 100% offline
               </span>
-              <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
+              <span className="rounded-full border border-white/8 bg-white/3 px-3 py-1 backdrop-blur-md">
                 App grátis
               </span>
-              <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
+              <span className="rounded-full border border-white/8 bg-white/3 px-3 py-1 backdrop-blur-md">
                 Sem mensalidade
               </span>
-              <span className="rounded-full border border-neon/30 bg-black/40 px-3 py-1 backdrop-blur-sm">
+              <span className="rounded-full border border-white/8 bg-white/3 px-3 py-1 backdrop-blur-md">
                 Sem cadastro
               </span>
             </motion.div>
@@ -562,9 +562,9 @@ export default function LandingPage() {
               <motion.div
                 key={i}
                 variants={itemUp}
-                className="feature-card rounded-2xl border border-zinc-200 bg-white p-5"
+                className="feature-card rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-lg"
               >
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-neon/10 text-2xl">
+                <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-500/10 text-2xl">
                   {f.emoji}
                 </div>
                 <h3 className="mt-3 text-sm font-bold text-zinc-900">
