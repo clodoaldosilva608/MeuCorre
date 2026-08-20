@@ -271,23 +271,25 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Conteúdo do hero — mobile: centralizado, desktop: 2 colunas */}
+        {/* Conteúdo do hero — mobile: centralizado, desktop: 2 colunas (texto + phone) */}
         <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center px-4 py-16 text-center md:py-24 lg:flex-row lg:items-center lg:gap-12 lg:text-left">
+          {/* Coluna esquerda: copy + CTAs */}
+          <div className="flex-1 lg:max-w-xl">
           {/* Logo / brand */}
           <motion.div
             variants={fadeIn}
             initial="hidden"
             animate="show"
-            className="flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-2 lg:justify-start"
           >
             <img src="/logo-meucorre.png" alt="MeuCorre" className="h-10 w-10 rounded-xl shadow-neon" />
-            <span className="text-xl font-extrabold tracking-tight text-neon text-glow-neon">
+            <span className="text-xl font-bold tracking-tight text-neon">
               MeuCorre
             </span>
           </motion.div>
 
           {/* Headline */}
-          <div className="mt-8 max-w-3xl">
+          <div className="mt-8">
             <motion.div
               variants={fadeUp}
               initial="hidden"
@@ -302,16 +304,16 @@ export default function LandingPage() {
               variants={fadeUp}
               initial="hidden"
               animate="show"
-              className="text-balance text-4xl font-black uppercase leading-none tracking-tight md:text-6xl lg:text-7xl"
+              className="text-balance text-4xl font-extrabold leading-tight tracking-tight md:text-5xl lg:text-6xl"
               style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
             >
-              <span className="block text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+              <span className="block text-white">
                 Pare de perder
               </span>
-              <span className="mt-1 block text-neon text-glow-neon">
+              <span className="block text-neon">
                 dinheiro
               </span>
-              <span className="mt-1 block text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+              <span className="block text-white">
                 sem saber!
               </span>
             </motion.h1>
@@ -320,30 +322,21 @@ export default function LandingPage() {
               variants={fadeUp}
               initial="hidden"
               animate="show"
-              className="mx-auto mt-5 max-w-xl text-pretty text-sm font-medium text-zinc-200 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] md:text-base"
+              className="mx-auto mt-5 max-w-xl text-pretty text-sm font-medium text-zinc-400 md:text-base lg:mx-0"
             >
               Controle corridas, despesas e lucro real em um só lugar.
               Funciona com iFood, 99Food, Lalamove e qualquer outro app.
             </motion.p>
 
-            {/* CTAs: Quiz (destaque), Baixar grátis, Quero PRO, Entrar */}
+            {/* CTAs: Baixar grátis (primário) + Quero PRO (outline) */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
               animate="show"
-              className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
+              className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center lg:justify-start"
             >
-              <a
-                href="/quiz"
-                className="btn-neon inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
-                data-cta-origin="hero_quiz"
-              >
-                <Zap className="h-4 w-4" />
-                Descubra quanto você está perdendo
-                <ArrowRight className="h-4 w-4" />
-              </a>
               <DownloadButton
-                className="btn-neon-outline inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
+                className="btn-neon inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
                 ctaOrigin="hero_free_download"
               >
                 Baixar grátis
@@ -351,7 +344,7 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={openCheckout}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
+                className="btn-neon-outline inline-flex w-full items-center justify-center gap-2 px-6 py-3.5 text-sm sm:w-auto md:text-base"
                 data-cta-origin="hero_offer"
               >
                 <CreditCard className="h-4 w-4" />
@@ -422,6 +415,109 @@ export default function LandingPage() {
               </div>
               <p className="text-[10px] text-zinc-400">via Pix • pagamento único</p>
             </motion.div>
+          </div>
+          </div>
+
+          {/* Coluna direita: Phone mockup (desktop apenas) */}
+          <div className="hidden flex-1 justify-center lg:flex">
+            <div className="relative">
+              {/* Glow atrás do phone */}
+              <div className="absolute inset-0 -z-10 rounded-[40px] bg-emerald-500/10 blur-3xl" />
+              {/* Phone frame */}
+              <div className="relative h-[600px] w-[300px] overflow-hidden rounded-[40px] border-[8px] border-zinc-800 bg-[#0A0A0A] shadow-2xl">
+                {/* Notch */}
+                <div className="absolute left-1/2 top-0 z-20 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-zinc-800" />
+                {/* Status bar */}
+                <div className="flex items-center justify-between px-6 pt-3 text-[10px] text-zinc-500">
+                  <span>9:41</span>
+                  <span>●●●●</span>
+                </div>
+                {/* App content mockup */}
+                <div className="px-4 py-3">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base">⚡</span>
+                      <span className="text-sm font-bold text-emerald-400">MeuCorre</span>
+                    </div>
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[8px] font-medium text-emerald-400">OFFLINE</span>
+                  </div>
+
+                  {/* Hero card: lucro líquido */}
+                  <div className="mt-3 rounded-2xl border border-emerald-500/15 bg-white/3 p-4 backdrop-blur-md">
+                    <p className="text-[9px] font-semibold uppercase tracking-wider text-zinc-400">Lucro líquido</p>
+                    <p className="mt-1 text-3xl font-black text-emerald-400" style={{fontVariantNumeric:'tabular-nums'}}>R$ 116,64</p>
+                    <div className="mt-2 flex gap-3 text-[9px]">
+                      <span className="text-emerald-400">↑ R$ 216,80</span>
+                      <span className="text-red-400">↓ R$ 100,16</span>
+                    </div>
+                  </div>
+
+                  {/* KPI grid */}
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-white/8 bg-white/3 p-2 backdrop-blur-md">
+                      <p className="text-[8px] text-zinc-400">Faturamento</p>
+                      <p className="text-sm font-bold text-white" style={{fontVariantNumeric:'tabular-nums'}}>R$ 216</p>
+                    </div>
+                    <div className="rounded-xl border border-white/8 bg-white/3 p-2 backdrop-blur-md">
+                      <p className="text-[8px] text-zinc-400">Corridas</p>
+                      <p className="text-sm font-bold text-white">12</p>
+                    </div>
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="mt-3 flex gap-1">
+                    <span className="rounded-lg bg-emerald-500 px-3 py-1 text-[8px] font-bold text-black">Hoje</span>
+                    <span className="rounded-lg border border-white/8 px-3 py-1 text-[8px] text-zinc-400">Semana</span>
+                    <span className="rounded-lg border border-white/8 px-3 py-1 text-[8px] text-zinc-400">Mês</span>
+                    <span className="rounded-lg border border-white/8 px-3 py-1 text-[8px] text-zinc-400">Tudo</span>
+                  </div>
+
+                  {/* Lista de corridas */}
+                  <div className="mt-3 space-y-1.5">
+                    <div className="flex items-center justify-between rounded-lg border border-white/8 bg-white/3 p-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs">🍔</span>
+                        <div>
+                          <p className="text-[9px] font-medium text-white">iFood</p>
+                          <p className="text-[7px] text-zinc-500">14:32</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-400">+R$ 12,50</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-white/8 bg-white/3 p-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs">📦</span>
+                        <div>
+                          <p className="text-[9px] font-medium text-white">99Food</p>
+                          <p className="text-[7px] text-zinc-500">15:08</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-400">+R$ 8,00</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-white/8 bg-white/3 p-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs">⛽</span>
+                        <div>
+                          <p className="text-[9px] font-medium text-red-400">Despesa</p>
+                          <p className="text-[7px] text-zinc-500">16:00</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-red-400">-R$ 25,00</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom nav */}
+                <div className="absolute bottom-0 left-0 right-0 flex items-center justify-around border-t border-white/6 bg-[#0A0A0A]/95 py-3 backdrop-blur-xl">
+                  <span className="text-[9px]">📊</span>
+                  <span className="text-[9px]">🛵</span>
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-500 text-sm text-black">+</span>
+                  <span className="text-[9px]">💸</span>
+                  <span className="text-[9px]">📈</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
