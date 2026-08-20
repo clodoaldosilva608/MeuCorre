@@ -103,6 +103,7 @@ function HomeContent() {
   // Quando ?demo=1, suprime splash, popups e permite controle via postMessage.
   // A landing page usa isso para mostrar o app rodando dentro do iPhone mockup.
   const isDemoMode = searchParams?.get("demo") === "1";
+  const showLegacyContent = searchParams?.get("legacy") === "1";
 
   // Splash com VÍDEO REAL do MeuCorre (idêntico ao vídeo enviado)
   // Dura 10s (duração do vídeo)
@@ -686,8 +687,8 @@ function HomeContent() {
         onClearAll={isDemoMode ? (() => {}) : () => setConfirmClear(true)}
         onLogout={isDemoMode ? (() => {}) : handleLogout}
       />
-      <details className="dashboard-legacy-content">
-        <summary>Mais recursos do app</summary>
+      {showLegacyContent && <section className="dashboard-legacy-content">
+        <h2>Recursos completos do app</h2>
         <div className="dashboard-legacy-inner">
       <AppLoadingLogo visible={showSplash} duration={10000}>
         {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
@@ -1266,7 +1267,7 @@ function HomeContent() {
         </AlertDialogContent>
       </AlertDialog>
         </div>
-      </details>
+      </section>}
     </div>
   );
 }
