@@ -351,7 +351,7 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={openCheckout}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
                 data-cta-origin="hero_offer"
               >
                 <CreditCard className="h-4 w-4" />
@@ -359,7 +359,7 @@ export default function LandingPage() {
               </button>
               <a
                 href="/login"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:border-neon/50 hover:text-neon sm:w-auto md:text-base"
                 data-cta-origin="hero_existing_user"
                 aria-label="Já sou do Corre — entrar na minha conta"
               >
@@ -642,7 +642,7 @@ export default function LandingPage() {
                 <span className="text-2xl">{f.emoji}</span>
                 <div>
                   <p className="text-sm font-bold text-white">{f.title}</p>
-                  <p className="mt-0.5 text-xs text-zinc-600">{f.desc}</p>
+                  <p className="mt-0.5 text-xs text-zinc-400">{f.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -706,7 +706,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
               Dicas que aumentam seu lucro
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-base text-zinc-600">
+            <p className="mx-auto mt-3 max-w-xl text-base text-zinc-400">
               Artigos práticos sobre finanças, moto, economia e estratégia para
               entregadores de app.
             </p>
@@ -779,7 +779,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
               MeuCorre PRO — você escolhe como pagar
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-base text-zinc-600">
+            <p className="mx-auto mt-3 max-w-xl text-base text-zinc-400">
               Mensal flexível, anual com economia, ou vitalício por tempo
               limitado. Todos com as mesmas features PRO.
             </p>
@@ -804,7 +804,7 @@ export default function LandingPage() {
                     {" "}para sempre
                   </span>
                 </p>
-                <p className="mt-1 text-xs text-zinc-600">
+                <p className="mt-1 text-xs text-zinc-400">
                   <strong className="text-emerald-600">14 dias de trial grátis</strong> com
                   acesso total ao app. Depois: 5 lançamentos/dia grátis para sempre.
                 </p>
@@ -851,7 +851,7 @@ export default function LandingPage() {
                 </span>
                 <span className="text-xs text-zinc-500">/mês</span>
               </div>
-              <ul className="mt-4 space-y-2 text-xs text-zinc-700">
+              <ul className="mt-4 space-y-2 text-xs text-zinc-300">
                 <li className="flex items-start gap-1.5">
                   <Check className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
                   Todas as features PRO
@@ -895,7 +895,7 @@ export default function LandingPage() {
               <p className="mt-1 text-[10px] text-zinc-500">
                 ≈ R$ 8,08/mês
               </p>
-              <ul className="mt-4 space-y-2 text-xs text-zinc-700">
+              <ul className="mt-4 space-y-2 text-xs text-zinc-300">
                 <li className="flex items-start gap-1.5">
                   <Check className="mt-0.5 h-3 w-3 shrink-0 text-neon" />
                   Todas as features PRO
@@ -1196,7 +1196,7 @@ export default function LandingPage() {
               <p className="mt-2 text-sm text-zinc-500">
                 Os 10 erros mais comuns que fazem você perder dinheiro todos os dias — e como evitar cada um.
               </p>
-              <ul className="mt-4 space-y-2 text-xs text-zinc-600">
+              <ul className="mt-4 space-y-2 text-xs text-zinc-400">
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Como calcular o lucro real</li>
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Depreciação da moto explicada</li>
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Plano de ação de 7 dias</li>
@@ -1240,7 +1240,7 @@ export default function LandingPage() {
               <p className="mt-2 text-sm text-zinc-500">
                 O guia definitivo: do cálculo de custos ao IR, do MEI aos investimentos. 25 capítulos em 5 partes.
               </p>
-              <ul className="mt-4 space-y-2 text-xs text-zinc-600">
+              <ul className="mt-4 space-y-2 text-xs text-zinc-400">
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-blue-500" /> Custos fixos vs variáveis</li>
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-blue-500" /> MEI, DAS, IR passo a passo</li>
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-blue-500" /> Plano de 90 dias para estabilizar</li>
@@ -1290,7 +1290,7 @@ export default function LandingPage() {
               <p className="mt-2 text-sm text-zinc-500">
                 De hobby a profissão. Gestão financeira avançada, frota, investimentos, MEI e escala do negócio.
               </p>
-              <ul className="mt-4 space-y-2 text-xs text-zinc-600">
+              <ul className="mt-4 space-y-2 text-xs text-zinc-400">
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> 15 módulos liberados semanalmente</li>
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Acesso vitalício + atualizações</li>
                 <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-emerald-500" /> Plano de 10 anos: entregador → empresário</li>
@@ -1322,7 +1322,7 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-80px" }}
             className="mt-10 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 text-center"
           >
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-zinc-400">
               <strong className="text-zinc-900">Quer divulgar e ganhar comissões?</strong>{" "}
               Participe do programa de afiliados MeuCorre e ganhe até 50% por venda.
             </p>
@@ -1645,7 +1645,7 @@ function PainCard({
       <p
         className={[
           "mt-0.5 text-xs",
-          isDark ? "text-zinc-400" : "text-zinc-600",
+          isDark ? "text-zinc-400" : "text-zinc-400",
         ].join(" ")}
       >
         {desc}
@@ -1671,7 +1671,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         </span>
       </button>
       {open && (
-        <div className="border-t border-zinc-100 p-4 text-sm text-zinc-600">
+        <div className="border-t border-zinc-100 p-4 text-sm text-zinc-400">
           {a}
         </div>
       )}
@@ -1853,7 +1853,7 @@ function CheckoutDialog({
         <form onSubmit={handleSubmit} className="space-y-3 px-5 py-5">
           {/* Seletor de plano dentro do dialog — permite mudar antes de pagar */}
           <div className="space-y-1.5">
-            <Label className="text-xs text-zinc-600">Plano selecionado</Label>
+            <Label className="text-xs text-zinc-400">Plano selecionado</Label>
             <div className="grid grid-cols-3 gap-2">
               {(["monthly", "annual", "lifetime"] as const).map((p) => {
                 const info = PLAN_INFO[p];
@@ -1890,7 +1890,7 @@ function CheckoutDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-zinc-600">Nome completo *</Label>
+            <Label className="text-xs text-zinc-400">Nome completo *</Label>
             <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -1899,7 +1899,7 @@ function CheckoutDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-zinc-600">Email *</Label>
+            <Label className="text-xs text-zinc-400">Email *</Label>
             <Input
               type="email"
               value={form.email}
@@ -1912,7 +1912,7 @@ function CheckoutDialog({
             </p>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-zinc-600">WhatsApp (opcional)</Label>
+            <Label className="text-xs text-zinc-400">WhatsApp (opcional)</Label>
             <Input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -1922,7 +1922,7 @@ function CheckoutDialog({
           </div>
 
           <div className="rounded-xl bg-neon/5 p-3 text-center">
-            <p className="text-xs text-zinc-600">
+            <p className="text-xs text-zinc-400">
               Total a pagar — oferta de lançamento
             </p>
             <div className="mt-1 flex items-end justify-center gap-2">
@@ -1938,8 +1938,8 @@ function CheckoutDialog({
             </p>
           </div>
 
-          <div className="rounded-xl bg-zinc-50 p-3 text-[11px] text-zinc-600">
-            <p className="font-semibold text-zinc-700">Como funciona:</p>
+          <div className="rounded-xl bg-zinc-50 p-3 text-[11px] text-zinc-400">
+            <p className="font-semibold text-zinc-300">Como funciona:</p>
             <ol className="mt-1 list-decimal space-y-0.5 pl-4">
               <li>Você será redirecionado para o checkout seguro da Kiwify</li>
               <li>Pague com Pix (aprovação em segundos) ou cartão</li>
