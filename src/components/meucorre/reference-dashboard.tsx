@@ -32,7 +32,7 @@ export function ReferenceDashboard({ stats, period, onPeriodChange, onNewDeliver
   return (
     <section className="reference-dashboard" aria-label="Dashboard MeuCorre">
       <header className="reference-dashboard-header">
-        <img src="/logo-meucorre.png" alt="MeuCorre" />
+        <div className="reference-dashboard-brand"><img src="/logo-meucorre.png" alt="" /><strong>Meu<span>Corre</span></strong></div>
         <div className="reference-offline"><span /> Offline<br /><small>Sincroniza quando conectar</small></div>
       </header>
       <div className="reference-dashboard-body">

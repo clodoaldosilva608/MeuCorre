@@ -1146,3 +1146,10 @@
 .dashboard-legacy-content > summary { cursor: pointer; padding: 14px; color: #66d84d; font-size: 12px; font-weight: 800; text-align: center; }
 .dashboard-legacy-inner { margin-top: 10px; }
 @media (max-width: 720px) { .reference-dashboard-header img { width: 160px; } .reference-dashboard-profit { grid-template-columns: 1fr 0.9fr; padding: 16px; } .reference-dashboard-profit strong { font-size: 34px; } .reference-dashboard-profit p { font-size: 13px; } .reference-dashboard-breakdown { padding-left: 15px; } .reference-dashboard-kpis > div { gap: 5px; padding: 0 7px; } .reference-dashboard-kpis svg { width: 18px; } .reference-dashboard-kpis span { font-size: 9px; } .reference-dashboard-kpis b { font-size: 12px; } .reference-dashboard-duo { gap: 8px; } .reference-dashboard-card { padding: 14px; } .reference-dashboard-card h2 { font-size: 16px; } .reference-app-grid { gap: 6px; } .reference-app-grid > div { padding: 8px; } .reference-app-grid b { font-size: 13px; } .reference-app-grid strong { font-size: 10px; } .reference-recent-row span { gap: 10px; } }
+
+
+.reference-brand-lockup, .reference-dashboard-brand { display: flex; align-items: center; gap: 8px; color: #f4f7f4; font-size: 24px; font-weight: 900; letter-spacing: -0.05em; }
+.reference-brand-lockup strong, .reference-dashboard-brand span { color: #20df70; font-style: normal; }
+.reference-brand-logo { width: 42px; height: 42px; object-fit: contain; }
+.reference-dashboard-brand img { width: 54px; height: 54px; object-fit: contain; }
+.reference-dashboard-brand { font-size: 31px; }

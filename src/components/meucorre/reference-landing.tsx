@@ -35,7 +35,7 @@ export function ReferenceLanding({ onCheckout, isAuthenticated }: ReferenceLandi
     <section className="reference-landing" aria-label="Landing page MeuCorre">
       <div className="reference-landing-inner">
         <header className="reference-landing-header">
-          <img src="/logo-meucorre.png" alt="MeuCorre" className="reference-brand-logo" />
+          <div className="reference-brand-lockup"><img src="/logo-meucorre.png" alt="" className="reference-brand-logo" /><span>Meu<strong>Corre</strong></span></div>
           <div className="flex items-center gap-2">
             <button type="button" className="reference-menu" aria-label="Abrir menu">☰</button>
             <DownloadButton className="reference-download">Baixar grátis</DownloadButton>
@@ -56,7 +56,7 @@ export function ReferenceLanding({ onCheckout, isAuthenticated }: ReferenceLandi
           <div className="reference-hero-phone" aria-label="Prévia do aplicativo MeuCorre">
             <div className="reference-phone-notch" />
             <div className="reference-phone-screen">
-              <div className="flex items-center justify-between"><strong>⚡ MeuCorre</strong><span className="text-[9px] text-emerald-400">● Offline</span></div>
+              <div className="flex items-center justify-between"><strong>⚡ Meu<span className="text-emerald-400">Corre</span></strong><span className="text-[9px] text-emerald-400">● Offline</span></div>
               <div className="reference-phone-profit"><span>Lucro líquido</span><strong>R$ 116,64</strong><small>Hoje, 24 de maio</small></div>
               <div className="reference-phone-kpis"><span>Faturamento<br /><b>R$ 216,80</b></span><span>Corridas<br /><b>12</b></span><span>Distância<br /><b>156 km</b></span></div>
               <div className="reference-phone-tabs"><b>Hoje</b><span>Semana</span><span>Mês</span><span>Tudo</span></div>
