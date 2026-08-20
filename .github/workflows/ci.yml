@@ -41,7 +41,7 @@ jobs:
     timeout-minutes: 15
 
     env:
-      # DATABASE_URL fake só para prisma generate não falhar
+      # DATABASE_URL e DIRECT_URL fake só para prisma generate não falhar
       # (não conecta com banco real durante o build do CI)
       DATABASE_URL: "postgresql://fake:fake@localhost:5432/fake"
       DIRECT_URL: "postgresql://fake:fake@localhost:5432/fake"
