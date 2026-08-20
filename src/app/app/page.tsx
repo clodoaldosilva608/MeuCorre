@@ -87,6 +87,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+type Tab = "corridas" | "despesas" | "ofertas" | "graficos";
+
 export default function Home() {
   return (
     <Suspense fallback={null}>

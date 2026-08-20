@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Bike, ChevronRight, CircleDollarSign, Download, Flag, Gauge, Grid3X3, HelpCircle, LogOut, MapPin, Menu, Navigation, Play, Share2, Smartphone, Timer, Trash2, WalletCards, X } from "lucide-react";
 import { formatBRL, formatKm } from "@/lib/apps";
-import type { Period, PeriodStat } from "@/lib/types";
+import type { PeriodFilter as Period, PeriodStat } from "@/lib/types";
 
 interface ReferenceDashboardProps {
   stats: PeriodStat;
