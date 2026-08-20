@@ -686,7 +686,7 @@ function HomeContent() {
         onLogout={isDemoMode ? (() => {}) : handleLogout}
       />
 
-      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">
+      <main className="dashboard-reference-main mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-32 pt-4">
         {/* Banner de anúncio no topo (apenas se não for PRO) */}
         {!isPro &&
           bannerAds
@@ -726,7 +726,7 @@ function HomeContent() {
             Visível apenas para usuários free (não-PRO) enquanto o trial está ativo.
             Mostra dias restantes e CTA para upgrade. */}
         {!isPro && trialStatus.isTrialActive && trialStatus.trialDaysLeft > 0 && (
-          <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5">
+          <div className="dashboard-trial-row flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-amber-500" />
               <span className="text-sm font-medium text-amber-300">
@@ -834,7 +834,7 @@ function HomeContent() {
             Só renderizamos quando o nome já foi carregado — evita
             layout shift no SSR e esconde totalmente quando offline. */}
         {userName && (
-          <div className="flex items-center gap-2 px-1">
+          <div className="dashboard-greeting-row flex items-center gap-2 px-1">
             <h2 className="text-base font-bold text-foreground dark:text-zinc-100">
               Olá, {userName.split(" ")[0]}! 👋
             </h2>

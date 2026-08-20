@@ -966,3 +966,10 @@
     padding: 0.75rem 0.55rem;
   }
 }
+
+
+/* A primeira dobra fiel da referência não exibe trial nem saudação; eles continuam acessíveis em fluxos secundários. */
+.dashboard-reference-main .dashboard-trial-row,
+.dashboard-reference-main .dashboard-greeting-row {
+  display: none;
+}
