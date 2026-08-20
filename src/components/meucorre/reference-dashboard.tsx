@@ -67,41 +67,49 @@ export function ReferenceDashboard({ stats, period, activeTab, goal, recentDeliv
           <div><MapPin /><span>Distância<b>{formatKm(km)}</b></span></div>
         </section>
         <div className="reference-periods">{(["hoje", "semana", "mes", "tudo"] as Period[]).map((value) => <button key={value} type="button" className={period === value ? "active" : ""} onClick={() => onPeriodChange(value)}>{value === "mes" ? "Mês" : value[0].toUpperCase() + value.slice(1)}</button>)}</div>
-        <div className="reference-dashboard-duo">
-          <section className="reference-dashboard-card reference-run-card"><header><h2>Corre do dia</h2><span>● Online</span></header><p>Inicie sua corrida, acompanhe em tempo real e registre ganhos e despesas.</p><div className="reference-map-dot" /><div className="reference-run-actions"><button type="button" onClick={onStartSession}><Play />Iniciar</button><button type="button" onClick={onOpenHeatmap}><Navigation />Mapa</button><button type="button" onClick={onStartSession}><Timer />Cronômetro</button></div></section>
-          <section className="reference-dashboard-card reference-goal-card"><header><h2>Metas</h2><span>{goal ? goal.periodLabel : "Sem meta ativa"}</span></header><div className="reference-goal-line"><span>{goal?.label || "Meta de ganhos"}</span><b>{formatBRL(goal?.targetValue ?? 0)}</b></div><div className="reference-progress"><span style={{ width: `${Math.min(100, goalProgress)}%` }} /></div><div className="reference-goal-meta"><span>{goal ? `${Math.round(goalProgress)}% concluída` : "Crie uma meta para acompanhar"}</span><span>{goal ? `Faltam ${formatBRL(goalRemaining)}` : ""}</span></div><div className="reference-streak"><strong>Progresso atual</strong><b>{formatBRL(goal?.currentValue ?? 0)}</b><small>Valores calculados a partir das corridas registradas.</small></div></section>
-        </div>
-        <section className="reference-dashboard-card reference-apps-card"><header><h2>Resumo por app</h2><button type="button" onClick={() => onTabChange("corridas")}>Ver todos</button></header><div className="reference-app-grid">{stats.byApp.length === 0 ? <p className="text-xs text-zinc-500">Nenhum app com corridas neste período.</p> : stats.byApp.map((app) => {
-          const appMeta = findApp(app.app, apps);
-          return (
-            <div key={app.app}>
-              {appMeta?.image ? (
-                <img src={appMeta.image} alt={app.label} className="reference-app-logo" />
-              ) : (
-                <span className="reference-app-icon" style={{ background: app.color }}>{app.label.slice(0, 2)}</span>
-              )}
-              <strong>{app.label}</strong>
-              <b>{formatBRL(app.total)}</b>
-              <small>{app.count} {app.count === 1 ? "corrida" : "corridas"}</small>
+        {/* ===== Seções abaixo SÓ aparecem na aba 'corridas' =====
+            Antes eram sempre exibidas, fazendo o conteúdo de outras abas
+            (Despesas/Ofertas/Gráficos) aparecerem DEPOIS delas — dando a
+            impressão de página duplicada. */}
+        {activeTab === "corridas" && (
+          <>
+            <div className="reference-dashboard-duo">
+              <section className="reference-dashboard-card reference-run-card"><header><h2>Corre do dia</h2><span>● Online</span></header><p>Inicie sua corrida, acompanhe em tempo real e registre ganhos e despesas.</p><div className="reference-map-dot" /><div className="reference-run-actions"><button type="button" onClick={onStartSession}><Play />Iniciar</button><button type="button" onClick={onOpenHeatmap}><Navigation />Mapa</button><button type="button" onClick={onStartSession}><Timer />Cronômetro</button></div></section>
+              <section className="reference-dashboard-card reference-goal-card"><header><h2>Metas</h2><span>{goal ? goal.periodLabel : "Sem meta ativa"}</span></header><div className="reference-goal-line"><span>{goal?.label || "Meta de ganhos"}</span><b>{formatBRL(goal?.targetValue ?? 0)}</b></div><div className="reference-progress"><span style={{ width: `${Math.min(100, goalProgress)}%` }} /></div><div className="reference-goal-meta"><span>{goal ? `${Math.round(goalProgress)}% concluída` : "Crie uma meta para acompanhar"}</span><span>{goal ? `Faltam ${formatBRL(goalRemaining)}` : ""}</span></div><div className="reference-streak"><strong>Progresso atual</strong><b>{formatBRL(goal?.currentValue ?? 0)}</b><small>Valores calculados a partir das corridas registradas.</small></div></section>
             </div>
-          );
-        })}</div></section>
-        <section className="reference-dashboard-card reference-recent-card"><header><h2>Últimas corridas</h2><button type="button" onClick={() => onTabChange("corridas")}>Ver todas</button></header>{recentDeliveries.length === 0 ? <p className="text-xs text-zinc-500">Nenhuma corrida registrada neste período.</p> : recentDeliveries.slice(0, 5).map((delivery) => {
-          const appMeta = findApp(delivery.app, apps);
-          return (
-            <button type="button" className="reference-recent-row" key={delivery.id} onClick={() => onTabChange("corridas")}>
-              <span className="reference-recent-app">
-                {appMeta?.image ? (
-                  <img src={appMeta.image} alt={appMeta.label} className="reference-recent-logo" />
-                ) : null}
-                <b>{new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(delivery.timestamp))}</b>
-                <small>{delivery.date}<br />{delivery.address || delivery.app}</small>
-              </span>
-              <strong>{formatBRL(delivery.value)}</strong>
-              <ChevronRight />
-            </button>
-          );
-        })}</section>
+            <section className="reference-dashboard-card reference-apps-card"><header><h2>Resumo por app</h2><button type="button" onClick={() => onTabChange("corridas")}>Ver todos</button></header><div className="reference-app-grid">{stats.byApp.length === 0 ? <p className="text-xs text-zinc-500">Nenhum app com corridas neste período.</p> : stats.byApp.map((app) => {
+              const appMeta = findApp(app.app, apps);
+              return (
+                <div key={app.app}>
+                  {appMeta?.image ? (
+                    <img src={appMeta.image} alt={app.label} className="reference-app-logo" />
+                  ) : (
+                    <span className="reference-app-icon" style={{ background: app.color }}>{app.label.slice(0, 2)}</span>
+                  )}
+                  <strong>{app.label}</strong>
+                  <b>{formatBRL(app.total)}</b>
+                  <small>{app.count} {app.count === 1 ? "corrida" : "corridas"}</small>
+                </div>
+              );
+            })}</div></section>
+            <section className="reference-dashboard-card reference-recent-card"><header><h2>Últimas corridas</h2><button type="button" onClick={() => onTabChange("corridas")}>Ver todas</button></header>{recentDeliveries.length === 0 ? <p className="text-xs text-zinc-500">Nenhuma corrida registrada neste período.</p> : recentDeliveries.slice(0, 5).map((delivery) => {
+              const appMeta = findApp(delivery.app, apps);
+              return (
+                <button type="button" className="reference-recent-row" key={delivery.id} onClick={() => onTabChange("corridas")}>
+                  <span className="reference-recent-app">
+                    {appMeta?.image ? (
+                      <img src={appMeta.image} alt={appMeta.label} className="reference-recent-logo" />
+                    ) : null}
+                    <b>{new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(delivery.timestamp))}</b>
+                    <small>{delivery.date}<br />{delivery.address || delivery.app}</small>
+                  </span>
+                  <strong>{formatBRL(delivery.value)}</strong>
+                  <ChevronRight />
+                </button>
+              );
+            })}</section>
+          </>
+        )}
         {/* Botão "Nova corrida" removido daqui — o FAB (botão flutuante fixo
             no rodapé) já cumpre essa função. Ter 2 botões "Nova corrida"
             visíveis causava confusão e duplicação visual. */}
