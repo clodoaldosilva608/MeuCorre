@@ -106,7 +106,10 @@ export function ReferenceDashboard({ stats, period, activeTab, goal, recentDeliv
             no rodapé) já cumpre essa função. Ter 2 botões "Nova corrida"
             visíveis causava confusão e duplicação visual. */}
       </div>
-      <nav className="reference-dashboard-nav"><button type="button" className={activeTab === "corridas" ? "active" : ""} onClick={() => onTabChange("corridas")}><Flag />Corridas</button><button type="button" className={activeTab === "despesas" ? "active" : ""} onClick={() => onTabChange("despesas")}><WalletCards />Despesas</button><button type="button" className={activeTab === "ofertas" ? "active" : ""} onClick={() => onTabChange("ofertas")}><Gauge />Ofertas</button><button type="button" className={activeTab === "graficos" ? "active" : ""} onClick={() => onTabChange("graficos")}><Bike />Gráficos</button></nav>
+      {/* Barra de navegação inferior removida daqui — o componente BottomNav
+          (classe 'bottom-nav-premium' com glassmorphism) já é renderizado em
+          page.tsx fora do ReferenceDashboard. Ter 2 barras inferiores
+          causava duplicação visual. */}
     </section>
   );
 }
