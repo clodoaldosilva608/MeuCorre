@@ -846,27 +846,28 @@ function HomeContent() {
         {/* Conteúdo da tab ativa */}
         {activeTab === "corridas" && (
           <>
-            {/* Corre do dia — cronômetro + GPS tracking */}
-            <CorreDoDia
-              activeSession={activeSession}
-              liveDurationMs={liveDurationMs}
-              liveDistanceKm={liveDistanceKm}
-              gpsError={gpsError}
-              sessions={workSessions}
-              onStart={startSession}
-              onStop={stopSession}
-              onCancel={cancelSession}
-              onDelete={deleteSession}
-              onOpenHeatmap={() => setHeatmapOpen(true)}
-            />
+            {/* Bloco principal da referência: Corre do dia + Metas em duas colunas */}
+            <div className="dashboard-focus-grid">
+              <CorreDoDia
+                activeSession={activeSession}
+                liveDurationMs={liveDurationMs}
+                liveDistanceKm={liveDistanceKm}
+                gpsError={gpsError}
+                sessions={workSessions}
+                onStart={startSession}
+                onStop={stopSession}
+                onCancel={cancelSession}
+                onDelete={deleteSession}
+                onOpenHeatmap={() => setHeatmapOpen(true)}
+              />
 
-            {/* Metas diárias/semanais — barra de progresso financeira */}
-            <GoalsProgress
-              goals={goalsWithProgress}
-              onAdd={addGoal}
-              onUpdate={updateGoal}
-              onDelete={deleteGoal}
-            />
+              <GoalsProgress
+                goals={goalsWithProgress}
+                onAdd={addGoal}
+                onUpdate={updateGoal}
+                onDelete={deleteGoal}
+              />
+            </div>
 
             <AppSummary stats={stats} />
 

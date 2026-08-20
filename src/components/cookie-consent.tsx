@@ -69,12 +69,12 @@ export function CookieConsent() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-[100] border-t border-zinc-700 bg-zinc-900/95 backdrop-blur-lg"
+      className="fixed bottom-3 right-3 z-[100] w-[min(360px,calc(100vw-1.5rem))] rounded-2xl border border-zinc-700 bg-zinc-950/95 shadow-2xl shadow-black/40 backdrop-blur-lg"
       role="dialog"
       aria-label="Consentimento de cookies"
     >
-      <div className="mx-auto max-w-3xl px-4 py-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="px-4 py-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1">
             <p className="text-xs text-zinc-300">
               <strong className="text-white">🍪 Cookies e privacidade</strong>

@@ -827,3 +827,60 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Reconstrução de composição: o bloco central da referência é uma grade de duas colunas. */
+.dashboard-focus-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.dashboard-focus-grid > * {
+  min-width: 0;
+  height: 100%;
+}
+
+/* Em telas muito estreitas, a composição continua legível sem remover nenhuma área. */
+@media (max-width: 359px) {
+  .dashboard-focus-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* A referência da landing usa primeiro um bloco compacto de cards e depois um CTA; evita que o conteúdo antigo crie espaços excessivos. */
+@media (max-width: 639px) {
+  .landing-page section {
+    padding-top: 3.5rem !important;
+    padding-bottom: 3.5rem !important;
+  }
+
+  .landing-page section:first-of-type {
+    padding-top: 0 !important;
+  }
+
+  .landing-page section:first-of-type + section .grid,
+  .landing-page section:nth-of-type(3) .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landing-page section:first-of-type + section .grid > *,
+  .landing-page section:nth-of-type(3) .grid > * {
+    min-height: 132px;
+  }
+
+  .landing-page #planos > div > div:last-child {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 640px) {
+  .landing-page section:nth-of-type(3) .grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .landing-page section:nth-of-type(3) .grid > * {
+    min-height: 176px;
+  }
+}
