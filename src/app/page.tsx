@@ -246,7 +246,7 @@ export default function LandingPage() {
       <Header onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
 
       {/* ===== 1. HERO — gradient mesh animado + badge flutuante + contador ===== */}
-      <section className="relative overflow-hidden bg-ink">
+      <section className="relative overflow-hidden" style={{ backgroundColor: "#0D0F0E", backgroundImage: "radial-gradient(ellipse at top, rgba(22, 101, 52, 0.12), transparent 60%)" }}>
         {/* Gradient mesh animado — blobs que se movem suavemente */}
         <div className="pointer-events-none absolute inset-0">
           <div className="mesh-blob-1 absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-neon/15 blur-[100px]" />

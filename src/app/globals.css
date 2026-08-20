@@ -59,9 +59,9 @@
   --color-amber-warn: #FB923C;
   --color-lime-acc: #84CC16;
   --color-steel: #64748B;
-  --color-ink-deep: #0A0A0A;
-  --color-ink-card: #111111;
-  --color-ink-elevated: #161616;
+  --color-ink-deep: #0D0F0E;
+  --color-ink-card: #1C1F1E;
+  --color-ink-elevated: #1A1D1E;
 }
 
 /* ===== Tema Claro (padrão MeuCorre light) ===== */
@@ -170,7 +170,7 @@
 .bg-orange-hot { background-color: #ff6b00; }
 
 /* Preto profundo e grafite — backgrounds */
-.bg-ink { background-color: #0a0a0a; }
+.bg-ink { background-color: #0D0F0E; }
 .bg-graphite { background-color: #1a1a1a; }
 .bg-asphalt { background-color: #2d3748; }
 
@@ -230,10 +230,10 @@
 /* ===== Glass Card (padrão redesign pixel-perfect) ===== */
 /* Card com fundo semi-transparente + blur + borda sutil + sombra profunda */
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(28, 31, 30, 0.8);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #2D302F;
   border-radius: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
@@ -267,10 +267,10 @@
 
 /* ===== Stat Card (card menor para métricas) — redesign pixel-perfect ===== */
 .stat-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(28, 31, 30, 0.8);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #2D302F;
   border-radius: 16px;
   padding: 16px;
   transition: all 0.25s ease;
@@ -360,7 +360,7 @@
 
 /* ===== Bottom nav premium (barra inferior glassmorphism) — redesign pixel-perfect ===== */
 .bottom-nav-premium {
-  background: rgba(10, 10, 10, 0.95);
+  background: rgba(13, 15, 14, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -368,7 +368,7 @@
 
 /* ===== Header premium (topo com glassmorphism) — redesign pixel-perfect ===== */
 .header-premium {
-  background: rgba(10, 10, 10, 0.95);
+  background: rgba(13, 15, 14, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
