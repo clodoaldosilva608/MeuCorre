@@ -674,6 +674,7 @@ function HomeContent() {
       <ReferenceDashboard
         stats={stats}
         period={period}
+        activeTab={activeTab}
         onPeriodChange={setPeriod}
         onNewDelivery={openNewDelivery}
         onStartSession={startSession}
@@ -689,6 +690,14 @@ function HomeContent() {
         onClearAll={isDemoMode ? (() => {}) : () => setConfirmClear(true)}
         onLogout={isDemoMode ? (() => {}) : handleLogout}
       />
+      {!isDemoMode && !isPro && bannerAds.filter((ad) => !dismissedBanners.has(ad.id)).slice(0, 1).map((ad) => <AdBanner key={ad.id} ad={ad} onClick={clickBanner} onDismiss={(id) => setDismissedBanners((previous) => new Set(previous).add(id))} />)}
+      {!isDemoMode && !isPro && cardAds[0] && <AdCard ad={cardAds[0]} onClick={clickCard} />}
+      {referralData && !isDemoMode && <section className="reference-referral-card"><div><span className="reference-eyebrow">Indique e Ganhe</span><h2>R$ {referralData.rewardAmount.toFixed(2)} por amigo que virar PRO</h2><p>Compartilhe seu link e acompanhe suas indicações. Cadastre sua chave PIX para receber.</p></div><button type="button" onClick={() => setShareOpen(true)}>Indicar agora</button><PixKeyRegister /></section>}
+      {activeTab !== "corridas" && <section className="reference-functional-tab-content" aria-label={`Conteúdo de ${activeTab}`}>
+        {activeTab === "despesas" && <><h2>Despesas</h2><ExpenseList expenses={filteredExpenses} onEdit={(expense) => { if (isDemoMode) return; setEditingExpense(expense); setExpenseFormOpen(true); }} onDelete={(expense) => { if (isDemoMode) return; setConfirmDeleteExpense(expense); }} /></>}
+        {activeTab === "ofertas" && <><h2>Ofertas para o seu corre</h2><OffersList isPro={isPro} /></>}
+        {activeTab === "graficos" && <Suspense fallback={<div className="flex h-48 items-center justify-center text-zinc-500">Carregando gráficos…</div>}><Charts dailySeries={dailySeries} stats={stats} expensesByCategory={expensesByCategory} /></Suspense>}
+      </section>}
       {showLegacyContent && <section className="dashboard-legacy-content">
         <h2>Recursos completos do app</h2>
         <div className="dashboard-legacy-inner">

@@ -8,6 +8,7 @@ import type { PeriodFilter as Period, PeriodStat } from "@/lib/types";
 interface ReferenceDashboardProps {
   stats: PeriodStat;
   period: Period;
+  activeTab: "corridas" | "despesas" | "ofertas" | "graficos";
   onPeriodChange: (period: Period) => void;
   onNewDelivery: () => void;
   onStartSession: () => void;
@@ -31,7 +32,7 @@ const appRows = [
   ["Rappi", "#ed4b56"],
 ] as const;
 
-export function ReferenceDashboard({ stats, period, onPeriodChange, onNewDelivery, onStartSession, onOpenHeatmap, onTabChange, onOpenApps, onOpenCapture, onOpenLicense, onOpenShare, onOpenOnboarding, onExportJSON, onExportCSV, onClearAll, onLogout }: ReferenceDashboardProps) {
+export function ReferenceDashboard({ stats, period, activeTab, onPeriodChange, onNewDelivery, onStartSession, onOpenHeatmap, onTabChange, onOpenApps, onOpenCapture, onOpenLicense, onOpenShare, onOpenOnboarding, onExportJSON, onExportCSV, onClearAll, onLogout }: ReferenceDashboardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const closeAndRun = (fn: () => void) => { setMenuOpen(false); fn(); };
   const amount = stats.total > 0 ? stats.total : 216.8;
@@ -68,7 +69,7 @@ export function ReferenceDashboard({ stats, period, onPeriodChange, onNewDeliver
         <section className="reference-dashboard-card reference-recent-card"><header><h2>Últimas corridas</h2><button type="button" onClick={() => onTabChange("corridas")}>Ver todas</button></header>{["Vila Madalena → Itaim Bibi", "Moema → Paraíso", "Centro → Liberdade"].map((route, index) => <button type="button" className="reference-recent-row" key={route} onClick={() => onTabChange("corridas")}><span><b>{["08:43", "07:22", "06:35"][index]}</b><small>Hoje<br />{route}</small></span><strong>{formatBRL([23.4, 18.6, 15.2][index])}</strong><ChevronRight /></button>)}</section>
         <button type="button" className="reference-new-run" onClick={onNewDelivery}><span>＋</span> Nova corrida</button>
       </div>
-      <nav className="reference-dashboard-nav"><button type="button" className="active" onClick={() => onTabChange("corridas")}><Flag />Corridas</button><button type="button" onClick={() => onTabChange("despesas")}><WalletCards />Despesas</button><button type="button" onClick={() => onTabChange("ofertas")}><Gauge />Ofertas</button><button type="button" onClick={() => onTabChange("graficos")}><Bike />Gráficos</button></nav>
+      <nav className="reference-dashboard-nav"><button type="button" className={activeTab === "corridas" ? "active" : ""} onClick={() => onTabChange("corridas")}><Flag />Corridas</button><button type="button" className={activeTab === "despesas" ? "active" : ""} onClick={() => onTabChange("despesas")}><WalletCards />Despesas</button><button type="button" className={activeTab === "ofertas" ? "active" : ""} onClick={() => onTabChange("ofertas")}><Gauge />Ofertas</button><button type="button" className={activeTab === "graficos" ? "active" : ""} onClick={() => onTabChange("graficos")}><Bike />Gráficos</button></nav>
     </section>
   );
 }

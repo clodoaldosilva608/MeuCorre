@@ -13,6 +13,7 @@ import { TestimonialsCarousel } from "@/components/meucorre/testimonials-carouse
 import { FounderMessage } from "@/components/meucorre/founder-message";
 import { YouTubeSection } from "@/components/meucorre/youtube-section";
 import { SponsoredBrandsCarousel } from "@/components/meucorre/sponsored-brands-carousel";
+import { LandingFunctionalSections } from "@/components/meucorre/landing-functional-sections";
 import { AnimatedCounter } from "@/components/meucorre/animated-counter";
 import { StickyCTA } from "@/components/meucorre/sticky-cta";
 import { ReferenceLanding } from "@/components/meucorre/reference-landing";
@@ -245,6 +246,7 @@ export default function LandingPage() {
   return (
     <div className="landing-page flex min-h-screen flex-col bg-ink text-white">
       <ReferenceLanding onCheckout={openCheckout} isAuthenticated={isAuthenticated} />
+      <LandingFunctionalSections />
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}

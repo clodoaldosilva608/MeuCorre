@@ -1179,3 +1179,34 @@
 @media (max-width: 520px) { .reference-dashboard-header { padding-inline: 15px; } .reference-dashboard-header-actions { gap: 8px; } .reference-offline { font-size: 11px; } .reference-offline small { font-size: 9px; } .reference-menu-button { width: 38px; height: 38px; } .reference-sidebar { width: min(340px, calc(100vw - 18px)); } }
 
 .landing-legacy-content > h2 { width: min(100%, 760px); margin: 28px auto 0; padding: 0 20px; color: #f1f6f2; font-size: clamp(22px, 4vw, 32px); font-weight: 900; letter-spacing: -0.03em; text-align: center; }
+
+/* Funcionalidades restauradas no redesign premium */
+.reference-landing-menu { position: absolute; top: 72px; right: 16px; z-index: 20; display: grid; min-width: 210px; gap: 4px; padding: 10px; border: 1px solid rgba(102,216,77,.28); border-radius: 16px; background: rgba(16,19,17,.98); box-shadow: 0 18px 45px rgba(0,0,0,.45); }
+.reference-landing-menu a, .reference-landing-menu button { display: block; width: 100%; border-radius: 10px; padding: 10px 12px; color: #dce7de; font-size: 13px; text-align: left; }
+.reference-landing-menu a:hover, .reference-landing-menu button:hover, .reference-landing-menu a:focus-visible, .reference-landing-menu button:focus-visible { background: #202a21; color: #66d84d; outline: none; }
+.reference-functional-sections { width: min(100%, 1120px); margin: 0 auto; padding: 0 18px 36px; }
+.reference-functional-sections .reference-landing-section { padding-top: 56px; }
+.reference-section-heading-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.reference-eyebrow { display: block; margin-bottom: 8px; color: #66d84d; font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.reference-text-link { display: inline-flex; align-items: center; gap: 6px; color: #66d84d; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.reference-faq-list { display: grid; gap: 8px; max-width: 760px; margin: 18px auto 0; }
+.reference-faq-item { border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: rgba(255,255,255,.035); }
+.reference-faq-item summary { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 16px; color: #eef5ef; font-size: 14px; font-weight: 800; list-style: none; }
+.reference-faq-item summary::-webkit-details-marker { display: none; }
+.reference-faq-item summary span { color: #66d84d; font-size: 20px; font-weight: 400; }
+.reference-faq-item p { margin: 0; border-top: 1px solid rgba(255,255,255,.08); padding: 14px 16px 16px; color: #9eaaa1; font-size: 13px; line-height: 1.6; }
+.reference-functional-footer { display: flex; align-items: start; justify-content: space-between; gap: 24px; margin-top: 56px; border-top: 1px solid rgba(255,255,255,.1); padding: 28px 0 12px; color: #8d998f; }
+.reference-functional-footer strong { color: #f4f7f4; font-size: 20px; }
+.reference-functional-footer strong span { color: #20df70; }
+.reference-functional-footer p { margin-top: 6px; font-size: 12px; }
+.reference-functional-footer nav { display: flex; flex-wrap: wrap; justify-content: end; gap: 8px 16px; }
+.reference-functional-footer nav a { color: #aab5ad; font-size: 12px; }
+.reference-functional-footer nav a:hover { color: #66d84d; }
+.reference-functional-tab-content { width: min(100%, 760px); margin: 0 auto; padding: 24px 16px 120px; }
+.reference-functional-tab-content > h2 { margin-bottom: 16px; color: #f4f7f4; font-size: 22px; font-weight: 900; }
+@media (max-width: 640px) { .reference-section-heading-row, .reference-functional-footer { align-items: stretch; flex-direction: column; } .reference-functional-footer nav { justify-content: start; } .reference-functional-sections { padding-inline: 14px; } .reference-functional-sections .reference-landing-section { padding-top: 42px; } }
+.reference-referral-card { width: min(100% - 32px, 760px); margin: 12px auto 0; display: grid; gap: 12px; border: 1px solid rgba(32,223,112,.28); border-radius: 16px; padding: 16px; background: linear-gradient(135deg, rgba(32,223,112,.12), rgba(16,19,17,.9)); }
+.reference-referral-card h2 { color: #f4f7f4; font-size: 18px; font-weight: 900; }
+.reference-referral-card p { margin-top: 5px; color: #9eaaa1; font-size: 12px; line-height: 1.5; }
+.reference-referral-card > button { justify-self: start; border-radius: 10px; background: #20df70; padding: 10px 16px; color: #07110a; font-size: 12px; font-weight: 900; }
+.reference-referral-card > button:hover { background: #66d84d; }
