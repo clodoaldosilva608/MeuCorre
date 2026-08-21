@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, prismaRead } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import { hashPassword } from "@/lib/user-auth";
 import crypto from "crypto";
@@ -7,20 +7,11 @@ import { z } from "zod";
 
 // GET /api/admin/users — lista usuários com paginação cursor-based
 //
-// SEGURANÇA/PERFORMANCE (P1-2):
-// Antes: take: 500 fixo — admin não via usuários além dos 500 mais recentes.
-// Em 100k users, isso esconde 99.5% da base.
-// Agora: paginação cursor-based (limit + cursor) — admin pode paginar.
-//
-// Query params:
-//   - filter: all | pro | free (default: all)
-//   - limit: 10..100 (default: 50)
-//   - cursor: ID do último user da página anterior (opcional)
-//
-// Retorno:
-//   - users: array de usuários (limit + 1 se houver próxima página)
-//   - nextCursor: ID do cursor para próxima página (null se fim)
-//   - hasMore: boolean indicando se há mais páginas
+// SEGURANÇA/PERFORMANCE (P1-2 + P3-3):
+// - Paginação cursor-based (limit 10-100 + cursor + hasMore)
+// - P3-3: usa prismaRead (read replica) para queries de leitura admin
+//   Redireciona carga do primary (escritas) para réplica (leituras)
+//   Em 50k users, admin dashboard não compete com sync de usuários
 export async function GET(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -35,8 +26,8 @@ export async function GET(req: NextRequest) {
 
   const where = filter === "pro" ? { isPro: true } : filter === "free" ? { isPro: false } : {};
 
-  // Busca limit + 1 para saber se há próxima página
-  const users = await prisma.user.findMany({
+  // P3-3: usa prismaRead (read replica) — leitura admin não compete com sync
+  const users = await prismaRead.user.findMany({
     where,
     orderBy: { createdAt: "desc" },
     take: limit + 1,

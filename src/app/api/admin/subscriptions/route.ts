@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, prismaRead } from "@/lib/prisma";
 import { isAdminAuthed } from "@/lib/admin-auth";
 import crypto from "crypto";
 import { z } from "zod";
 
 // GET /api/admin/subscriptions — lista compras com paginação cursor-based
 //
-// SEGURANÇA/PERFORMANCE (P1-2):
-// Antes: take: 100 fixo — admin não via compras além das 100 mais recentes.
-// Em 100k vendas, isso esconde 99.9% da base.
-// Agora: paginação cursor-based (limit + cursor) — admin pode paginar.
-//
-// Query params:
-//   - status: pending | approved | rejected | all (default: all)
-//   - limit: 10..100 (default: 50)
-//   - cursor: ID do último item da página anterior (opcional)
+// SEGURANÇA/PERFORMANCE (P1-2 + P3-3):
+// - Paginação cursor-based (limit 10-100 + cursor + hasMore)
+// - P3-3: usa prismaRead (read replica) para leituras admin
 export async function GET(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -27,7 +21,9 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(Math.max(limitParam || 50, 10), 100);
 
   const where = status && status !== "all" ? { status } : {};
-  const subs = await prisma.subscription.findMany({
+
+  // P3-3: usa prismaRead (read replica)
+  const subs = await prismaRead.subscription.findMany({
     where,
     orderBy: { createdAt: "desc" },
     take: limit + 1,
