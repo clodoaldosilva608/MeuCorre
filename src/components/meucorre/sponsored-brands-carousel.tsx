@@ -92,7 +92,7 @@ export function SponsoredBrandsCarousel() {
         <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-zinc-950 to-transparent" />
 
         <motion.div
-          className="flex gap-4"
+          className="flex gap-4 overflow-x-hidden"
           animate={{ x: ["0%", "-50%"] }}
           transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
           style={{ width: "max-content" }}

@@ -113,7 +113,7 @@ export function BlogCarousel() {
 
       {/* Container do carrossel — animação CSS infinita */}
       <motion.div
-        className="flex gap-4"
+        className="flex gap-4 overflow-x-hidden"
         animate={{ x: ["0%", "-50%"] }}
         transition={{
           duration: 60, // 60 segundos para percorrer todos os posts

@@ -716,6 +716,108 @@ function HomeContent() {
         onClearAll={isDemoMode ? (() => {}) : () => setConfirmClear(true)}
         onLogout={isDemoMode ? (() => {}) : handleLogout}
       />
+      {/* ===== Componentes restaurados que sumiram ao remover showLegacyContent =====
+          Estes eram parte do <main> legacy e foram perdidos. Agora vivem
+          entre o ReferenceDashboard e o referral card. */}
+
+      {/* Banner de Trial — contagem regressiva permanente na dashboard.
+          Visível apenas para usuários free (não-PRO) enquanto o trial está ativo. */}
+      {!isPro && trialStatus.isTrialActive && trialStatus.trialDaysLeft > 0 && (
+        <div className="dashboard-trial-row flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 mx-auto w-full max-w-md mt-3">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium text-amber-300">
+              {trialStatus.trialDaysLeft} {trialStatus.trialDaysLeft === 1 ? "dia restante" : "dias restantes"} do teste grátis
+            </span>
+          </div>
+          <button
+            onClick={() => setLicenseOpen(true)}
+            className="text-xs font-bold text-amber-400 underline-offset-2 hover:underline"
+          >
+            Virar PRO →
+          </button>
+        </div>
+      )}
+
+      {/* Banner de Trial expirado — mostra limite de lançamentos */}
+      {!isPro && trialStatus.isTrialExpired && (
+        <div className="flex items-center justify-between rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 mx-auto w-full max-w-md mt-3">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-400" />
+            <span className="text-sm font-medium text-red-300">
+              {trialStatus.remainingLaunches > 0
+                ? `${trialStatus.remainingLaunches} ${trialStatus.remainingLaunches === 1 ? "lançamento restante" : "lançamentos restantes"} hoje`
+                : "Limite diário atingido"}
+            </span>
+          </div>
+          <button
+            onClick={() => setLicenseOpen(true)}
+            className="text-xs font-bold text-red-400 underline-offset-2 hover:underline"
+          >
+            Virar PRO →
+          </button>
+        </div>
+      )}
+
+      {/* SummaryCards — cards de resumo (ganhos, despesas, lucro, corridas) */}
+      <div className="mx-auto w-full max-w-md px-4 mt-4">
+        <SummaryCards stats={stats} periodLabel={periodLabel(period)} />
+      </div>
+
+      {/* Conteúdo da aba Corridas — CorreDoDia (real com GPS), GoalsProgress, DeliveryList */}
+      {activeTab === "corridas" && (
+        <div className="mx-auto w-full max-w-md px-4 mt-4 space-y-5">
+          {/* Corre do dia real com GPS + timer + distância */}
+          <CorreDoDia
+            activeSession={activeSession}
+            liveDurationMs={liveDurationMs}
+            liveDistanceKm={liveDistanceKm}
+            gpsError={gpsError}
+            sessions={workSessions}
+            onStart={startSession}
+            onStop={stopSession}
+            onCancel={cancelSession}
+            onDelete={deleteSession}
+            onOpenHeatmap={() => setHeatmapOpen(true)}
+          />
+
+          {/* Metas com barra de progresso e CRUD */}
+          <GoalsProgress
+            goals={goalsWithProgress}
+            onAdd={addGoal}
+            onUpdate={updateGoal}
+            onDelete={deleteGoal}
+          />
+
+          {/* AppSummary — gráfico de resumo por app */}
+          <AppSummary stats={stats} />
+
+          {/* DeliveryList — lista completa de corridas com editar/excluir */}
+          <DeliveryList
+            deliveries={filteredDeliveries}
+            onEdit={(d) => {
+              if (isDemoMode) return;
+              setEditingDelivery(d);
+              setDeliveryFormOpen(true);
+            }}
+            onDelete={(d) => {
+              if (isDemoMode) return;
+              setConfirmDeleteDelivery(d);
+            }}
+            apps={apps}
+          />
+        </div>
+      )}
+
+      {/* Referral banner rotativo */}
+      {referralData && !isDemoMode && (
+        <div className="mx-auto w-full max-w-md px-4 mt-4">
+          <div className="overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5">
+            <ReferralBannerRotator onShare={() => setShareOpen(true)} />
+          </div>
+        </div>
+      )}
+
       {!isDemoMode && !isPro && bannerAds.filter((ad) => !dismissedBanners.has(ad.id)).slice(0, 1).map((ad) => <AdBanner key={ad.id} ad={ad} onClick={clickBanner} onDismiss={(id) => setDismissedBanners((previous) => new Set(previous).add(id))} />)}
       {!isDemoMode && !isPro && cardAds[0] && <AdCard ad={cardAds[0]} onClick={clickCard} />}
       {referralData && !isDemoMode && <section className="reference-referral-card"><div><span className="reference-eyebrow">Indique e Ganhe</span><h2>R$ {referralData.rewardAmount.toFixed(2)} por amigo que virar PRO</h2><p>Compartilhe seu link e acompanhe suas indicações. Cadastre sua chave PIX para receber.</p></div><button type="button" onClick={() => setShareOpen(true)}>Indicar agora</button><PixKeyRegister /></section>}
@@ -732,7 +834,7 @@ function HomeContent() {
           "Nova corrida" e todos os outros fluxos críticos da dashboard. */}
 
       {/* Splash com vídeo do MeuCorre — também precisa renderizar mesmo sem legacy */}
-      {showSplash && !showLegacyContent && (
+      {showSplash && (
         <AppLoadingLogo visible={showSplash} duration={10000}>
           {/* Splash patrocinado (apenas se não for PRO, não for demo, e houver anúncio) */}
           {!isPro && !isDemoMode && splashAds[0] && <SponsoredSplash ad={splashAds[0]} />}

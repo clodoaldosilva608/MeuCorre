@@ -69,7 +69,7 @@ export function CookieConsent() {
 
   return (
     <div
-      className="fixed bottom-3 right-3 z-[100] w-[min(360px,calc(100vw-1.5rem))] rounded-2xl border border-zinc-700 bg-zinc-950/95 shadow-2xl shadow-black/40 backdrop-blur-lg"
+      className="fixed bottom-[5.5rem] right-3 z-[100] w-[min(360px,calc(100vw-1.5rem))] rounded-2xl border border-zinc-700 bg-zinc-950/95 shadow-2xl shadow-black/40 backdrop-blur-lg"
       role="dialog"
       aria-label="Consentimento de cookies"
     >

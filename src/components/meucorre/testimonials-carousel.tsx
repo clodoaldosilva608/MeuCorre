@@ -198,7 +198,7 @@ export function TestimonialsCarousel() {
 
       {/* Container do carrossel — animação CSS infinita */}
       <motion.div
-        className="flex gap-4"
+        className="flex gap-4 overflow-x-hidden"
         animate={{ x: ["0%", "-50%"] }}
         transition={{
           duration: 80, // 80 segundos para percorrer todos os depoimentos
