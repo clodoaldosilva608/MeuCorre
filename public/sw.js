@@ -1,16 +1,18 @@
 // Service Worker do MeuCorre — PWA offline-first.
 // Cacheia o app shell para funcionar sem internet (garagens, subsolos, etc.).
 //
-// ESTRATÉGIA DE CACHE (Fase 3 — Achado #1 corrigido):
-// - App shell (HTML, JS, CSS, imagens estáticas): stale-while-revalidate
+// ESTRATÉGIA DE CACHE:
+// - Navegação (HTML pages): NETWORK-FIRST
+//   Tenta buscar a versão mais recente do servidor. Só usa cache se offline.
+//   Isto garante que mudanças no código (ex: remoção da dashboard legacy)
+//   sejam visíveis IMEDIATAMENTE ao recarregar — sem precisar de um segundo
+//   reload para ver a nova versão.
+// - Assets estáticos (JS, CSS, imagens): STALE-WHILE-REVALIDATE
+//   Serve do cache para carregamento rápido, atualiza em background.
 // - /api/*: NUNCA intercepta — sempre vai direto ao servidor.
-//   Razão: rotas API retornam dados sensíveis do usuário logado e devem
-//   ser sempre frescas. Antes da correção, GET /api/sync retornava 200
-//   em cache mesmo após logout, expondo dados stale do usuário anterior.
-// - _next/data/*: NUNCA intercepta (rotas dinâmicas do Next.js que
-//   podem conter dados sensíveis).
+// - _next/data/*: NUNCA intercepta (rotas dinâmicas do Next.js).
 
-const CACHE_NAME = "meucorre-v4"; // bumped: v3 → v4 força update do SW e limpa cache antigo
+const CACHE_NAME = "meucorre-v5"; // bumped: v4 → v5 força limpeza de cache antigo
 const APP_SHELL = [
   "/",
   "/manifest.json",
@@ -30,7 +32,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Ativa: limpa caches antigos
+// Ativa: limpa caches antigos e assume controle imediatamente
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -44,7 +46,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Fetch: stale-while-revalidate para app shell; bypass para API
+// Fetch handler
 self.addEventListener("fetch", (event) => {
   const req = event.request;
 
@@ -57,8 +59,6 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   // CRÍTICO: não intercepta rotas API nem dados dinâmicos do Next.js.
-  // Sem isso, GET /api/sync retornava 200 em cache mesmo após logout,
-  // expondo dados stale do usuário anterior (Achado #1 da Fase 2).
   if (
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/_next/data/")
@@ -66,19 +66,42 @@ self.addEventListener("fetch", (event) => {
     return; // deixa o browser fazer a request normal (sem cache do SW)
   }
 
-  // Estratégia: stale-while-revalidate para o app shell (HTML, JS, CSS, imgs)
+  // ===== Navegação (HTML pages): NETWORK-FIRST =====
+  // Garante que o usuário sempre veja a versão mais recente do HTML.
+  // Só cai para cache se estiver offline.
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          // Sucesso — atualiza o cache e retorna a resposta fresca
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return res;
+        })
+        .catch(() => {
+          // Offline — retorna o HTML em cache (última versão vista)
+          return caches.match(req).then((cached) => {
+            return cached || caches.match("/");
+          });
+        }),
+    );
+    return;
+  }
+
+  // ===== Assets estáticos (JS, CSS, imagens): STALE-WHILE-REVALIDATE =====
   event.respondWith(
     caches.match(req).then((cached) => {
       const fetchPromise = fetch(req)
         .then((res) => {
-          // Só faz cache de respostas válidas
           if (res && res.status === 200 && res.type === "basic") {
             const clone = res.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
           }
           return res;
         })
-        .catch(() => cached); // offline: retorna o cache
+        .catch(() => cached);
       return cached || fetchPromise;
     }),
   );

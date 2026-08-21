@@ -132,7 +132,29 @@ export default function RootLayout({
                 if ('serviceWorker' in navigator) {
                   window.addEventListener('load', () => {
                     navigator.serviceWorker.register('/sw.js')
-                      .then(() => console.log('[MeuCorre] Service Worker registrado'))
+                      .then((reg) => {
+                        console.log('[MeuCorre] Service Worker registrado');
+                        // Detecta atualização do SW e força recarga
+                        // para que o usuário veja a nova versão imediatamente
+                        if (reg.waiting) {
+                          reg.waiting.postMessage('SKIP_WAITING');
+                        }
+                        reg.addEventListener('updatefound', () => {
+                          const newWorker = reg.installing;
+                          if (newWorker) {
+                            newWorker.addEventListener('statechange', () => {
+                              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Novo SW instalado — envia SKIP_WAITING
+                                newWorker.postMessage('SKIP_WAITING');
+                                // Quando o novo SW assume o controle, recarrega a página
+                                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                                  window.location.reload();
+                                });
+                              }
+                            });
+                          }
+                        });
+                      })
                       .catch(err => console.warn('[MeuCorre] SW erro:', err));
                   });
                 }
