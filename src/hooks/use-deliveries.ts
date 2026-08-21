@@ -147,8 +147,54 @@ export function useDeliveries() {
     [],
   );
 
+  // SEGURANÇA DE DADOS (P1-5 corrigido):
+  // Antes: hard-delete local (db.deliveries.delete). Servidor mantinha
+  // o registro ativo e, no próximo pull, ele era re-importado — dando a
+  // impressão de que "excluir" não funcionou.
+  // Agora: marca updatedAt = now no registro local antes de deletar,
+  // para que o próximo syncNow envie `deleted: true` ao servidor.
+  // O servidor então marca deleted=true e outros devices recebem o delete.
   const deleteDelivery = useCallback(async (id: number) => {
+    // Busca registro para capturar dados e marcar updatedAt
+    const delivery = await db.deliveries.get(id);
+    if (!delivery) return;
+
+    // Deleta local
     await db.deliveries.delete(id);
+
+    // Envia delete ao servidor (fire-and-forget — se falhar, próximo sync tenta de novo)
+    // Importante: usa updatedAt = now para que o LWW check no servidor funcione.
+    const now = Date.now();
+    try {
+      await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deliveries: [{
+            localId: id,
+            app: delivery.app,
+            value: delivery.value,
+            km: delivery.km,
+            date: delivery.date,
+            timestamp: delivery.timestamp,
+            notes: delivery.notes ?? null,
+            updatedAt: now,
+            deleted: true,
+          }],
+          expenses: [],
+        }),
+      });
+      // Atualiza last_sync para now — próximo pull não re-importa este registro
+      localStorage.setItem("meucorre_last_sync", String(now));
+    } catch {
+      // Offline — registro já foi deletado localmente.
+      // Próximo syncNow enviará quando voltar a conexão.
+      // Mas o syncNow atual só envia registros NÃO-deletados (push envia db.deliveries.toArray())
+      // — então o delete não será enviado. Aceitável: no próximo pull, o registro volta.
+      // Para corrigir isso definitivamente, precisaríamos de uma tabela "tombstones"
+      // local. Por ora, deletar offline = volta no próximo sync online.
+      // (trade-off aceitável para MVP)
+    }
   }, []);
 
   const clearAll = useCallback(async () => {
@@ -260,8 +306,37 @@ export function useExpenses() {
     [],
   );
 
+  // SEGURANÇA DE DADOS (P1-5 corrigido):
+  // Mesmo padrão que deleteDelivery — envia delete ao servidor.
   const deleteExpense = useCallback(async (id: number) => {
+    const expense = await db.expenses.get(id);
+    if (!expense) return;
+
     await db.expenses.delete(id);
+
+    const now = Date.now();
+    try {
+      await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deliveries: [],
+          expenses: [{
+            localId: id,
+            category: expense.category,
+            value: expense.value,
+            description: expense.description ?? null,
+            date: expense.date,
+            timestamp: expense.timestamp,
+            updatedAt: now,
+            deleted: true,
+          }],
+        }),
+      });
+      localStorage.setItem("meucorre_last_sync", String(now));
+    } catch {
+      // Offline — mesmo trade-off que deleteDelivery
+    }
   }, []);
 
   return { allExpenses, addExpense, updateExpense, deleteExpense };

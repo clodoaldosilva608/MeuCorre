@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 const TRIAL_DAYS = 14;
 
@@ -13,8 +14,18 @@ const TRIAL_DAYS = 14;
 //
 // GRACEFUL DEGRADATION: se o banco estiver indisponível, retorna { user: null }
 // em vez de 500. O app funciona em modo anônimo (dados só locais via Dexie).
-// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
-export async function GET() {
+//
+// SEGURANÇA (P1-1):
+// Rate limit 60/IP/15min — endpoint chamado a cada render do /app.
+// Sem rate limit, atacante pode chamar 1000x/s e sobrecarregar DB.
+export async function GET(req: NextRequest) {
+  // Rate limit por IP (usuário pode não estar logado ainda)
+  const limited = await applyRateLimit(req, {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 60,
+  });
+  if (limited) return limited;
+
   const session = await getUserSession();
   if (!session) {
     return NextResponse.json({ user: null });

@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
+import { applyRateLimit } from "@/lib/rate-limit";
 import crypto from "crypto";
 import { z } from "zod";
 
 // GET /api/referral/code — retorna o código de referral do usuário logado
 // (cria automaticamente se não existir, para TODOS os usuários logados)
-// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
-export async function GET() {
+//
+// SEGURANÇA (P1-1):
+// Rate limit 30/user/15min — múltiplas queries (campaign, referralCode,
+// aggregate, groupBy). Sem rate limit, atacante pode chamar 1000x/s.
+export async function GET(req: NextRequest) {
   const session = await getUserSession();
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+
+  // Rate limit por userId (usuário logado)
+  const limited = await applyRateLimit(req, {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 30,
+  }, session.sub);
+  if (limited) return limited;
 
   // Verifica se a campanha está ativa
   const campaign = await prisma.referralCampaign.findFirst({
@@ -83,7 +94,18 @@ export async function GET() {
 
 // POST /api/referral/code — registra clique no link de referral
 // Body: { code: "MEUCORRE-XXXXXX" }
+//
+// SEGURANÇA (P1-1):
+// Rate limit 30/IP/15min — previne inflar cliques (bot tentando
+// manipular métricas de popularidade de um código).
 export async function POST(req: NextRequest) {
+  // Rate limit por IP (público, não exige login)
+  const limited = await applyRateLimit(req, {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 30,
+  });
+  if (limited) return limited;
+
   let body: { code?: string };
   try {
     body = (await req.json()) as { code?: string };

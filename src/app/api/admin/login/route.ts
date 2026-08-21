@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminToken, verifyAdminPassword } from "@/lib/admin-auth";
 import { logger } from "@/lib/logger";
 import { loginSchema, validateOrError } from "@/lib/zod-schemas";
-import { z } from "zod";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 // POST /api/admin/login
 // Auth por email + senha. Suporta 2 modos:
@@ -11,25 +11,13 @@ import { z } from "zod";
 //
 // Seta cookie httpOnly com JWT assinado (HMAC-SHA256).
 // Proteção contra brute force: máx 5 tentativas por IP a cada 15 min.
-const MAX_ATTEMPTS = 5;
-const WINDOW_MS = 15 * 60 * 1000; // 15 min
-const attempts = new Map<string, { count: number; firstAt: number }>();
-
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const entry = attempts.get(ip);
-
-  if (!entry || now - entry.firstAt > WINDOW_MS) {
-    attempts.set(ip, { count: 1, firstAt: now });
-    return { allowed: true, remaining: MAX_ATTEMPTS - 1 };
-  }
-
-  entry.count++;
-  if (entry.count > MAX_ATTEMPTS) {
-    return { allowed: false, remaining: 0 };
-  }
-  return { allowed: true, remaining: MAX_ATTEMPTS - entry.count };
-}
+//
+// SEGURANÇA (P1-4 corrigido):
+// Antes, rate limit era in-memory (`attempts = new Map()`).
+// Em Vercel serverless, cada instância tem seu próprio Map — atacante
+// distribui tentativas entre cold starts e contorna o limite.
+// Agora usa applyRateLimit (Redis distribuído via Upstash quando
+// configurado, fallback in-memory em dev).
 
 function getClientIp(req: NextRequest): string {
   return (
@@ -39,12 +27,17 @@ function getClientIp(req: NextRequest): string {
   );
 }
 
-// PUBLIC ROUTE — Esta rota é intencionalmente pública (login/logout/cron usam auth própria)
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
-  const { allowed, remaining } = checkRateLimit(ip);
 
-  if (!allowed) {
+  // Rate limit distribuído (Redis em prod, in-memory em dev)
+  // 5 tentativas por IP a cada 15 min
+  // NOTA: admin-login usa por-IP (não userId) pois usuário ainda não logou.
+  const limited = await applyRateLimit(req, {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 5,
+  });
+  if (limited) {
     return NextResponse.json(
       {
         error: "Muitas tentativas. Tente novamente em 15 minutos.",
@@ -103,10 +96,10 @@ export async function POST(req: NextRequest) {
   const result = await verifyAdminPassword(email.trim(), password);
 
   if (!result.valid) {
-    logger.warn("Admin login falhou — credenciais inválidas", { email, ip, remaining });
+    logger.warn("Admin login falhou — credenciais inválidas", { email, ip });
     return NextResponse.json(
       {
-        error: `Email ou senha incorretos. ${remaining} tentativa(s) restante(s).`,
+        error: `Email ou senha incorretos.`,
       },
       { status: 401 },
     );

@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 // POST /api/app/score/calculate — calcula e salva novo snapshot do score
 //
@@ -9,11 +10,22 @@ import { getUserSession } from "@/lib/user-auth";
 //   1. Regularity (40%): regularidade de lançamentos (corridas + despesas)
 //   2. Consistency (35%): consistência de lucro positivo
 //   3. GoalAdherence (25%): acompanhamento de metas ativas
-export async function POST() {
+//
+// SEGURANÇA (P1-1):
+// Rate limit 10/user/15min — cria nova ScoreSnapshot a cada chamada.
+// Sem rate limit, usuário pode chamar 100x/min e inflar tabela ScoreSnapshot.
+export async function POST(req: NextRequest) {
   const session = await getUserSession();
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+
+  // Rate limit por userId (usuário logado)
+  const limited = await applyRateLimit(req, {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 10,
+  }, session.sub);
+  if (limited) return limited;
 
   const userId = session.sub;
   const now = new Date();

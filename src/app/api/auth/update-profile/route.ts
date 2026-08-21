@@ -3,9 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { getUserSession } from "@/lib/user-auth";
 import { hashPassword } from "@/lib/user-auth";
 import { z } from "zod";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 // PATCH /api/auth/update-profile
 // Atualiza nome, telefone, cidade e/ou senha do usuário logado
+//
+// SEGURANÇA (P1-1):
+// Rate limit 10/user/15min — previne spam de updates (que incluem
+// hash de senha — operação cara com bcrypt 12 rounds).
 
 const updateProfileSchema = z.object({
   name: z.string().min(2, "Nome muito curto").max(100, "Nome muito longo").optional(),
@@ -19,6 +24,13 @@ export async function PATCH(req: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+
+  // Rate limit por userId (usuário logado)
+  const limited = await applyRateLimit(req, {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 10,
+  }, session.sub);
+  if (limited) return limited;
 
   let body: unknown;
   try {

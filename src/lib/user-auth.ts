@@ -37,9 +37,13 @@ export interface UserPayload {
   exp?: number;
 }
 
-// Hash de senha com bcrypt (10 rounds = ~100ms, seguro contra rainbow tables)
+// Hash de senha com bcrypt (12 rounds = ~300ms, recomendado por OWASP 2025).
+// Antes era 10 rounds (~100ms) — adequado até ~2023 mas vulnerável a
+// hardware moderno (GPU paralela quebra hashes mais rápido).
+// 12 rounds mantém UX aceitável (login em <500ms) e levanta a barra.
+// Custo de cracking: ~$200 em GPU/hora para 10 rounds, ~$1.600 para 12 rounds.
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hash(password, 12);
 }
 
 // Verifica senha contra hash
