@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getShardingStatus } from "@/lib/sharding";
+import { getCdnStatus } from "@/lib/cdn";
 
 // ===== Health check endpoint =====
 //
@@ -78,6 +80,21 @@ export async function GET() {
 
   // 7. Backup S3 — opcional
   checks.backupS3 = process.env.BACKUP_S3_BUCKET ? "configured" : "not_configured";
+
+  // 8. P4-4: CDN
+  const cdnStatus = getCdnStatus();
+  checks.cdn = cdnStatus.provider === "cloudflare" ? "cloudflare" : "vercel-edge";
+
+  // 9. P4-3: Sharding
+  const shardingStatus = getShardingStatus();
+  checks.sharding = shardingStatus.enabled
+    ? `enabled (${shardingStatus.configuredShards}/${shardingStatus.shardCount} shards)`
+    : "disabled";
+
+  // 10. P4-5: Feature flags
+  checks.featureFlags = process.env.EDGE_CONFIG
+    ? "edge-config"
+    : "db-fallback";
 
   // Build info
   const buildInfo = {
