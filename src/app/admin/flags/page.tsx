@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Flag, Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Flag, Loader2, ShieldCheck, ShieldAlert, Zap } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -61,8 +61,11 @@ const FLAG_DESCRIPTIONS: Record<string, { label: string; description: string; re
 
 export default function FlagsPage() {
   const [flags, setFlags] = useState<Record<string, boolean>>({});
+  const [perfFlags, setPerfFlags] = useState<Record<string, { value: unknown; type: string; description: string }>>({});
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [editingPerfKey, setEditingPerfKey] = useState<string | null>(null);
+  const [editingPerfValue, setEditingPerfValue] = useState<string>("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -71,6 +74,7 @@ export default function FlagsPage() {
       if (res.ok) {
         const data = await res.json();
         setFlags(data.flags ?? {});
+        setPerfFlags(data.performanceFlags ?? {});
       }
     } finally {
       setLoading(false);
@@ -96,6 +100,42 @@ export default function FlagsPage() {
         );
       } else {
         toast.error("Erro ao atualizar flag");
+      }
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  // P4-5: Atualiza performance flag (typed value)
+  const savePerfFlag = async (key: string) => {
+    setUpdating(`perf:${key}`);
+    try {
+      const meta = perfFlags[key];
+      let parsedValue: unknown = editingPerfValue;
+      if (meta?.type === "number") {
+        parsedValue = Number(editingPerfValue);
+        if (isNaN(parsedValue as number)) {
+          toast.error("Valor deve ser numérico");
+          return;
+        }
+      } else if (meta?.type === "boolean") {
+        parsedValue = editingPerfValue === "true";
+      }
+
+      const res = await fetch("/api/admin/feature-flags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: `perf:${key}`, value: parsedValue, isPerformance: true }),
+      });
+      if (res.ok) {
+        setPerfFlags((f) => ({
+          ...f,
+          [key]: { ...f[key], value: parsedValue },
+        }));
+        toast.success(`${key} atualizado`);
+        setEditingPerfKey(null);
+      } else {
+        toast.error("Erro ao atualizar flag de performance");
       }
     } finally {
       setUpdating(null);
@@ -183,6 +223,88 @@ export default function FlagsPage() {
             </div>
           );
         })}
+
+      {/* P4-5: Performance Flags (typed) */}
+      {Object.keys(perfFlags).length > 0 && (
+        <div className="space-y-3 pt-4">
+          <div className="border-t border-zinc-800 pt-4">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-zinc-100">
+              <Zap className="h-5 w-5 text-amber-400" />
+              Flags de Performance
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500">
+              Ajusta parâmetros de runtime sem precisar de redeploy. Mudanças afetam produção em até 1 minuto (cache TTL).
+            </p>
+          </div>
+
+          {Object.entries(perfFlags).map(([key, meta]) => (
+            <div
+              key={key}
+              className="flex items-start justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-semibold text-zinc-100">{key}</span>
+                  <Badge variant="outline" className="border-amber-500/30 text-[10px] text-amber-400">
+                    {meta.type}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-xs text-zinc-500">{meta.description}</p>
+                <p className="mt-1 text-[10px] text-zinc-600">
+                  Valor atual: <code className="text-amber-400">{String(meta.value)}</code>
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {updating === `perf:${key}` && <Loader2 className="h-3 w-3 animate-spin text-zinc-500" />}
+                {editingPerfKey === key ? (
+                  <div className="flex items-center gap-1">
+                    {meta.type === "boolean" ? (
+                      <select
+                        value={editingPerfValue}
+                        onChange={(e) => setEditingPerfValue(e.target.value)}
+                        className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-100"
+                      >
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                      </select>
+                    ) : (
+                      <input
+                        type={meta.type === "number" ? "number" : "text"}
+                        value={editingPerfValue}
+                        onChange={(e) => setEditingPerfValue(e.target.value)}
+                        className="w-24 rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-100"
+                        autoFocus
+                      />
+                    )}
+                    <button
+                      onClick={() => savePerfFlag(key)}
+                      className="rounded bg-emerald-500 px-2 py-1 text-[10px] font-bold text-zinc-950 hover:bg-emerald-400"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={() => setEditingPerfKey(null)}
+                      className="rounded bg-zinc-700 px-2 py-1 text-[10px] text-zinc-300 hover:bg-zinc-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setEditingPerfKey(key);
+                      setEditingPerfValue(String(meta.value));
+                    }}
+                    className="rounded border border-zinc-700 px-2 py-1 text-[10px] text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
+                  >
+                    Editar
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       </div>
     </div>
   );
