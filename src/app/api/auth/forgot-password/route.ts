@@ -2,19 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createPasswordResetToken } from "@/lib/user-auth";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { enqueue } from "@/lib/queue";
 import { z } from "zod";
 import crypto from "crypto";
 
 // POST /api/auth/forgot-password
-// Gera token de reset e retorna o link de recuperação.
-// Em produção com RESEND_API_KEY configurado, envia email real.
-// Sem RESEND_API_KEY, retorna o link na resposta (para o frontend mostrar).
+// Gera token de reset e enfileira envio de email via fila.
+//
+// SEGURANÇA/PERFORMANCE (P2-1 corrigido):
+// Antes: envio de email era síncrono. Se Resend lento (5s), response demorava.
+// Em scale, 5 users pedindo reset ao mesmo tempo = 25s de latência total.
+// Agora: enfileira para /api/queue/send-email (QStash em prod, sync em dev).
+// Response retorna imediato (token já está no DB).
 
 const forgotSchema = z.object({
   email: z.string().email("Email inválido"),
 });
 
-// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function POST(req: NextRequest) {
   const limited = await applyRateLimit(req, {
     windowMs: 60 * 60 * 1000,
@@ -29,7 +33,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  // Validação Zod
   const parsed = forgotSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
@@ -67,24 +70,28 @@ export async function POST(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://meucorre.vercel.app";
   const resetLink = `${appUrl}/recuperar-senha?token=${token}`;
 
-  // Se RESEND_API_KEY estiver configurado, envia email real
-  if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
-    try {
-      await sendResetEmail(email, user.name, resetLink);
-      // Log sem expor email completo (LGPD)
-      console.log('[forgot-password] Email enviado com sucesso');
-      return genericResponse;
-    } catch (err) {
-      console.error('[forgot-password] Erro ao enviar email');
-      // Fall through to return link in response
+  // Se RESEND_API_KEY configurado, enfileira envio de email
+  if (process.env.RESEND_API_KEY) {
+    const result = await enqueue({
+      url: "/api/queue/send-email",
+      body: {
+        type: "reset-password",
+        to: email,
+        userName: user.name,
+        resetLink,
+      },
+    });
+
+    if (!result.ok && result.sync) {
+      // Em dev (sync), se falhou, loga e retorna genérico
+      console.error("[forgot-password] Falha ao enfileirar email:", result.error);
+    } else {
+      console.log("[forgot-password] Email enfileirado");
     }
+    return genericResponse;
   }
 
   // Sem Resend configurado: retorna link apenas em desenvolvimento
-  // NUNCA logar reset links em produção — risco de segurança
-
-  // Retorna o link na resposta (apenas em desenvolvimento)
-  // Em produção com Resend, o link não é retornado (só email)
   if (process.env.NODE_ENV !== "production") {
     return NextResponse.json({
       ok: true,
@@ -94,34 +101,4 @@ export async function POST(req: NextRequest) {
   }
 
   return genericResponse;
-}
-
-// Envia email de recuperação via Resend
-async function sendResetEmail(email: string, name: string, resetLink: string) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: process.env.RESEND_FROM_EMAIL,
-      to: email,
-      subject: "MeuCorre — Recuperação de Senha",
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2 style="color: #10b981;">⚡ MeuCorre</h2>
-          <p>Olá, ${name}!</p>
-          <p>Você solicitou a recuperação de senha. Clique no link abaixo para definir uma nova senha:</p>
-          <p><a href="${resetLink}" style="display: inline-block; background: #10b981; color: #09090b; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Redefinir senha</a></p>
-          <p>Ou copie este link: ${resetLink}</p>
-          <p style="color: #71717a; font-size: 12px;">Este link expira em 1 hora. Se você não solicitou, ignore este email.</p>
-        </div>
-      `,
-    }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Resend API error: ${res.status}`);
-  }
 }

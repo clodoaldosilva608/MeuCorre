@@ -12,13 +12,24 @@ import { DeliveryList } from "@/components/meucorre/delivery-list";
 import { DeliveryForm } from "@/components/meucorre/delivery-form";
 import { ExpenseForm } from "@/components/meucorre/expense-form";
 import { ExpenseList } from "@/components/meucorre/expense-list";
-import { AppManager } from "@/components/meucorre/app-manager";
-import { NotificationCapture } from "@/components/meucorre/notification-capture";
 // PERFORMANCE: Charts carrega recharts (~200KB) + framer-motion (~50KB).
 // Só é necessário quando o usuário clica na aba "Gráficos". Usamos lazy()
 // para code-split e reduzir o bundle inicial do /app em ~250KB.
 const Charts = lazy(() =>
   import("@/components/meucorre/charts").then((m) => ({ default: m.Charts })),
+);
+// P2-3: HeatmapMap carrega leaflet (~3.9MB) — só necessário quando
+// usuário clica em "Mapa". Lazy-load reduz bundle inicial em ~3.9MB.
+const HeatmapMap = lazy(() =>
+  import("@/components/meucorre/heatmap-map").then((m) => ({ default: m.HeatmapMap })),
+);
+// P2-3: AppManager e NotificationCapture são modals pesados (vários
+// sub-componentes). Lazy-load reduz bundle inicial.
+const AppManager = lazy(() =>
+  import("@/components/meucorre/app-manager").then((m) => ({ default: m.AppManager })),
+);
+const NotificationCapture = lazy(() =>
+  import("@/components/meucorre/notification-capture").then((m) => ({ default: m.NotificationCapture })),
 );
 import { OffersList } from "@/components/meucorre/offers-list";
 import { Fab } from "@/components/meucorre/fab";
@@ -40,7 +51,7 @@ import { OnboardingPopup } from "@/components/meucorre/onboarding-popup";
 import { BlogPromoPopup } from "@/components/meucorre/blog-promo-popup";
 import { SocialFollowPopup } from "@/components/meucorre/social-follow-popup";
 import { SponsorBannerPopup } from "@/components/meucorre/sponsor-banner-popup";
-import { HeatmapMap } from "@/components/meucorre/heatmap-map";
+// HeatmapMap importado via lazy() acima (linha 25-27)
 import { useGoals } from "@/hooks/use-goals";
 import { useWorkSessions } from "@/hooks/use-work-sessions";
 import { useAds, activateLicense, checkProStatus } from "@/hooks/use-ads";
@@ -787,22 +798,26 @@ function HomeContent() {
         editing={editingExpense}
       />
 
-      <AppManager
-        open={appManagerOpen}
-        onOpenChange={setAppManagerOpen}
-        apps={apps}
-        onAdd={addApp}
-        onUpdate={updateApp}
-        onDelete={deleteApp}
-        onToggleHide={toggleHideApp}
-      />
+      <Suspense fallback={null}>
+        <AppManager
+          open={appManagerOpen}
+          onOpenChange={setAppManagerOpen}
+          apps={apps}
+          onAdd={addApp}
+          onUpdate={updateApp}
+          onDelete={deleteApp}
+          onToggleHide={toggleHideApp}
+        />
+      </Suspense>
 
-      <NotificationCapture
-        open={captureOpen}
-        onOpenChange={setCaptureOpen}
+      <Suspense fallback={null}>
+        <NotificationCapture
+          open={captureOpen}
+          onOpenChange={setCaptureOpen}
         apps={visibleApps}
         onConfirm={handleCapture}
       />
+      </Suspense>
 
       <LicenseDialog
         open={licenseOpen}
@@ -868,11 +883,13 @@ function HomeContent() {
       {/* Mapa de calor — áreas quentes onde o entregador mais faz corridas.
           Aberto via botão "Mapa de calor" no Corre do dia.
           Filtra por período, dia da semana ou data personalizada. */}
-      <HeatmapMap
-        open={heatmapOpen}
-        onOpenChange={setHeatmapOpen}
-        deliveries={allDeliveries}
-      />
+      <Suspense fallback={<div className="flex h-48 items-center justify-center text-zinc-500">Carregando mapa…</div>}>
+        <HeatmapMap
+          open={heatmapOpen}
+          onOpenChange={setHeatmapOpen}
+          deliveries={allDeliveries}
+        />
+      </Suspense>
 
       {/* Nota: o pop-up "Baixar aplicativo" (InstallAppPopup) é renderizado
           dentro do Header, que controla tanto a abertura automática (após

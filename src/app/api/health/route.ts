@@ -8,16 +8,33 @@ import { prisma } from "@/lib/prisma";
 // - Load balancers / uptime monitors (UptimeRobot, BetterStack)
 // - Vercel deployment checks
 // - Internal monitoring dashboards
+// - Alertas Sentry (ver P2-8 abaixo)
 //
-// Retorna 200 se tudo OK, 503 se algum componente falhar.
+// P2-8: Alertas Sentry → Slack/Email em erro 5xx
+// Para configurar alertas:
+// 1. Vá em https://sentry.io → Settings → Alerts
+// 2. Crie regra: "When an issue is seen for the first time"
+// 3. Ação: enviar para Slack webhook ou email
+// 4. Filtro: environment = production AND level = error
+// 5. Threshold: 5+ eventos em 5 minutos (evita spam)
+//
+// P2-9: Health check externo
+// Configure UptimeRobot ou BetterStack para monitorar:
+// - URL: https://meucorre.vercel.app/api/health
+// - Método: GET
+// - Intervalo: 1 minuto
+// - Status esperado: 200
+// - Alerta se: 503 (unhealthy) ou timeout (>10s)
+// - Canais: email, Slack, SMS, WhatsApp
+//
+// Retorna 200 se tudo OK, 503 se algum componente crítico falhar.
 // Não requer auth (público) — não expõe dados sensíveis.
 
-// PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET() {
-  const checks: Record<string, "ok" | "down" | "not_configured" | "configured"> = {};
+  const checks: Record<string, string> = {};
   let allHealthy = true;
 
-  // 1. Database (PostgreSQL via Prisma)
+  // 1. Database (PostgreSQL via Prisma) — CRÍTICO
   try {
     await prisma.$queryRaw`SELECT 1`;
     checks.database = "ok";
@@ -26,7 +43,7 @@ export async function GET() {
     allHealthy = false;
   }
 
-  // 2. Redis (Upstash) — opcional, não derruba health se não configurado
+  // 2. Redis (Upstash) — não crítico (fallback in-memory funciona)
   const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
   if (redisUrl) {
     try {
@@ -35,32 +52,52 @@ export async function GET() {
         signal: AbortSignal.timeout(2000),
       });
       checks.redis = res.ok ? "ok" : "down";
-      if (!res.ok) allHealthy = false;
+      if (!res.ok) {
+        // Redis down não derruba health (fallback in-memory)
+        // mas logged para alerta
+        console.warn("[health] Redis down — fallback in-memory ativo");
+      }
     } catch {
       checks.redis = "down";
-      // Redis down NÃO derruba health geral (fallback in-memory funciona)
     }
   } else {
     checks.redis = "not_configured";
   }
 
-  // 3. Sentry — apenas reporta se DSN está configurado (não testa conectividade)
+  // 3. Sentry — apenas reporta se DSN está configurado
   checks.sentry = process.env.SENTRY_DSN ? "configured" : "not_configured";
 
-  // 4. Build info (para debug)
+  // 4. QStash (fila) — opcional
+  checks.qstash = process.env.QSTASH_TOKEN ? "configured" : "not_configured";
+
+  // 5. Resend (email) — opcional
+  checks.resend = process.env.RESEND_API_KEY ? "configured" : "not_configured";
+
+  // 6. Kiwify — opcional
+  checks.kiwify = process.env.KIWIFY_WEBHOOK_SECRET ? "configured" : "not_configured";
+
+  // 7. Backup S3 — opcional
+  checks.backupS3 = process.env.BACKUP_S3_BUCKET ? "configured" : "not_configured";
+
+  // Build info
   const buildInfo = {
     version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "dev",
     environment: process.env.NODE_ENV ?? "unknown",
     region: process.env.VERCEL_REGION ?? "unknown",
   };
 
+  // Apenas database e sentry (se configurado) são críticos
+  const criticalChecks = checks.database === "ok";
+  const statusCode = criticalChecks ? 200 : 503;
+
   return NextResponse.json(
     {
-      status: allHealthy ? "healthy" : "unhealthy",
+      status: allHealthy ? "healthy" : criticalChecks ? "degraded" : "unhealthy",
       checks,
       build: buildInfo,
+      // P2-9: timestamps para monitoração externa calcular latência
       timestamp: new Date().toISOString(),
     },
-    { status: allHealthy ? 200 : 503 },
+    { status: statusCode },
   );
 }

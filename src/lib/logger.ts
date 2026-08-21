@@ -35,12 +35,17 @@ function formatLog(level: LogLevel, message: string, context: LogContext = {}): 
   const timestamp = new Date().toISOString();
   const levelUpper = level.toUpperCase();
 
+  // P2-2: correlation ID do middleware (se disponível)
+  const correlationId =
+    (globalThis as Record<string, unknown>).__correlationId as string | undefined;
+
   if (process.env.NODE_ENV === "production") {
     // Produção: JSON estruturado para Vercel/Datadog
     return JSON.stringify({
       timestamp,
       level: levelUpper,
       message,
+      ...(correlationId ? { requestId: correlationId } : {}),
       ...context,
     });
   }
@@ -49,7 +54,8 @@ function formatLog(level: LogLevel, message: string, context: LogContext = {}): 
   const contextStr = Object.keys(context).length > 0
     ? " " + JSON.stringify(context)
     : "";
-  return `${LEVEL_COLORS[level]}[${levelUpper}]${RESET} ${timestamp} ${message}${contextStr}`;
+  const reqIdStr = correlationId ? ` ${correlationId}` : "";
+  return `${LEVEL_COLORS[level]}[${levelUpper}]${RESET}${reqIdStr} ${timestamp} ${message}${contextStr}`;
 }
 
 export const logger = {

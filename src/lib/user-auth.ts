@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { jwtVerify, SignJWT } from "jose";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { blacklistToken, isBlacklisted, generateJti } from "@/lib/token-blacklist";
 
 // ===== Auth de usuários entregadores (não admin) =====
 //
@@ -54,21 +55,41 @@ export async function verifyPassword(
   return bcrypt.compare(password, hash);
 }
 
-// Gera JWT de sessão (válido 30 dias)
+// Gera JWT de sessão (válido 30 dias).
+//
+// P2-4: cada token recebe um jti (JWT ID) único para permitir blacklist.
+// Se o token vazar, admin pode revogar imediatamente via blacklistToken().
 export async function createUserToken(payload: {
   userId: string;
   email: string;
   isPro: boolean;
 }): Promise<string> {
+  const jti = generateJti();
   return new SignJWT({
     email: payload.email,
     isPro: payload.isPro,
   })
     .setProtectedHeader({ alg: ALG })
     .setSubject(payload.userId)
+    .setJti(jti)
     .setIssuedAt()
     .setExpirationTime("30d")
     .sign(getSecret());
+}
+
+// Revoga um token JWT adicionando seu jti à blacklist.
+// TTL = tempo até expiração natural do token (depois não precisa mais).
+export async function revokeUserToken(token: string): Promise<void> {
+  try {
+    const { payload } = await jwtVerify(token, getSecret(), {
+      algorithms: [ALG],
+    });
+    if (payload.jti && payload.exp) {
+      await blacklistToken(payload.jti, payload.exp * 1000);
+    }
+  } catch {
+    // Token inválido/expirado — não há nada para revogar
+  }
 }
 
 // Verifica se há sessão de usuário válida E ativa no banco.
@@ -92,6 +113,11 @@ export async function getUserSession(): Promise<UserPayload | null> {
     });
 
     const userPayload = payload as unknown as UserPayload;
+
+    // P2-4: Verifica se o jti está na blacklist (token revogado)
+    if (payload.jti && (await isBlacklisted(payload.jti))) {
+      return null; // token revogado
+    }
 
     // Verifica no banco se o usuário ainda está ativo
     // Se não estiver (banido/desativado), retorna null = não autorizado
