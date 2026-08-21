@@ -54,9 +54,21 @@ export async function POST(req: NextRequest) {
   }
 
   // Verifica JWT do token
-  const secret = new TextEncoder().encode(
-    process.env.USER_JWT_SECRET ?? process.env.ADMIN_JWT_SECRET ?? "fallback",
-  );
+  // SEGURANÇA (P0-8 corrigido):
+  // Antes, se USER_JWT_SECRET e ADMIN_JWT_SECRET ambos ausentes, caía pra
+  // `"fallback"` — atacante que conhece o código-fonte forja tokens livres.
+  // Agora falha closed: exige que pelo menos um secret esteja configurado.
+  const secretEnv = process.env.USER_JWT_SECRET ?? process.env.ADMIN_JWT_SECRET;
+  if (!secretEnv) {
+    console.error(
+      "[reset-password] Nem USER_JWT_SECRET nem ADMIN_JWT_SECRET configurados",
+    );
+    return NextResponse.json(
+      { error: "Serviço indisponível — configurar segredos JWT" },
+      { status: 503 },
+    );
+  }
+  const secret = new TextEncoder().encode(secretEnv);
   try {
     await jwtVerify(token, secret, { algorithms: ["HS256"] });
   } catch {

@@ -103,11 +103,27 @@ export async function POST(req: NextRequest) {
 
 // GET /api/subscription?id=xxx
 // Consulta status de uma compra pelo ID (para o cliente acompanhar).
+//
+// SEGURANÇA (P0-4 corrigido):
+// Antes, QUALQUER ID expunha buyerEmail, buyerName, licenseKey — IDOR crítico.
+// Agora exige que o usuário esteja logado E seja dono da compra (buyerEmail
+// da sessão == buyerEmail da subscription).
+import { getUserSession } from "@/lib/user-auth";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+  }
+
+  // Exige sessão de usuário logado
+  const session = await getUserSession();
+  if (!session?.sub) {
+    return NextResponse.json(
+      { error: "Não autorizado — faça login" },
+      { status: 401 },
+    );
   }
 
   const sub = await prisma.subscription.findUnique({
@@ -127,6 +143,17 @@ export async function GET(req: NextRequest) {
 
   if (!sub) {
     return NextResponse.json({ error: "Compra não encontrada" }, { status: 404 });
+  }
+
+  // Verifica ownership: buyerEmail da subscription deve bater com email da sessão
+  // Proteção contra IDOR — usuário A não pode ver compra do usuário B
+  const sessionEmail = session.email?.toLowerCase().trim();
+  const subEmail = sub.buyerEmail?.toLowerCase().trim();
+  if (sessionEmail !== subEmail) {
+    return NextResponse.json(
+      { error: "Compra não pertence a este usuário" },
+      { status: 403 },
+    );
   }
 
   return NextResponse.json({ subscription: sub });

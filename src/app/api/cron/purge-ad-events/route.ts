@@ -9,8 +9,12 @@ import { logger } from "@/lib/logger";
 // Arquiva eventos de anúncios (views/clicks) com mais de 90 dias.
 // Previne crescimento infinito da tabela AdEvent.
 //
-// Segurança: protegido por CRON_SECRET (header X-Cron-Secret).
-// Configurar Vercel Cron para chamar este endpoint diariamente.
+// SEGURANÇA (P0-7 corrigido):
+// Antes, esperava header `x-cron-secret` mas Vercel Cron envia
+// `Authorization: Bearer <CRON_SECRET>`. Resultado: purge nunca rodava,
+// AdEvent crescia indefinidamente.
+// Agora aceita `Authorization: Bearer` (padrão Vercel) e ainda mantém
+// `x-cron-secret` para backward compat.
 //
 // vercel.json:
 // {
@@ -22,9 +26,24 @@ import { logger } from "@/lib/logger";
 
 const PURGE_AFTER_DAYS = 90;
 
-// PUBLIC ROUTE — Esta rota é intencionalmente pública (login/logout/cron usam auth própria)
+// Helper: valida se a request vem do cron legítimo (Vercel envia Authorization: Bearer)
+function isCronAuthorized(req: NextRequest): boolean {
+  const expectedSecret = process.env.CRON_SECRET;
+  if (!expectedSecret) return false;
+
+  // Formato 1: Authorization: Bearer <secret> (padrão Vercel Cron)
+  const authHeader = req.headers.get("authorization");
+  if (authHeader === `Bearer ${expectedSecret}`) return true;
+
+  // Formato 2: x-cron-secret: <secret> (legacy, mantido para compat)
+  const cronHeader = req.headers.get("x-cron-secret");
+  if (cronHeader === expectedSecret) return true;
+
+  return false;
+}
+
 export async function DELETE(req: NextRequest) {
-  // Valida CRON_SECRET
+  // Valida CRON_SECRET — fail closed
   const expectedSecret = process.env.CRON_SECRET;
   if (!expectedSecret) {
     logger.warn("CRON_SECRET não configurado — purge não executado");
@@ -34,8 +53,7 @@ export async function DELETE(req: NextRequest) {
     );
   }
 
-  const receivedSecret = req.headers.get("x-cron-secret");
-  if (!receivedSecret || receivedSecret !== expectedSecret) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -105,8 +123,7 @@ export async function GET(req: NextRequest) {
   if (!expectedSecret) {
     return NextResponse.json({ ok: true, configured: false });
   }
-  const receivedSecret = req.headers.get("x-cron-secret");
-  if (!receivedSecret || receivedSecret !== expectedSecret) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

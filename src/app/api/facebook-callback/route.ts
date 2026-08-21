@@ -5,6 +5,25 @@ import { NextRequest, NextResponse } from "next/server";
 // O Facebook redireciona para cá após o usuário autorizar.
 // Esta página mostra o código e tenta enviar automaticamente para a aba admin
 // aberta (via window.opener / postMessage).
+//
+// SEGURANÇA (P0-5 corrigido):
+// Antes, o `code` era injetado diretamente em HTML/textarea sem escape —
+// XSS refletido. Agora é escapado antes de ser inserido no HTML.
+
+// Escapa caracteres perigosos para inserção em contexto HTML.
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Escapa para uso dentro de <script> JSON — previne </script> injection.
+function escapeJsonForScript(str: string): string {
+  return JSON.stringify(str).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+}
 
 // PUBLIC ROUTE — Esta rota é intencionalmente pública (não requer admin auth)
 export async function GET(req: NextRequest) {
@@ -16,7 +35,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(
       `<!DOCTYPE html><html><body style="font-family:sans-serif;text-align:center;padding:50px;background:#0a0a0a;color:#f4f4f5;">
       <h1 style="color:#ef4444">❌ Erro na autorização</h1>
-      <p style="color:#a1a1aa">${error}</p>
+      <p style="color:#a1a1aa">${escapeHtml(error)}</p>
       <p style="margin-top:20px;color:#71717a">Você pode fechar esta aba.</p>
       </body></html>`,
       { headers: { "Content-Type": "text/html; charset=utf-8" } },
@@ -43,11 +62,11 @@ export async function GET(req: NextRequest) {
     <p id="status" style="color:#71717a;font-size:12px;margin-top:20px;">Aguardando...</p>
     <details style="margin-top:30px;text-align:left;max-width:600px;margin-left:auto;margin-right:auto;">
       <summary style="color:#71717a;cursor:pointer;font-size:12px;">Ver código (caso precise colar manual)</summary>
-      <textarea readonly style="width:100%;height:100px;font-family:monospace;font-size:11px;padding:10px;margin-top:10px;border:1px solid #27272a;background:#18181b;color:#1877F2;border-radius:6px;" onclick="this.select()">${code}</textarea>
+      <textarea readonly style="width:100%;height:100px;font-family:monospace;font-size:11px;padding:10px;margin-top:10px;border:1px solid #27272a;background:#18181b;color:#1877F2;border-radius:6px;" onclick="this.select()">${escapeHtml(code)}</textarea>
     </details>
     <script>
       (function() {
-        const code = ${JSON.stringify(code)};
+        const code = ${escapeJsonForScript(code)};
         const status = document.getElementById('status');
 
         if (window.opener && !window.opener.closed) {

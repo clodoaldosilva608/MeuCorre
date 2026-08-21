@@ -181,19 +181,44 @@ export async function POST(req: NextRequest) {
 
   // PERFORMANCE + ATOMICIDADE:
   // - $transaction: todas as escritas são atômicas (ou tudo salva, ou nada)
-  // - Promise.all: upserts rodam em paralelo dentro da transação (1 roundtrip
-  //   ao banco em vez de N roundtrips sequenciais)
-  // - Sem findUnique prévio: o upsert com create/update condicional já garante
-  //   last-write-wins (updatedAt no update só aplica se for mais recente).
-  //   Removemos o findUnique para cortar pela metade o número de queries.
+  // - Promise.all: upserts rodam em paralelo dentro da transação
+  //
+  // SEGURANÇA DE DADOS (P0-10 corrigido):
+  // Antes, o `update` clause do upsert era INCONDICIONAL — sempre sobrescrevia,
+  // mesmo se o cliente enviasse um registro mais antigo que o servidor.
+  // Isso quebrava o last-write-wins: dois devices sincronizando ao mesmo
+  // tempo, o último a chegar sempre vencia, mesmo se seus dados fossem antigos.
+  //
+  // Agora fazemos findUnique + compare updatedAt ANTES do upsert.
+  // Se updatedAt do cliente < updatedAt do servidor, PULAMOS o update
+  // (registro mais novo no servidor é mantido).
   try {
     await prisma.$transaction(async (tx) => {
-      // Bulk upsert de deliveries
+      // Bulk upsert de deliveries com LWW check
       if (body.deliveries && body.deliveries.length > 0) {
         const deliveriesToSync = body.deliveries.slice(0, MAX_PUSH_BATCH);
         await Promise.all(
-          deliveriesToSync.map((d) =>
-            tx.syncedDelivery.upsert({
+          deliveriesToSync.map(async (d) => {
+            const clientUpdatedAt = BigInt(d.updatedAt);
+
+            // Busca registro existente para comparar updatedAt
+            const existing = await tx.syncedDelivery.findUnique({
+              where: {
+                userId_localId: {
+                  userId: session.sub,
+                  localId: d.localId,
+                },
+              },
+              select: { updatedAt: true },
+            });
+
+            // LWW: se cliente tem updatedAt MAIS RECENTE que servidor, atualiza.
+            // Se cliente é mais antigo, PULA (servidor já tem versão mais nova).
+            if (existing && existing.updatedAt > clientUpdatedAt) {
+              return; // skip — servidor tem versão mais nova
+            }
+
+            await tx.syncedDelivery.upsert({
               where: {
                 userId_localId: {
                   userId: session.sub,
@@ -209,7 +234,7 @@ export async function POST(req: NextRequest) {
                 date: d.date,
                 timestamp: BigInt(d.timestamp),
                 notes: d.notes ?? null,
-                updatedAt: BigInt(d.updatedAt),
+                updatedAt: clientUpdatedAt,
                 deleted: d.deleted ?? false,
               },
               update: {
@@ -219,21 +244,37 @@ export async function POST(req: NextRequest) {
                 date: d.date,
                 timestamp: BigInt(d.timestamp),
                 notes: d.notes ?? null,
-                updatedAt: BigInt(d.updatedAt),
+                updatedAt: clientUpdatedAt,
                 deleted: d.deleted ?? false,
               },
-            }),
-          ),
+            });
+          }),
         );
         results.deliveries = deliveriesToSync.length;
       }
 
-      // Bulk upsert de expenses
+      // Bulk upsert de expenses com LWW check
       if (body.expenses && body.expenses.length > 0) {
         const expensesToSync = body.expenses.slice(0, MAX_PUSH_BATCH);
         await Promise.all(
-          expensesToSync.map((e) =>
-            tx.syncedExpense.upsert({
+          expensesToSync.map(async (e) => {
+            const clientUpdatedAt = BigInt(e.updatedAt);
+
+            const existing = await tx.syncedExpense.findUnique({
+              where: {
+                userId_localId: {
+                  userId: session.sub,
+                  localId: e.localId,
+                },
+              },
+              select: { updatedAt: true },
+            });
+
+            if (existing && existing.updatedAt > clientUpdatedAt) {
+              return; // skip — servidor tem versão mais nova
+            }
+
+            await tx.syncedExpense.upsert({
               where: {
                 userId_localId: {
                   userId: session.sub,
@@ -248,7 +289,7 @@ export async function POST(req: NextRequest) {
                 description: e.description ?? null,
                 date: e.date,
                 timestamp: BigInt(e.timestamp),
-                updatedAt: BigInt(e.updatedAt),
+                updatedAt: clientUpdatedAt,
                 deleted: e.deleted ?? false,
               },
               update: {
@@ -257,11 +298,11 @@ export async function POST(req: NextRequest) {
                 description: e.description ?? null,
                 date: e.date,
                 timestamp: BigInt(e.timestamp),
-                updatedAt: BigInt(e.updatedAt),
+                updatedAt: clientUpdatedAt,
                 deleted: e.deleted ?? false,
               },
-            }),
-          ),
+            });
+          }),
         );
         results.expenses = expensesToSync.length;
       }

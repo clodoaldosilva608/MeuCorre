@@ -7,12 +7,26 @@ import { prisma } from "@/lib/prisma";
 //
 // vercel.json:
 //   { "path": "/api/cron/backup", "schedule": "0 4 * * *" }
-// PUBLIC ROUTE — Esta rota é intencionalmente pública (login/logout/cron usam auth própria)
+//
+// SEGURANÇA (P0-6 corrigido):
+// Antes, se CRON_SECRET não estivesse configurado, a rota era PUBLIC —
+// qualquer um podia chamar e receber dump de TODAS as tabelas (User,
+// AdminUser com hashes, Subscription com licenseKeys).
+// Agora falha closed: se secret ausente, retorna 503.
 export async function GET(req: NextRequest) {
-  // Verifica secret do cron
+  // Verifica secret do cron — FAIL CLOSED (não fail-open)
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    // Secret não configurado — não sabemos se a request é legítima
+    // Retorna 503 para alertar operadores que a config está faltando
+    console.error("[backup] CRON_SECRET não configurado — bloqueando acesso");
+    return NextResponse.json(
+      { error: "Serviço indisponível — configurar CRON_SECRET" },
+      { status: 503 },
+    );
+  }
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

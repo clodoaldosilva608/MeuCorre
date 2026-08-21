@@ -82,6 +82,11 @@ model AdEvent {
   createdAt DateTime @default(now())
 
   @@index([adId, eventType])
+  // P0-12: índice em createdAt permite que o cron de purge
+  // (DELETE WHERE createdAt < cutoffDate) faça index scan em vez
+  // de full table scan. Sem isso, em 100k users × 5 views/dia =
+  // 500k inserts/dia = 15M/mês, purge demoraria minutos e travaria o DB.
+  @@index([createdAt])
 }
 
 // ===== Feedback dos usuários =====

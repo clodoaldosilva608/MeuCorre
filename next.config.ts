@@ -1,11 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // TypeScript check desabilitado no build para evitar OOM (out of memory)
-  // na Vercel. Validação de tipos é feita com `npx tsc --noEmit` antes do commit.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // TypeScript check habilitado no build — falha se houver erros de tipo.
+  // Antes era ignorado (para evitar OOM na Vercel), mas isso esconde bugs
+  // reais de tipagem que viram vulnerabilidades em produção.
+  // Validação também feita via `npx tsc --noEmit` no CI antes do build.
   reactStrictMode: true,
   // Security headers
   async headers() {

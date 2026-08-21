@@ -63,11 +63,64 @@ export function useAds(placement: AdData["placement"]) {
 
 // Verifica se o device tem licença PRO ativa.
 // A licença é guardada no localStorage (string). Verificada contra a API.
+//
+// SEGURANÇA (P0-11 corrigido):
+// Antes, se a chamada a /api/license/verify falhasse (rede bloqueada,
+// adblocker, etc.), o catch retornava `true` — fail-open = PRO grátis
+// + sem anúncios. Atacante simplesmente bloqueava a URL da API e
+// recebia PRO sem pagar.
+//
+// Agora retorna `false` (fail-closed): se não conseguimos confirmar
+// que a licença é válida, assumimos que NÃO é. Usuário offline com
+// licença legítima paga perde acesso até voltar a ficar online —
+// trade-off correto para evitar bypass.
+//
+// Bônus: TTL de 24h. Mesmo se a licença expirar/for reembolsada,
+// dentro de 24h ainda funciona offline (UX aceitável para PRO).
 export async function checkProStatus(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   const license = localStorage.getItem(STORAGE_KEY);
   if (!license) return false;
 
+  // TTL: se última verificação foi há menos de 24h, confia no cache local
+  // (otimista, mas com janela limitada — depois expira)
+  const TTL_MS = 24 * 60 * 60 * 1000; // 24h
+  const lastCheck = localStorage.getItem("meucorre_license_last_check");
+  if (lastCheck) {
+    const elapsed = Date.now() - parseInt(lastCheck, 10);
+    if (elapsed < TTL_MS) {
+      // Dentro da janela de 24h — confia no cache local (otimista)
+      // Mas ainda tenta verificar em background para invalidar cedo
+      // se a licença foi revogada no servidor.
+      // (Não esperamos — fire-and-forget.)
+      fetch("/api/license/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ licenseKey: license }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.pro !== true) {
+            // Servidor diz que não é PRO — remove do cache imediatamente
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem("meucorre_license_last_check");
+          } else {
+            // Atualiza timestamp de última verificação
+            localStorage.setItem(
+              "meucorre_license_last_check",
+              String(Date.now()),
+            );
+          }
+        })
+        .catch(() => {
+          // Falha na verificação em background — confia no TTL
+          // (não muda nada, próxima chamada síncrona decide)
+        });
+      return true;
+    }
+  }
+
+  // Fora da janela TTL (ou primeira vez) — verificação síncrona OBRIGATÓRIA
   try {
     const res = await fetch("/api/license/verify", {
       method: "POST",
@@ -75,10 +128,20 @@ export async function checkProStatus(): Promise<boolean> {
       body: JSON.stringify({ licenseKey: license }),
     });
     const data = await res.json();
-    return data.pro === true;
+    if (data.pro === true) {
+      // Atualiza timestamp de última verificação
+      localStorage.setItem("meucorre_license_last_check", String(Date.now()));
+      return true;
+    } else {
+      // Servidor diz que não é PRO — remove do cache
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("meucorre_license_last_check");
+      return false;
+    }
   } catch {
-    // Se offline, confia no cache local (otimista)
-    return true;
+    // FAIL-CLOSED: se não conseguimos verificar, assume que NÃO é PRO.
+    // Antes retornava `true` (fail-open) = bypass fácil via adblocker.
+    return false;
   }
 }
 

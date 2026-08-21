@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { timingSafeEqual } from "crypto";
 
 // POST /api/webhooks/kiwify
 // Recebe notificações de venda da Kiwify e registra no banco.
@@ -29,26 +30,51 @@ import crypto from "crypto";
 //
 // Segurança: a Kiwify envia header "x-kiwify-signature" com HMAC-SHA256
 // do body usando o WEBHOOK_SECRET. Verificamos antes de processar.
+//
+// IDEMPOTÊNCIA (P0-9 corrigido):
+// A Kiwify faz retries automáticos se receber != 2xx. Antes, cada retry
+// criava uma nova RevenueEntry — receita duplicada em relatórios financeiros.
+// Agora checamos se já existe RevenueEntry com mesmo orderId+event antes
+// de criar nova. Se existe, retornamos 200 sem criar nova.
+
+// Helper: comparação constant-time para HMAC (previne timing attack)
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Ler body raw (não parsed) para validar assinatura
     const bodyText = await req.text();
 
-    // 2. Validar assinatura HMAC (se WEBHOOK_SECRET configurado)
+    // 2. Validar assinatura HMAC — fail closed se secret ausente
     const webhookSecret = process.env.KIWIFY_WEBHOOK_SECRET;
     const signature = req.headers.get("x-kiwify-signature") || "";
 
-    if (webhookSecret) {
-      const expectedSignature = crypto
-        .createHmac("sha256", webhookSecret)
-        .update(bodyText)
-        .digest("hex");
+    if (!webhookSecret) {
+      // Sem secret configurado — não conseguimos validar autenticidade
+      // Fail closed: recusa o webhook (Kiwify vai tentar de novo quando
+      // configurarmos o secret corretamente)
+      console.error("[kiwify-webhook] KIWIFY_WEBHOOK_SECRET não configurado");
+      return NextResponse.json(
+        { error: "Webhook secret not configured" },
+        { status: 503 },
+      );
+    }
 
-      if (signature !== expectedSignature) {
-        console.warn("[kiwify-webhook] Assinatura inválida");
-        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-      }
+    const expectedSignature = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(bodyText)
+      .digest("hex");
+
+    if (!safeCompare(signature, expectedSignature)) {
+      console.warn("[kiwify-webhook] Assinatura inválida");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     // 3. Parse JSON
@@ -64,13 +90,48 @@ export async function POST(req: NextRequest) {
     const event = payload.event;
     const order = payload.order;
 
-    if (!event || !order) {
+    if (!event || !order || !order.order_id) {
       return NextResponse.json({ error: "Missing event or order" }, { status: 400 });
     }
 
     console.log(`[kiwify-webhook] Evento: ${event}, Order: ${order.order_id}`);
 
-    // 5. Mapear evento para source de receita
+    // 5. IDEMPOTÊNCIA — checa se já processamos este orderId+event
+    // Kiwify faz retries; sem isso, cada retry criaria receita duplicada.
+    // Procura em RevenueEntry.metadata.orderId e event.
+    // Usa findFirst com filtro em JSONB (Postgres suporta path ->>).
+    const existingEntry = await prisma.revenueEntry.findFirst({
+      where: {
+        productId: order.product_id ?? undefined,
+        metadata: {
+          path: ["orderId"],
+          equals: order.order_id,
+        },
+      },
+      select: { id: true, metadata: true },
+    });
+
+    if (existingEntry) {
+      // Verifica se é o mesmo evento (orderId + event)
+      const existingMeta = existingEntry.metadata as {
+        event?: string;
+        orderId?: string;
+      } | null;
+      if (existingMeta?.event === event) {
+        console.log(
+          `[kiwify-webhook] Evento já processado: ${event}/${order.order_id} — ignorando (idempotência)`,
+        );
+        return NextResponse.json({
+          ok: true,
+          event,
+          orderId: order.order_id,
+          idempotent: true,
+          message: "Event already processed",
+        });
+      }
+    }
+
+    // 6. Mapear evento para source de receita
     let source = "products";
     let amount = order.price || 0;
     let description = order.product_name || "Venda Kiwify";
@@ -98,7 +159,7 @@ export async function POST(req: NextRequest) {
         const commission = order.affiliate?.commission || 0;
         const netAmount = amount - commission;
 
-        // 6. Criar entrada de receita
+        // 7. Criar entrada de receita
         await prisma.revenueEntry.create({
           data: {
             date: new Date(),
@@ -113,6 +174,7 @@ export async function POST(req: NextRequest) {
               customer: order.customer,
               affiliate: order.affiliate,
               event,
+              processedAt: new Date().toISOString(),
               raw: JSON.parse(JSON.stringify(payload)),
             },
           },
@@ -136,6 +198,7 @@ export async function POST(req: NextRequest) {
               orderId: order.order_id,
               event,
               reason: event,
+              processedAt: new Date().toISOString(),
               raw: JSON.parse(JSON.stringify(payload)),
             },
           },
@@ -153,7 +216,7 @@ export async function POST(req: NextRequest) {
         console.log(`[kiwify-webhook] Evento não processado: ${event}`);
     }
 
-    // 7. Responder 200 (Kiwify espera 200 para confirmar recebimento)
+    // 8. Responder 200 (Kiwify espera 200 para confirmar recebimento)
     return NextResponse.json({ ok: true, event, orderId: order.order_id });
   } catch (error) {
     console.error("[kiwify-webhook] Erro:", error);

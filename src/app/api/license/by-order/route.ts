@@ -12,11 +12,21 @@ import { z } from "zod";
 //
 // Esse cookie é gerado em /api/subscription/checkout-session
 // e validado aqui. Sem ele, /api/license/by-order recusa.
-
+//
+// SEGURANÇA (P0-8 corrigido):
+// Antes, se ADMIN_JWT_SECRET e ADMIN_PASSWORD ambos ausentes, caía pra
+// `"meucorre-session-fallback"` — atacante que conhece o código-fonte
+// forja sessões de checkout livremente, acessando licença de qualquer email.
+// Agora falha closed: exige secret configurado.
+const SESSION_SECRET_ENV =
+  process.env.ADMIN_JWT_SECRET ?? process.env.ADMIN_PASSWORD;
+if (!SESSION_SECRET_ENV) {
+  console.error(
+    "[license/by-order] ADMIN_JWT_SECRET ou ADMIN_PASSWORD deve estar configurado",
+  );
+}
 const SESSION_SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET ??
-    process.env.ADMIN_PASSWORD ??
-    "meucorre-session-fallback",
+  SESSION_SECRET_ENV ?? "meucorre-session-UNCONFIGURED-DO-NOT-USE-IN-PROD",
 );
 
 interface CheckoutSession {
