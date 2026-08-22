@@ -1339,6 +1339,37 @@ model SocialMetric {
   @@index([profileId, measuredAt])
 }
 
+// ===== Descrições de Postagens para Redes Sociais =====
+//
+// Armazena textos/legendas prontos para postar em cada rede social.
+// Permite upload em lote, classificação por plataforma, copiar, editar,
+// compartilhar e excluir.
+
+model PostDescription {
+  id              String   @id @default(cuid())
+  // Plataforma: instagram | tiktok | youtube | facebook | twitter | telegram | whatsapp | linkedin | kwai | threads | all
+  platform        String   @default("all")
+  // Categoria do post (ex: dica, promocional, engajamento, educacional, storytelling)
+  category        String   @default("geral")
+  // Título curto para identificação (ex: "Dica de economia - Post #12")
+  title           String   @default("")
+  // Texto/legenda completo da postagem
+  content         String
+  // Hashtags separadas por espaço (ex: "#meucorre #entregador #financas")
+  hashtags        String?
+  // Status: draft | ready | posted | archived
+  status          String   @default("ready")
+  // Notas internas do admin
+  notes           String?
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([platform, status])
+  @@index([category])
+  @@index([createdAt])
+}
+
 // ===== Afiliados e Produtos Digitais =====
 //
 // Rastreia links de afiliados (Shopee, Magalu, Amazon, etc.) e produtos

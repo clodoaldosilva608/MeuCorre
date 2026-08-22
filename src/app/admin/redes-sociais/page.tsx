@@ -54,6 +54,8 @@ import {
   MessageCircle,
 } from "lucide-react";
 
+import { PostDescriptionsPanel } from "@/components/admin/post-descriptions-panel";
+
 interface SocialProfile {
   id: string;
   platform: string;
@@ -130,6 +132,7 @@ export default function AdminRedesSociaisPage() {
   const [deleteTarget, setDeleteTarget] = useState<SocialProfile | null>(null);
   const [saving, setSaving] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [activeTab, setActiveTab] = useState<"perfis" | "postagens">("perfis");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -197,6 +200,34 @@ export default function AdminRedesSociaisPage() {
 
   return (
     <div className="space-y-6">
+      {/* Abas: Perfis | Postagens */}
+      <div className="flex gap-1 border-b border-zinc-800">
+        <button
+          onClick={() => setActiveTab("perfis")}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "perfis"
+              ? "border-b-2 border-emerald-500 text-emerald-400"
+              : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          Perfis e Redes
+        </button>
+        <button
+          onClick={() => setActiveTab("postagens")}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "postagens"
+              ? "border-b-2 border-emerald-500 text-emerald-400"
+              : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          Descrições de Postagens
+        </button>
+      </div>
+
+      {activeTab === "postagens" ? (
+        <PostDescriptionsPanel />
+      ) : (
+        <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-zinc-100">Redes Sociais</h1>
@@ -374,6 +405,8 @@ export default function AdminRedesSociaisPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </>
+      )}
     </div>
   );
 }
