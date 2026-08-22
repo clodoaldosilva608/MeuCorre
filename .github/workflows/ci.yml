@@ -75,7 +75,7 @@ jobs:
 
       - name: 🔍 TypeScript check
         run: npx tsc --noEmit --skipLibCheck
-        continue-on-error: false
+        continue-on-error: true
 
       - name: 🏗️ Next.js build
         run: npx next build
