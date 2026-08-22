@@ -30,9 +30,9 @@ export async function register() {
 }
 
 async function registerOTel() {
-  // @vercel/otel é o pacote oficial da Vercel para OpenTelemetry
-  // Instala: npm install @vercel/otel @opentelemetry/api
-  // Em Vercel: traces aparecem em Observability → Traces automaticamente.
+  // @vercel/otel é o pacote oficial da Vercel para OpenTelemetry.
+  // Tenta carregar dinamicamente — se não estiver instalado, usa
+  // correlation ID simples do middleware (P2-2) como fallback.
   try {
     const { registerOTel } = await import("@vercel/otel");
     registerOTel({
