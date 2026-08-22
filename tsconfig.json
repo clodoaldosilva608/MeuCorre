@@ -43,6 +43,9 @@
     "tests",
     "tool-results",
     "mini-services",
-    "docs"
+    "docs",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "vitest.config.ts"
   ]
 }
