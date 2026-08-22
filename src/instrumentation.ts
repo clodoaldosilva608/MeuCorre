@@ -6,21 +6,13 @@
 // Este arquivo é importado automaticamente pelo Next.js quando
 // `instrumentationHook: true` está habilitado no next.config.ts.
 //
-// Recursos instrumentados:
-// - HTTP requests (fetch, http/https)
-// - Prisma queries
-// - Redis (Upstash)
-// - Custom spans (via trace.getSpan())
+// Nota: @vercel/otel e @opentelemetry/api são dependências OPCIONAIS.
+// Se não estiverem instaladas, o sistema usa correlation ID simples
+// do middleware (P2-2) como fallback.
 //
-// Export para Vercel:
-// - Vercel captura traces automaticamente (sem configuração extra)
-// - Para Honeycomb/Datadog/Jaeger: configurar OTEL_EXPORTER_OTLP_ENDPOINT
-//
-// Uso em rotas:
-//   import { trace } from "@opentelemetry/api";
-//   const span = trace.getActiveSpan();
-//   span?.setAttribute("userId", session.sub);
-//   span?.setAttribute("deliveryCount", deliveries.length);
+// Para ativar OpenTelemetry completo:
+//   npm install @vercel/otel @opentelemetry/api
+// Depois o dynamic import abaixo vai funcionar automaticamente.
 
 export async function register() {
   // Só registra em runtime Node.js (não Edge)
@@ -30,15 +22,19 @@ export async function register() {
 }
 
 async function registerOTel() {
-  // @vercel/otel é o pacote oficial da Vercel para OpenTelemetry.
-  // Tenta carregar dinamicamente — se não estiver instalado, usa
-  // correlation ID simples do middleware (P2-2) como fallback.
   try {
-    const { registerOTel } = await import("@vercel/otel");
-    registerOTel({
-      // Serviço identificado como "meucorre"
+    // Tenta carregar @vercel/otel dinamicamente usando eval para
+    // contornar o TypeScript module resolver (módulo é opcional).
+    // Se não estiver instalado, cai no catch e usa fallback.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mod: any = await (Function('return import("@vercel/otel")')()).catch(() => null);
+    if (!mod || typeof mod.registerOTel !== "function") {
+      console.log("[otel] @vercel/otel não instalado — usando correlation ID do middleware");
+      return;
+    }
+
+    mod.registerOTel({
       serviceName: "meucorre",
-      // Atributos globais em todos os traces
       attributes: {
         "service.version": process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "dev",
         "deployment.url": process.env.VERCEL_URL ?? "local",
@@ -47,29 +43,26 @@ async function registerOTel() {
     });
     console.log("[otel] OpenTelemetry registrado com sucesso");
   } catch (err) {
-    // @vercel/otel não instalado — usa correlation ID simples (P2-2)
     console.warn(
-      "[otel] @vercel/otel não instalado, usando correlation ID básico (P2-2):",
+      "[otel] Falha ao registrar OpenTelemetry, usando correlation ID básico (P2-2):",
       err instanceof Error ? err.message : err,
     );
   }
 }
 
-// Helper para criar span customizado em rotas críticas
-// Uso:
-//   import { withSpan } from "@/lib/otel";
-//   const result = await withSpan("sync.deliveries", async (span) => {
-//     span.setAttribute("userId", userId);
-//     span.setAttribute("count", deliveries.length);
-//     return await syncDeliveries(userId, deliveries);
-//   });
+// Helper para criar span customizado em rotas críticas.
+// Se @opentelemetry/api não estiver instalado, executa sem span.
 export async function withSpan<T>(
   name: string,
   fn: (span?: { setAttribute: (key: string, value: string | number | boolean) => void }) => Promise<T>,
 ): Promise<T> {
   try {
-    const { trace } = await import("@opentelemetry/api");
-    const tracer = trace.getTracer("meucorre");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mod: any = await (Function('return import("@opentelemetry/api")')()).catch(() => null);
+    if (!mod) {
+      return await fn();
+    }
+    const tracer = mod.trace.getTracer("meucorre");
     return tracer.startActiveSpan(name, async (span) => {
       try {
         const result = await fn({
@@ -90,7 +83,7 @@ export async function withSpan<T>(
       }
     });
   } catch {
-    // @opentelemetry/api não disponível — executa sem span
+    // Fallback: executa sem span
     return await fn();
   }
 }
